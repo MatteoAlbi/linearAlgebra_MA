@@ -1,56 +1,56 @@
-#include "linearAlgebra.hpp"
+#include "linear_algebra_ma/linearAlgebra.hpp"
 
 double& Matrix::operator()(const uint & r, const uint & c){
-    if(r >= this->r) throw out_of_range("Row index out of range");
-    if(c >= this->c) throw out_of_range("Col index out of range");
-    return this->v[r * this->c + c];
+    if(r >= this->_r) throw out_of_range("Row index out of range");
+    if(c >= this->_c) throw out_of_range("Col index out of range");
+    return this->_v[r * this->_c + c];
 }
 
 const double& Matrix::operator()(const uint & r, const uint & c) const{
-    if(r >= this->r) throw out_of_range("Row index out of range");
-    if(c >= this->c) throw out_of_range("Col index out of range");
-    return this->v[r * this->c + c];
+    if(r >= this->_r) throw out_of_range("Row index out of range");
+    if(c >= this->_c) throw out_of_range("Col index out of range");
+    return this->_v[r * this->_c + c];
 }
 
 double& Matrix::operator()(const uint & i){
-    if(this->c == 1){
-        if(i >= this->r) throw out_of_range("Index out of range");
+    if(this->_c == 1){
+        if(i >= this->_r) throw out_of_range("Index out of range");
         return this->operator()(i,0);
     } 
-    else if(this->r == 1){
-        if(i >= this->c) throw out_of_range("Index out of range");
+    else if(this->_r == 1){
+        if(i >= this->_c) throw out_of_range("Index out of range");
         return this->operator()(0,i);
     }
     else{
-        if(i >= this->r || i >= this->c) throw out_of_range("Index out of range");
+        if(i >= this->_r || i >= this->_c) throw out_of_range("Index out of range");
         return this->operator()(i,i);
     }
 }
 
 const double& Matrix::operator()(const uint & i) const{
-    if(this->c == 1){
-        if(i >= this->r) throw out_of_range("Index out of range");
+    if(this->_c == 1){
+        if(i >= this->_r) throw out_of_range("Index out of range");
         return this->operator()(i,0);
     } 
-    else if(this->r == 1){
-        if(i >= this->c) throw out_of_range("Index out of range");
+    else if(this->_r == 1){
+        if(i >= this->_c) throw out_of_range("Index out of range");
         return this->operator()(0,i);
     }
     else{
-        if(i >= this->r || i >= this->c) throw out_of_range("Index out of range");
+        if(i >= this->_r || i >= this->_c) throw out_of_range("Index out of range");
         return this->operator()(i,i);
     }
 }
 
 Matrix Matrix::operator()(pair<uint,uint> rs, const uint & c) const{
-    if(rs.second >= this->r) throw out_of_range("Row index out of range");
-    if(c >= this->c) throw out_of_range("Col index out of range");
+    if(rs.second >= this->_r) throw out_of_range("Row index out of range");
+    if(c >= this->_c) throw out_of_range("Col index out of range");
     if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second");
 
-    if(rs.first == 0 && rs.second == 0) rs.second = this->r-1;
+    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
     Matrix ret = Matrix(rs.second - rs.first + 1, 1);
 
-    for(uint i=0; i<ret.r; i++){
+    for(uint i=0; i<ret._r; i++){
         ret(i,0) = this->operator()(i + rs.first, c);
     }
 
@@ -58,14 +58,14 @@ Matrix Matrix::operator()(pair<uint,uint> rs, const uint & c) const{
 }
 
 Matrix Matrix::operator()(const uint & r, pair<uint,uint> cs) const{
-    if(r >= this->r) throw out_of_range("Row index out of range");
-    if(cs.second >= this->c) throw out_of_range("Col index out of range");
+    if(r >= this->_r) throw out_of_range("Row index out of range");
+    if(cs.second >= this->_c) throw out_of_range("Col index out of range");
     if(cs.first > cs.second) throw invalid_argument("Col first element must be <= of second");
 
-    if(cs.first == 0 && cs.second == 0) cs.second = this->c-1;
+    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
     Matrix ret = Matrix(1, cs.second - cs.first + 1);
 
-    for(uint j=0; j<ret.c; j++){
+    for(uint j=0; j<ret._c; j++){
         ret(0,j) = this->operator()(r, j + cs.first);
     }
 
@@ -73,17 +73,17 @@ Matrix Matrix::operator()(const uint & r, pair<uint,uint> cs) const{
 }
 
 Matrix Matrix::operator()(pair<uint,uint> rs, pair<uint,uint> cs) const{
-    if(rs.second >= this->r) throw out_of_range("Row index out of range");
-    if(cs.second >= this->c) throw out_of_range("Col index out of range");
+    if(rs.second >= this->_r) throw out_of_range("Row index out of range");
+    if(cs.second >= this->_c) throw out_of_range("Col index out of range");
     if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw invalid_argument("Col first element must be <= of second");
 
-    if(rs.first == 0 && rs.second == 0) rs.second = this->r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->c-1;
+    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
+    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
     Matrix ret = Matrix(rs.second - rs.first + 1, cs.second - cs.first + 1);
 
-    for(uint i=0; i<ret.r; i++){
-        for(uint j=0; j<ret.c; j++){
+    for(uint i=0; i<ret._r; i++){
+        for(uint j=0; j<ret._c; j++){
             ret(i,j) = this->operator()(i + rs.first, j + cs.first);
         }
     }
@@ -92,10 +92,10 @@ Matrix Matrix::operator()(pair<uint,uint> rs, pair<uint,uint> cs) const{
 }
 
 Matrix& Matrix::operator=(const Matrix& m){
-    this->r = m.r;
-    this->c = m.c;
-    if(this->v != nullptr) delete[] this->v;
-    this->v = new double[this->r*this->c];
+    this->_r = m._r;
+    this->_c = m._c;
+    if(this->_v != nullptr) delete[] this->_v;
+    this->_v = new double[this->_r*this->_c];
     this->setV(m.getV());
 
     return *this;
@@ -104,102 +104,103 @@ Matrix& Matrix::operator=(const Matrix& m){
 
 
 void Matrix::operator+=(const double & k){
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) += k;
         }
     }
 }
 
 void Matrix::operator+=(const int & k){
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) += k;
         }
     }
 }
 
 void Matrix::operator+=(const Matrix & m){
-    if(this->r != m.r || this->c != m.c) throw invalid_argument("Matrices' shapes don't match");
+    if(this->_r != m._r || this->_c != m._c) throw invalid_argument("Matrices' shapes don't match");
     
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) += m(i,j);
         }
     }
 }
 
 void Matrix::operator-=(const double & k){
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) -= k;
         }
     }
 }
 
 void Matrix::operator-=(const int & k){
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) -= k;
         }
     }
 }
 
 void Matrix::operator-=(const Matrix & m){
-    if(this->r != m.r || this->c != m.c) throw invalid_argument("Matrices' shapes don't match");
+    if(this->_r != m._r || this->_c != m._c) throw invalid_argument("Matrices' shapes don't match");
     
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) -= m(i,j);
         }
     }
 }
 
 void Matrix::operator*=(const double & k){
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) *= k;
         }
     }
 }
 
 void Matrix::operator*=(const int & k){
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) *= k;
         }
     }
 }
 
 void Matrix::operator*=(const Matrix & m){
-    if(this->c != m.r) throw invalid_argument("Matrices' shapes don't match");
+    if(this->_c != m._r) throw invalid_argument("Matrices' shapes don't match");
     
-    double v[this->r * m.c];
+    double* tmp = new double[this->_r * m._c];
 
-    for (uint i = 0; i<this->r; i++) {
-        for (uint j = 0; j<m.c; j++) {
-            v[i * m.c + j] = 0;
-            for (uint k = 0; k<this->c; k++) {
-                v[i * m.c + j] += this->operator()(i,k) * m(k,j);
+    for (uint i = 0; i<this->_r; i++) {
+        for (uint j = 0; j<m._c; j++) {
+            tmp[i * m._c + j] = 0;
+            for (uint k = 0; k<this->_c; k++) {
+                tmp[i * m._c + j] += this->operator()(i,k) * m(k,j);
             }
         }
     }
 
-    this->c = m.c;
-    this->setV(v);
+    this->_c = m._c;
+    this->setV(tmp);
+    delete tmp;
 }
 
 void Matrix::operator/=(const double & k){
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) /= k;
         }
     }
 }
 
 void Matrix::operator/=(const int & k){
-    for(uint i=0; i<this->r; i++){
-        for(uint j=0; j<this->c; j++){
+    for(uint i=0; i<this->_r; i++){
+        for(uint j=0; j<this->_c; j++){
             this->operator()(i,j) /= k;
         }
     }
@@ -224,97 +225,99 @@ void Matrix::operator/=(const Matrix & m){
 
 
 void Matrix::operator&=(const Matrix & m){
-    if(this->r != m.r) throw invalid_argument("Matrices must have same number of rows");
+    if(this->_r != m._r) throw invalid_argument("Matrices must have same number of rows");
     
-    uint totC = this->c + m.c;
-    double v[this->r * totC];
+    uint totC = this->_c + m._c;
+    double* tmp = new double[this->_r * totC];
 
-    for (uint i = 0; i<this->r; i++) {
+    for (uint i = 0; i<this->_r; i++) {
         for (uint j = 0; j<totC; j++) {
-            if(j < this->c) v[i * totC + j] = this->operator()(i,j);
-            else v[i * totC + j] = m(i,j-this->c);
+            if(j < this->_c) tmp[i * totC + j] = this->operator()(i,j);
+            else tmp[i * totC + j] = m(i,j-this->_c);
         }
     }
 
-    this->c += m.c;
-    this->setV(v);
+    this->_c += m._c;
+    this->setV(tmp);
+    delete tmp;
 }
 
 void Matrix::operator|=(const Matrix & m){
-    if(this->c != m.c) throw invalid_argument("Matrices must have same number of columns");
+    if(this->_c != m._c) throw invalid_argument("Matrices must have same number of columns");
     
-    uint totR = this->r + m.r;
-    double v[totR * this->c];
+    uint totR = this->_r + m._r;
+    double *tmp = new double[totR * this->_c];
 
     for (uint i = 0; i<totR; i++) {
-        for (uint j = 0; j<this->c; j++) {
-            if(i < this->r) v[i * this->c + j] = this->operator()(i,j);
-            else v[i * this->c + j] = m(i-this->r,j);
+        for (uint j = 0; j<this->_c; j++) {
+            if(i < this->_r) tmp[i * this->_c + j] = this->operator()(i,j);
+            else tmp[i * this->_c + j] = m(i-this->_r,j);
         }
     }
     
-    this->r += m.r;
-    this->setV(v);
+    this->_r += m._r;
+    this->setV(tmp);
+    delete tmp;
 }
 
 
 
 Matrix::Matrix(){
-    this->r = 0;
-    this->c = 0;
-    this->v = nullptr;
+    this->_r = 0;
+    this->_c = 0;
+    this->_v = nullptr;
 }
 
 Matrix::Matrix(const uint & r, const uint & c) {
-    this->r = r;
-    this->c = c;
-    this->v = new double[this->r*this->c]();
+    this->_r = r;
+    this->_c = c;
+    this->_v = new double[this->_r*this->_c]();
 }
 
 Matrix::Matrix(const uint & r, const uint & c, const double * v) {
-    this->r = r;
-    this->c = c;
-    this->v = new double[this->r*this->c];
+    this->_r = r;
+    this->_c = c;
+    this->_v = new double[this->_r*this->_c];
     this->setV(v);   
 }
 
 Matrix::Matrix(Matrix & m){
-    this->r = m.r;
-    this->c = m.c;
-    this->v = new double[this->r*this->c];
+    this->_r = m._r;
+    this->_c = m._c;
+    this->_v = new double[this->_r*this->_c];
     this->setV(m.getV());
 }
 
 Matrix::Matrix(const Matrix & m){
-    this->r = m.r;
-    this->c = m.c;
-    this->v = new double[this->r*this->c];
+    this->_r = m._r;
+    this->_c = m._c;
+    this->_v = new double[this->_r*this->_c];
     this->setV(m.getV());
 }
 
 Matrix::~Matrix() {
-    if(this->v != nullptr) delete[] this->v;
+    if(this->_v != nullptr) delete[] this->_v;
 }
 
 
 
 const uint & Matrix::getR() const{
-    return this->r;
+    return this->_r;
 }
 
 const uint & Matrix::getC() const{
-    return this->c;
+    return this->_c;
 }
 
 const double* Matrix::getV() const{
-    return this->v;
+    return this->_v;
 }
 
 void Matrix::setV(const double * v){
     try{
-        for (uint i = 0; i < this->r; i++){
-            for (uint j = 0; j < this->c; j++){
-                this->operator()(i,j) = v[i * this->c + j];
+        for (uint i = 0; i < this->_r; i++){
+            for (uint j = 0; j < this->_c; j++){
+                this->operator()(i,j) = v[i * this->_c + j];
             }
         }
     }
@@ -325,13 +328,13 @@ void Matrix::setV(const double * v){
 }
 
 void Matrix::setV(pair<uint,uint> rs, pair<uint,uint> cs, const double * v){
-    if(rs.second >= this->r) throw out_of_range("Row index out of range");
-    if(cs.second >= this->c) throw out_of_range("Col index out of range");
+    if(rs.second >= this->_r) throw out_of_range("Row index out of range");
+    if(cs.second >= this->_c) throw out_of_range("Col index out of range");
     if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw invalid_argument("Col first element must be <= of second");
 
-    if(rs.first == 0 && rs.second == 0) rs.second = this->r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->c-1;
+    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
+    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     uint nRows = rs.second - rs.first + 1;
     uint nCols = cs.second - cs.first + 1;
@@ -352,26 +355,26 @@ void Matrix::setV(pair<uint,uint> rs, pair<uint,uint> cs, const double * v){
 
 
 Matrix Matrix::t() const{
-    Matrix ret = Matrix(this->c, this->r);
-    for (uint i = 0; i<this->r; i++) {
-        for (uint j = 0; j<this->c; j++) {
-            ret.v[j * ret.c + i] = this->v[i * this->c + j];
+    Matrix ret = Matrix(this->_c, this->_r);
+    for (uint i = 0; i<this->_r; i++) {
+        for (uint j = 0; j<this->_c; j++) {
+            ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
         }
     }
     return ret;
 }
 
 Matrix Matrix::cof(const uint & p, const uint & q) const{
-    if(this->r < p || this->c < q) throw invalid_argument("p or q exceed matrix boundaries");
+    if(this->_r < p || this->_c < q) throw invalid_argument("p or q exceed matrix boundaries");
 
     uint i = 0, j = 0;
 
-    Matrix ret = Matrix(this->r-1,this->c-1);
+    Matrix ret = Matrix(this->_r-1,this->_c-1);
 
     // Looping for each element of the matrix
-    for (uint row = 0; row < this->r; row++){
+    for (uint row = 0; row < this->_r; row++){
 
-        for (uint col = 0; col < this->c; col++){
+        for (uint col = 0; col < this->_c; col++){
 
             // Copying into result matrix only those element
             // which are not in given row and column
@@ -381,7 +384,7 @@ Matrix Matrix::cof(const uint & p, const uint & q) const{
  
                 // Row is filled, so increase row index and
                 // reset col index
-                if (j == ret.c){
+                if (j == ret._c){
                     j = 0;
                     i++;
                 }
@@ -393,15 +396,15 @@ Matrix Matrix::cof(const uint & p, const uint & q) const{
 }
 
 double Matrix::det() const{
-    if(this->r != this->c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
 
     // Base case : if matrix contains single element
-    if (this->r == 1){
-        return this->v[0];
+    if (this->_r == 1){
+        return this->_v[0];
     } 
     // if matrix is 2x2
-    else if (this->r == 2){
-        return this->v[0]*this->v[3] - this->v[1]*this->v[2];
+    else if (this->_r == 2){
+        return this->_v[0]*this->_v[3] - this->_v[1]*this->_v[2];
     }
 
     else{
@@ -411,10 +414,10 @@ double Matrix::det() const{
         int sign = 1; // To store sign multiplier
     
         // Iterate for each element of first row
-        for (uint j = 0; j < this->c; j++){
+        for (uint j = 0; j < this->_c; j++){
             // Getting Cofactor of m->v[0][f]
             cof = this->cof(0, j);
-            D += sign * this->v[j] * cof.det();
+            D += sign * this->_v[j] * cof.det();
     
             // terms are to be added with alternate sign
             sign = -sign;
@@ -425,20 +428,20 @@ double Matrix::det() const{
 }
 
 Matrix Matrix::adj() const{
-    if(this->r != this->c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
 
-    Matrix ret = Matrix(this->r, this->c);
+    Matrix ret = Matrix(this->_r, this->_c);
 
-    if (this->r == 1){
-        ret.v[0] = 1;
+    if (this->_r == 1){
+        ret._v[0] = 1;
         return ret;
     }
 
     int sign = 1;
     Matrix cof; // To store cofactors
 
-    for (uint i=0; i<this->r; i++){
-        for (uint j=0; j<this->c; j++){
+    for (uint i=0; i<this->_r; i++){
+        for (uint j=0; j<this->_c; j++){
             // Get cofactor
             cof = this->cof(i,j);
  
@@ -456,7 +459,7 @@ Matrix Matrix::adj() const{
 }
 
 Matrix Matrix::inv() const{
-    if(this->r != this->c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
 
     // Find determinant of A
     double det = this->det(); 
@@ -481,10 +484,10 @@ Matrix Matrix::pinv_left() const{
 }
 
 double Matrix::norm2() const{
-    if(this->r == 1 || this->c == 1){
+    if(this->_r == 1 || this->_c == 1){
         double ret = 0;
-        for(uint i=0; i< this->r+this->c-1; i++){
-            ret += pow(this->v[i],2);
+        for(uint i=0; i< this->_r+this->_c-1; i++){
+            ret += pow(this->_v[i],2);
         }
         return sqrt(ret);
     }

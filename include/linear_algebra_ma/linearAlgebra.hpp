@@ -17,9 +17,9 @@ typedef unsigned int uint;
 
 class Matrix {
     protected: 
-        uint r;
-        uint c;
-        double * v;
+        uint _r;
+        uint _c;
+        double * _v;
 
     public:
         /**

@@ -14,7 +14,8 @@ set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 #-- linear_algebra
 # add library
 add_library(linear_algebra 
-    "src/linear_algebra_ma/linear_algebra.cpp"
+    "src/linear_algebra_ma/linear_algebra/linear_algebra.cpp"
+    "src/linear_algebra_ma/linear_algebra/operators.cpp"
 )
 
 # include directories
@@ -32,7 +33,8 @@ target_compile_options(linear_algebra PRIVATE
 #-- geometries
 # add library
 add_library(geometries
-    "src/linear_algebra_ma/geometries.cpp"
+    "src/linear_algebra_ma/geometries/point.cpp"
+    "src/linear_algebra_ma/geometries/line.cpp"
 )
 
 # include directories

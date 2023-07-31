@@ -1,5 +1,5 @@
-#ifndef TM_GEOMETRIES
-#define TM_GEOMETRIES
+#ifndef MA_GEOMETRIES
+#define MA_GEOMETRIES
 
 #include <utility>
 #include <vector>
@@ -10,7 +10,7 @@
 #include "linear_algebra_ma/linearAlgebra.hpp"
 
 
-namespace TM
+namespace MA
 {
 
 class Point{
@@ -70,7 +70,7 @@ private:
 };
 
 
-} // namespace TM
+} // namespace MA
 
 
-#endif // TM_GEOMETRIES
+#endif // MA_GEOMETRIES

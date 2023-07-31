@@ -116,3 +116,7 @@ TEST(Matrix, set) {
     }
     // cout << m2 << endl;
 }
+
+TEST(Matrix, transpose){
+    
+}

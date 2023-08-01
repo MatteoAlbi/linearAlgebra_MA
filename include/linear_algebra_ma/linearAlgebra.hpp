@@ -204,6 +204,7 @@ public:
      */
     void normalize_self();
 
+#pragma region decomposition_methods
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 
      *        with Q orthogonal matrix and R upper triangular matrix
@@ -213,7 +214,7 @@ public:
      * @param Q orthogonal matrix
      * @param R upper triangular matrix
      */
-    void qr_dec(Matrix & Q, Matrix & R);
+    void qr_dec(Matrix & Q, Matrix & R) const;
 
 
     //https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
@@ -224,7 +225,8 @@ public:
      * @param L lower triangular matrix
      * @param U upper triangular matrix
      */
-    void lu_dec(Matrix & L, Matrix & U);
+    void lu_dec(Matrix & L, Matrix & U) const;
+#pragma endregion decomposition_methods
 
 #pragma region ls_solution
     /**

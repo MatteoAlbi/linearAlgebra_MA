@@ -291,86 +291,94 @@ double * diag(const Matrix & m){
 }
 
 
-// void Matrix::qr_dec(Matrix & Q, Matrix & R){
-//     uint r = this->_r;
-//     uint c = this->_c;
+#pragma region decomposition_methods
 
-//     //set R to A
-//     R = this;
-//     Matrix Rtmp{r, c};
+/*
+void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
+    uint r = this->_r;
+    uint c = this->_c;
+
+    //set R to A
+    R = this;
+    Matrix Rtmp{r, c};
     
-//     uint n = std::min<double>(r, c);
+    uint n = std::min<double>(r, c);
 
-//     double v[r], tmp[r*r], hk[r*r];
-//     double H_list[n][r*r];
-//     double sign, vtv;
-//     uint v_dim;
+    double v[r], tmp[r*r], hk[r*r];
+    double H_list[n][r*r];
+    double sign, vtv;
+    uint v_dim;
 
-//     for(uint i=0; i<n; i++){
-//         //extract column of R
-//         Matrix v = R({i, r}, i);
-//         for(uint j=i; j<r; j++) v[j-i] = R[j*c + i];
-//         v_dim = r-i;
+    for(uint i=0; i<n; i++){
+        //extract column of R
+        Matrix v = R({i, r}, i);
+        for(uint j=i; j<r; j++) v[j-i] = R[j*c + i];
+        v_dim = r-i;
 
-//         //compute vk
-//         sign = v[0] < 0 ? -1 : 1;
-//         v[0] += sign * norm2(v, v_dim);
+        //compute vk
+        sign = v[0] < 0 ? -1 : 1;
+        v[0] += sign * norm2(v, v_dim);
 
-//         normalize(v, v_dim);
+        normalize(v, v_dim);
 
-//         //compute H matrix
-//         matrix_mult_T(v, v, tmp, v_dim, v_dim, 1);
-//         for(uint j=0; j<v_dim*v_dim; j++) tmp[j] *= -2;
-//         for(uint j=0; j<v_dim; j++) tmp[j * v_dim + j] += 1;
+        //compute H matrix
+        matrix_mult_T(v, v, tmp, v_dim, v_dim, 1);
+        for(uint j=0; j<v_dim*v_dim; j++) tmp[j] *= -2;
+        for(uint j=0; j<v_dim; j++) tmp[j * v_dim + j] += 1;
 
-//         for(uint j=0; j<r; j++){
-//             for(uint k=0; k<r; k++){
-//                 if(j >= i && k >= i) hk[j*r+k] = tmp[(j-i)*v_dim + (k-i)];
-//                 else if(j == k) hk[j*r+k] = 1;
-//                 else hk[j*r+k] = 0;
-//             }
-//         }
+        for(uint j=0; j<r; j++){
+            for(uint k=0; k<r; k++){
+                if(j >= i && k >= i) hk[j*r+k] = tmp[(j-i)*v_dim + (k-i)];
+                else if(j == k) hk[j*r+k] = 1;
+                else hk[j*r+k] = 0;
+            }
+        }
 
-//         //store H matrix to compute Q
-//         memcpy(H_list[i], hk, sizeof(double)*r*r);
-//         //update R
-//         matrix_mult(hk, R, Rtmp, r, c, r);
-//         memcpy(R, Rtmp, sizeof(double)*r*c);
+        //store H matrix to compute Q
+        memcpy(H_list[i], hk, sizeof(double)*r*r);
+        //update R
+        matrix_mult(hk, R, Rtmp, r, c, r);
+        memcpy(R, Rtmp, sizeof(double)*r*c);
 
-//     }
+    }
 
-//     //compute Q
-//     matrix_mult(H_list[0], H_list[1], Q, r, r, r);
-//     for(uint i=2; i<n; i++){
-//         matrix_mult(Q, H_list[i], tmp, r, r, r);
-//         memcpy(Q, tmp, sizeof(double)*r*r);
-//     }
+    //compute Q
+    matrix_mult(H_list[0], H_list[1], Q, r, r, r);
+    for(uint i=2; i<n; i++){
+        matrix_mult(Q, H_list[i], tmp, r, r, r);
+        memcpy(Q, tmp, sizeof(double)*r*r);
+    }
 
-// }
+}
+*/
+
+void Matrix::lu_dec(Matrix & L, Matrix & U) const{
+    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+    uint n = this->_r;
+
+    for (uint i = 0; i < n; i++) {
+        for (uint j = 0; j < n; j++) {
+            if (j < i) L[j, i] = 0;
+            else {
+                L[j*n + i] = A[j*n + i];
+                for (uint k = 0; k < i; k++) L[j*n + i] -= L[j*n + k] * U[k*n + i];
+            }
+        }
+        for (uint j = 0; j < n; j++) {
+            if (j < i) U[i*n + j] = 0;
+            else if (j == i) U[i*n + j] = 1;
+            else {
+                U[i*n + j] = A[i*n + j] / L[i*n + i];
+                for (uint k = 0; k < i; k++)  U[i*n + j] -= L[i*n + k] * U[k*n + j] / L[i*n + i];
+            }
+        }
+    }
+}
+
+#pragma endregion decomposition_methods
 
 
-// void lu_dec(Matrix & L, Matrix & U){
-//     uint i = 0, j = 0, k = 0;
-//     for (i = 0; i < n; i++) {
-//         for (j = 0; j < n; j++) {
-//             if (j < i) L[j*n + i] = 0;
-//             else {
-//                 L[j*n + i] = A[j*n + i];
-//                 for (k = 0; k < i; k++) L[j*n + i] -= L[j*n + k] * U[k*n + i];
-//             }
-//         }
-//         for (j = 0; j < n; j++) {
-//             if (j < i) U[i*n + j] = 0;
-//             else if (j == i) U[i*n + j] = 1;
-//             else {
-//                 U[i*n + j] = A[i*n + j] / L[i*n + i];
-//                 for (k = 0; k < i; k++)  U[i*n + j] -= L[i*n + k] * U[k*n + j] / L[i*n + i];
-//             }
-//         }
-//     }
-// }
-
-
+#pragma region ls_solution
 // void backward_sub(const double *const U, const double *const B, 
 //                  double *const res, const uint n, const uint c_b){
             
@@ -443,6 +451,7 @@ double * diag(const Matrix & m){
 
 //     transpose(res_t, res, c_a, r_b);
 // }
+#pragma endregion ls_solution
 
 } // namespace MA
 

@@ -195,6 +195,8 @@ Matrix Matrix::cof_mat() const{
     for(uint i=0; i<this->_r; i++) for(uint j=0; j<this->_c; j++){
         ret(i,j) = this->cof(i,j);
     }
+
+    return ret;
 }
 
 Matrix Matrix::adj() const{
@@ -205,6 +207,8 @@ Matrix Matrix::adj() const{
     for(uint i=0; i<this->_r; i++) for(uint j=0; j<this->_c; j++){
         ret(j,i) = this->cof(i,j);
     }
+
+    return ret;
 }
 
 Matrix Matrix::inv() const{
@@ -356,20 +360,36 @@ void Matrix::lu_dec(Matrix & L, Matrix & U) const{
     if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
     uint n = this->_r;
 
+    // reshape L and U
+    if(L.size() != this->size()){
+        if(L._v != nullptr) delete[] L._v;
+        L._v = new double[this->size()]();
+    }
+    L._r = n;
+    L._c = n;
+    if(U.size() != this->size()){
+        if(U._v != nullptr) delete[] U._v;
+        U._v = new double[this->size()]();
+    }
+    U._r = n;
+    U._c = n;
+
     for (uint i = 0; i < n; i++) {
+        // lower triang
         for (uint j = 0; j < n; j++) {
-            if (j < i) L[j*n + i] = 0;
+            if (j < i) L(j,i) = 0;
             else {
-                L[j*n + i] = A[j*n + i];
-                for (uint k = 0; k < i; k++) L[j*n + i] -= L[j*n + k] * U[k*n + i];
+                L(j,i) = this->operator()(j,i);
+                for (uint k = 0; k < i; k++) L(j,i) -= L(j,k) * U(k,i);
             }
         }
+        // upper triang
         for (uint j = 0; j < n; j++) {
-            if (j < i) U[i*n + j] = 0;
-            else if (j == i) U[i*n + j] = 1;
+            if (j < i) U(i,j) = 0;
+            else if (j == i) U(i,j) = 1;
             else {
-                U[i*n + j] = A[i*n + j] / L[i*n + i];
-                for (uint k = 0; k < i; k++)  U[i*n + j] -= L[i*n + k] * U[k*n + j] / L[i*n + i];
+                U(i,j) = this->operator()(i,j) / L(i,i);
+                for (uint k = 0; k < i; k++)  U(i,j) -= L(i,k) * U(k,j) / L(i,i);
             }
         }
     }

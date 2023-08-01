@@ -541,10 +541,10 @@ TEST(Matrix, lu_dec){
 
     // matrix decomposable
     m1 = Matrix (4,4,
-        {1,3,5,9,
-         0,2,1,7,
-         4,1,8,2,
-         5,2,1,9}
+        {1,3,5,2,
+         0,2,1,6,
+         4,1,3,2,
+         5,2,1,4}
     );
     EXPECT_NO_THROW(m1.lu_dec(L,U));
     EXPECT_TRUE(L*U == m1);
@@ -610,6 +610,89 @@ TEST(Matrix, forward_sub){
 }
 
 TEST(Matrix, matrix_l_divide){
-    
+    Matrix A,b,C;
+    A = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1}
+    );
+    b = Matrix(4,1, {2,4,1,3});
+
+    // A not square
+    EXPECT_THROW(Matrix::matrix_l_divide(A({0,3},{1,3}), b), runtime_error);
+    // underdetermined
+    C = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(Matrix::matrix_l_divide(C, b), runtime_error);
+
+    // solution
+    EXPECT_TRUE(Matrix::matrix_l_divide(A,b) == Matrix(4,1, {1,1,0,-1}));
+
+    // Matrix L,U;
+    // A.lu_dec(L,U);
+    // cout << L << endl;
+    // cout << U << endl;
+    // cout << Matrix::matrix_l_divide(A,b) << endl;
 }
 
+TEST(Matrix, solve_ls){
+    Matrix A,b,C;
+    A = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1}
+    );
+    b = Matrix(4,1, {2,4,1,3});
+
+    // A not square
+    EXPECT_THROW(Matrix::solve_ls(A({0,3},{1,3}), b), invalid_argument);
+    // underdetermined
+    C = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(Matrix::solve_ls(C, b), runtime_error);
+
+    // solution
+    EXPECT_TRUE(Matrix::solve_ls(A,b) == Matrix(4,1, {1,1,0,-1}));
+}
+
+
+TEST(Matrix, matrix_r_divide){
+    Matrix A,b,C;
+    A = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1}
+    );
+    b = Matrix(1,4, {2,4,1,3});
+
+    // A not square
+    EXPECT_THROW(Matrix::matrix_r_divide(b, A({0,3},{1,3})), runtime_error);
+    // underdetermined
+    C = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(Matrix::matrix_r_divide(b, C), runtime_error);
+
+    // solution
+    EXPECT_TRUE(Matrix::matrix_r_divide(b,A.t()) == Matrix(1,4, {1,1,0,-1}));
+
+    // Matrix L,U;
+    // A.lu_dec(L,U);
+    // cout << L << endl;
+    // cout << U << endl;
+    // cout << Matrix::matrix_r_divide(b,A.t()) << endl;
+}

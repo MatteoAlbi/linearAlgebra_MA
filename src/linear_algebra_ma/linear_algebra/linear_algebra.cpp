@@ -358,7 +358,7 @@ void Matrix::lu_dec(Matrix & L, Matrix & U) const{
 
     for (uint i = 0; i < n; i++) {
         for (uint j = 0; j < n; j++) {
-            if (j < i) L[j, i] = 0;
+            if (j < i) L[j*n + i] = 0;
             else {
                 L[j*n + i] = A[j*n + i];
                 for (uint k = 0; k < i; k++) L[j*n + i] -= L[j*n + k] * U[k*n + i];

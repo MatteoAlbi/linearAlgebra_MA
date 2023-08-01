@@ -1,5 +1,5 @@
-#ifndef MA_LINEAR_ALGEBRA
-#define MA_LINEAR_ALGEBRA
+#ifndef MA_MATRICES
+#define MA_MATRICES
 
 #include <stdio.h>
 #include <stdbool.h>
@@ -369,4 +369,4 @@ double * diag(const Matrix & m);
 
 } // namespace MA
 
-#endif // MA_LINEAR_ALGEBRA
+#endif // MA_MATRICES

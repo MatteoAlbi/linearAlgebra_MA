@@ -11,21 +11,21 @@ set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 
 
-#-- linear_algebra
+#-- matrices
 # add library
-add_library(linear_algebra 
-    "src/linear_algebra_ma/linear_algebra/linear_algebra.cpp"
-    "src/linear_algebra_ma/linear_algebra/operators.cpp"
+add_library(matrices 
+    "src/linear_algebra_ma/matrices/matrices.cpp"
+    "src/linear_algebra_ma/matrices/operators.cpp"
 )
 
 # include directories
-target_include_directories(linear_algebra PUBLIC
+target_include_directories(matrices PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
 # turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
-target_compile_options(linear_algebra PRIVATE 
+target_compile_options(matrices PRIVATE 
     "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
 )
 
@@ -48,7 +48,7 @@ target_compile_options(geometries PRIVATE
     "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
 )
 
-target_link_libraries(geometries linear_algebra)
+target_link_libraries(geometries matrices)
 
 
 #-- gtest
@@ -67,12 +67,12 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 # test linear algebra
-add_executable(linear_algebra_unit_test
-    "tests/test_linear_algebra.cpp"
+add_executable(matrices_unit_test
+    "tests/test_matrices.cpp"
 )
-target_link_libraries(linear_algebra_unit_test
+target_link_libraries(matrices_unit_test
     GTest::gtest_main
-    linear_algebra
+    matrices
 )
 
 #test geometries
@@ -86,6 +86,6 @@ target_link_libraries(geometries_unit_test
 
 include(GoogleTest)
 gtest_discover_tests(
-    linear_algebra_unit_test
+    matrices_unit_test
     geometries_unit_test
 )

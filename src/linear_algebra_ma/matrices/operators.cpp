@@ -1,4 +1,4 @@
-#include "linear_algebra_ma/linearAlgebra.hpp"
+#include "linear_algebra_ma/matrices.hpp"
 
 namespace MA
 {

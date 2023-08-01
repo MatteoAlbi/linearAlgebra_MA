@@ -1,5 +1,5 @@
-#ifndef MA_GEOMETRIES
-#define MA_GEOMETRIES
+#ifndef MA_LINE
+#define MA_LINE
 
 #include <utility>
 #include <vector>
@@ -7,39 +7,14 @@
 #include <string>
 #include <math.h>
 
-#include "linear_algebra_ma/linearAlgebra.hpp"
+#include "linear_algebra_ma/matrices.hpp"
+#include "linear_algebra_ma/geometries/point.hpp"
 
 
 namespace MA
 {
-
-class Point{
-public:
-    Point(double x = NAN, double y = NAN);
-
-    const double & x() const;
-    const double & y() const;
-    double & x();
-    double & y();
-    void x(const double & x);
-    void y(const double & y);
-
-    bool operator==(const Point & p) const;
-    bool operator==(Point const * const p) const;
-
-    bool operator!=(const Point & p) const;
-    bool operator!=(Point const * const p) const;
-
-    double distance(const Point & p) const;
-
-    bool isnan() const;
-
-private:
-    double _x;
-    double _y;
-
-};
-
+namespace geometries
+{
 
 class Line{
 public:
@@ -69,8 +44,8 @@ private:
     Point _p2;
 };
 
-
+} // namespace geometries
 } // namespace MA
 
 
-#endif // MA_GEOMETRIES
+#endif // MA_LINE

@@ -1,6 +1,8 @@
-#include "linear_algebra_ma/geometries.hpp"
+#include "linear_algebra_ma/geometries/line.hpp"
 
 namespace MA
+{
+namespace geometries
 {
 
 Line::Line(Point p1, Point p2): _p1(p1), _p2(p2) {}
@@ -35,13 +37,17 @@ double Line::slope() const{
 }
 
 double Line::distance(const Point & p) const{
+    double line_points_dist = _p2.distance(_p1);
+    if(line_points_dist == 0) return _p2.distance(p);
+
     return fabs((_p2.x() - _p1.x()) * (_p1.y() - p.y()) - 
                 (_p2.y() - _p1.y()) * (_p1.x() - p.x())) 
-                / sqrt(_p2.distance(_p1));
+                / sqrt(line_points_dist);
 }
 
 Point Line::intersection(const Line & l) const{
     return l.p1();
 }
 
+} // namespace geometries
 } // namespace MA

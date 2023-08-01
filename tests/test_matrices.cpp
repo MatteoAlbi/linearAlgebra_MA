@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "linear_algebra_ma/linearAlgebra.hpp"
+#include "linear_algebra_ma/matrices.hpp"
 
 using namespace MA;
 
@@ -272,7 +272,7 @@ TEST(Matrix, sum_operator){
     EXPECT_NO_THROW(Matrix(0,3)+=7.72);
     EXPECT_NO_THROW(Matrix(3,0)+8.13);
 
-    // matrix
+    // matrices
     m1 = Matrix(3,4,v1);
     v2 = v1;
     Matrix m2 = m1 + 2.28;
@@ -309,7 +309,7 @@ TEST(Matrix, subtract_operator){
     EXPECT_NO_THROW(Matrix(0,3)-=7.72);
     EXPECT_NO_THROW(Matrix(3,0)-8.13);
 
-    // matrix
+    // matrices
     m1 = Matrix(3,4,v1);
     v2 = v1;
     Matrix m2 = m1 + 2;
@@ -349,7 +349,7 @@ TEST(Matrix, multiply_operator){
     EXPECT_NO_THROW(Matrix(0,3)*=2.5);
     EXPECT_NO_THROW(Matrix(3,0)*2.5);
 
-    // matrix
+    // matrices
     m1 = Matrix(3,4,v1);
     v2 = v1;
     Matrix m2 = m1({1,2}, {0,3}).t();
@@ -389,7 +389,7 @@ TEST(Matrix, divide_operator){
     EXPECT_NO_THROW(Matrix(0,3)/=2.5);
     EXPECT_NO_THROW(Matrix(3,0)/2.5);
 
-    // matrix
+    // matrices
     Matrix A(4,4,
         {1,3,4,2,
          0,2,1,-2,
@@ -566,7 +566,7 @@ TEST(Matrix, qr_dec){
 */
 
 TEST(Matrix, lu_dec){
-    // matrix not square
+    // matrices not square
     Matrix m1,L,U;
     m1 = Matrix (3,4,
         {1,3,5,9,
@@ -576,7 +576,7 @@ TEST(Matrix, lu_dec){
     );
     EXPECT_THROW(m1.lu_dec(L,U), invalid_argument);
 
-    // matrix decomposable
+    // matrices decomposable
     m1 = Matrix (4,4,
         {1,3,5,2,
          0,2,1,6,
@@ -586,7 +586,7 @@ TEST(Matrix, lu_dec){
     EXPECT_NO_THROW(m1.lu_dec(L,U));
     EXPECT_TRUE(L*U == m1);
 
-    // matrix not decomposable
+    // matrices not decomposable
     m1 = Matrix(4,4,
         {1,3,5,9,
          1,3,1,7,

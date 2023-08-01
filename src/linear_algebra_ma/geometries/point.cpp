@@ -1,6 +1,8 @@
-#include "linear_algebra_ma/geometries.hpp"
+#include "linear_algebra_ma/geometries/point.hpp"
 
 namespace MA
+{
+namespace geometries
 {
 
 Point::Point(double x, double y): _x(x), _y(y) {}
@@ -31,6 +33,7 @@ bool Point::operator!=(Point const * const p) const{
 }
 
 double Point::distance(const Point & p) const{
+    if(this->isnan() || p.isnan()) return NAN;
     return sqrt(pow(this->_x - p._x, 2) + pow(this->_y - p._y,2));
 }
 
@@ -38,4 +41,9 @@ bool Point::isnan() const{
     return (std::isnan(_x) || std::isnan(_y));
 }
 
+bool Point::isinf() const{
+    return (std::isinf(_x) || std::isinf(_y));
+}
+
+} // namespace geometries
 } // namespace MA

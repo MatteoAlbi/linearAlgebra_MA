@@ -246,7 +246,7 @@ Matrix operator-(const Matrix& m1, const Matrix& m2){
 }
 #pragma endregion subtract
 
-#pragma region multiplication
+#pragma region multiply
 void Matrix::operator*=(const double & k){
     for(uint i=0; i<this->_r; i++){
         for(uint j=0; j<this->_c; j++){
@@ -297,9 +297,9 @@ Matrix operator*(const Matrix& m1, const Matrix& m2){
 
     return ret;
 }
-#pragma endregion multiplication
+#pragma endregion multiply
 
-#pragma region right_division
+#pragma region right_divide
 void Matrix::operator/=(const double & k){
     for(uint i=0; i<this->_r; i++){
         for(uint j=0; j<this->_c; j++){
@@ -365,7 +365,7 @@ Matrix operator/(const Matrix& m1, const Matrix& m2){
     return m1*inv;
 }
 */
-#pragma endregion right_division
+#pragma endregion right_divide
 
 #pragma region concatenate
 void Matrix::operator&=(const Matrix & m){

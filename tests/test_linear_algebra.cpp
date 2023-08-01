@@ -332,3 +332,120 @@ TEST(Matrix, norm2){
     EXPECT_EQ(m1({3,3},{1,1}).norm2(), 2);
 }
 
+TEST(Matrix, sum_operator){
+    std::vector<double> v1 =  {10,11,12,13,14,15,16,17,18,19,20,21};
+    std::vector<double> v2 = v1;
+    Matrix m1(3,4,v1);
+
+    // int
+    for(int i=0; i<v2.size(); i++) v2[i]+=7;
+    EXPECT_TRUE(m1+7 == Matrix(3,4, v2));
+    m1+=7;
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)+=3);
+    EXPECT_NO_THROW(Matrix(3,0)+3);
+
+    // double
+    m1 = Matrix(3,4,v1);
+    v2 = v1;
+    for(int i=0; i<v2.size(); i++) v2[i]+=(-3.14);
+    EXPECT_TRUE(m1+(-3.14) == Matrix(3,4, v2));
+    m1+=(-3.14);
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)+=7.72);
+    EXPECT_NO_THROW(Matrix(3,0)+8.13);
+
+    // matrix
+    m1 = Matrix(3,4,v1);
+    v2 = v1;
+    Matrix m2 = m1 + 2.28;
+    for(int i=0; i<v2.size(); i++) v2[i] = v2[i] + v2[i] + 2.28;
+    EXPECT_TRUE((m1+m2) == Matrix(3,4, v2));
+    m1+=m2;
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+
+    Matrix m3(4,3, v2);
+    EXPECT_THROW(m1+m3, invalid_argument);
+    EXPECT_THROW(m1+=m3, invalid_argument);
+}
+
+TEST(Matrix, subtract_operator){
+    std::vector<double> v1 =  {10,11,12,13,14,15,16,17,18,19,20,21};
+    std::vector<double> v2 = v1;
+    Matrix m1(3,4,v1);
+
+    // int
+    for(int i=0; i<v2.size(); i++) v2[i]-=7;
+    EXPECT_TRUE(m1-7 == Matrix(3,4, v2));
+    m1-=7;
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)-=3);
+    EXPECT_NO_THROW(Matrix(3,0)-3);
+
+    // double
+    m1 = Matrix(3,4,v1);
+    v2 = v1;
+    for(int i=0; i<v2.size(); i++) v2[i]-=(-3.14);
+    EXPECT_TRUE(m1-(-3.14) == Matrix(3,4, v2));
+    m1-=(-3.14);
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)-=7.72);
+    EXPECT_NO_THROW(Matrix(3,0)-8.13);
+
+    // matrix
+    m1 = Matrix(3,4,v1);
+    v2 = v1;
+    Matrix m2 = m1 + 2;
+    for(int i=0; i<v2.size(); i++) v2[i] = v2[i] - v2[i] - 2;
+    EXPECT_TRUE((m1-m2) == Matrix(3,4, v2));
+    // cout << m1-m2 << endl;
+    // cout << Matrix(3,4, v2) << endl;
+    m1-=m2;
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+
+    Matrix m3(4,3, v2);
+    EXPECT_THROW(m1-m3, invalid_argument);
+    EXPECT_THROW(m1-=m3, invalid_argument);
+
+}
+
+TEST(Matrix, multiply_operator){
+    std::vector<double> v1 =  {1,3,5,9,1,3,1,7,4,3,9,7};
+    std::vector<double> v2 = v1;
+    Matrix m1(3,4,v1);
+
+    // int
+    for(int i=0; i<v2.size(); i++) v2[i]*=2;
+    EXPECT_TRUE(m1*2 == Matrix(3,4, v2));
+    m1*=2;
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)*=2);
+    EXPECT_NO_THROW(Matrix(3,0)*2);
+
+    // double
+    m1 = Matrix(3,4,v1);
+    v2 = v1;
+    for(int i=0; i<v2.size(); i++) v2[i]*=2.5;
+    EXPECT_TRUE(m1*2.5 == Matrix(3,4, v2));
+    m1*=2.5;
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)*=2.5);
+    EXPECT_NO_THROW(Matrix(3,0)*2.5);
+
+    // matrix
+    m1 = Matrix(3,4,v1);
+    v2 = v1;
+    Matrix m2 = m1({1,2}, {0,3}).t();
+    EXPECT_TRUE((m1*m2) == Matrix(3,2, {78,121,60,71,71,155}));
+    m1*=m2;
+    EXPECT_TRUE(m1 == Matrix(3,2, {78,121,60,71,71,155}));
+    m1 = Matrix(3,4,v1);
+    EXPECT_TRUE(m1(1,{1,3})*m1({0,2},2) == Matrix(1,1, {79}));
+    m1*=m1.t();
+    EXPECT_TRUE(m1 == Matrix(3,3, {116,78,121,78,60,71,121,71,155}));
+    m1 = Matrix(3,4,v1);
+    m2 = m1({1,2}, {0,3});
+    EXPECT_THROW(m1*m2, invalid_argument);
+    EXPECT_THROW(m1*=m1, invalid_argument);
+
+}

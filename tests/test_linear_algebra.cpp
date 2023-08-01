@@ -52,46 +52,6 @@ TEST(Matrix, constructor_get) {
     EXPECT_EQ(tmp[5], 6);
 }
 
-TEST(Matrix, equal_operator){
-    std::vector<double> v1 = 
-        {10,11,12,13,
-         14,15,16,17,
-         18,19,20,21,
-         22,23,24,25};
-    std::vector<double> v2 = 
-        {10,11,12,13,
-         4,5,6,7,
-         8,9,10,11,
-         12,13,14,15};
-
-    EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(4, 3, v1));
-    EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(3, 3, v1));
-    EXPECT_TRUE(Matrix(2, 4, v1) == Matrix(2, 4, v1));
-    EXPECT_TRUE(Matrix(2, 4, v1) == new Matrix(2, 4, v1));
-    EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(3, 4, v2));
-    EXPECT_FALSE(Matrix(3, 4, v1) == new Matrix(3, 4, v2));
-}
-
-TEST(Matrix, unequal_operator){
-    std::vector<double> v1 = 
-        {10,11,12,13,
-         14,15,16,17,
-         18,19,20,21,
-         22,23,24,25};
-    std::vector<double> v2 = 
-        {10,11,12,13,
-         4,5,6,7,
-         8,9,10,11,
-         12,13,14,15};
-
-    EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(4, 3, v1));
-    EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(3, 3, v1));
-    EXPECT_FALSE(Matrix(2, 4, v1) != Matrix(2, 4, v1));
-    EXPECT_FALSE(Matrix(2, 4, v1) != new Matrix(2, 4, v1));
-    EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(3, 4, v2));
-    EXPECT_TRUE(Matrix(3, 4, v1) != new Matrix(3, 4, v2));
-}
-
 TEST(Matrix, access_operator){
     Matrix m2;
     Matrix m1(4,4,
@@ -249,87 +209,44 @@ TEST(Matrix, transpose){
     }
 }
 
-TEST(Matrix, cofactor){
-    Matrix m2;
-
-    Matrix m1(3,4,
+TEST(Matrix, equal_operator){
+    std::vector<double> v1 = 
         {10,11,12,13,
          14,15,16,17,
-         18,19,20,21}
-    );
-    EXPECT_THROW(m1.cof(3,2), invalid_argument);
-    EXPECT_THROW(m1.cof(0,4), invalid_argument);
-    EXPECT_NO_THROW(m2 = m1.cof(1,2));
-    EXPECT_EQ(m2.getR(), (uint)2);
-    EXPECT_EQ(m2.getC(), (uint)3);
-    for(int i=0; i<2; i++) for(int j=0;j<3;j++){
-        uint k = i > 0 ? i+1 : i;
-        uint l = j > 1 ? j+1 : j;
-        EXPECT_EQ(m2(i,j), m1(k,l));
-    }
+         18,19,20,21,
+         22,23,24,25};
+    std::vector<double> v2 = 
+        {10,11,12,13,
+         4,5,6,7,
+         8,9,10,11,
+         12,13,14,15};
 
-    m1 = Matrix(1,5,
-        {10,11,12,13,14}
-    );
-    EXPECT_NO_THROW(m2 = m1.cof(0,3));
-    EXPECT_EQ(m2.getR(), (uint)0);
-    EXPECT_EQ(m2.getC(), (uint)4);
-    EXPECT_THROW(m2(0,0), out_of_range);
-
+    EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(4, 3, v1));
+    EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(3, 3, v1));
+    EXPECT_TRUE(Matrix(2, 4, v1) == Matrix(2, 4, v1));
+    EXPECT_TRUE(Matrix(2, 4, v1) == new Matrix(2, 4, v1));
+    EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(3, 4, v2));
+    EXPECT_FALSE(Matrix(3, 4, v1) == new Matrix(3, 4, v2));
 }
 
-TEST(Matrix, determinant){
-    Matrix m1(3,4,
+TEST(Matrix, unequal_operator){
+    std::vector<double> v1 = 
         {10,11,12,13,
          14,15,16,17,
-         18,19,20,21}
-    );
-    EXPECT_THROW(m1.det(), invalid_argument);
+         18,19,20,21,
+         22,23,24,25};
+    std::vector<double> v2 = 
+        {10,11,12,13,
+         4,5,6,7,
+         8,9,10,11,
+         12,13,14,15};
 
-    m1 = Matrix(4,4,
-        {1,3,5,9,
-         1,3,1,7,
-         4,3,9,7,
-         5,2,0,9}
-    );
-    
-    // 1x1
-    EXPECT_EQ(m1({0,0},{0,0}).det(), 1);
-    EXPECT_EQ(m1({2,2},{1,1}).det(), 3);
-    // 2x2
-    EXPECT_EQ(m1({1,2},{2,3}).det(), -56);
-    // 3x3
-    EXPECT_EQ(m1({1,3},{0,2}).det(), 110);
-    // 4x4
-    EXPECT_EQ(m1.det(), -376);
-}
-
-/*
-TEST(Matrix, adj){
-    // TODO
-}
-
-TEST(Matrix, inv){
-    // TODO
-}
-
-TEST(Matrix, pinv_left){
-    // TODO
-}
-*/
-
-TEST(Matrix, norm2){
-    Matrix m1(4,4,
-        {1,3,5,9,
-         1,3,1,7,
-         4,3,9,7,
-         5,2,0,9}
-    );
-
-    EXPECT_THROW(m1.norm2(), invalid_argument);
-    EXPECT_EQ(m1(2,{0,3}).norm2(), sqrt(155));
-    EXPECT_EQ(m1({0,2},1).norm2(), sqrt(27));
-    EXPECT_EQ(m1({3,3},{1,1}).norm2(), 2);
+    EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(4, 3, v1));
+    EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(3, 3, v1));
+    EXPECT_FALSE(Matrix(2, 4, v1) != Matrix(2, 4, v1));
+    EXPECT_FALSE(Matrix(2, 4, v1) != new Matrix(2, 4, v1));
+    EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(3, 4, v2));
+    EXPECT_TRUE(Matrix(3, 4, v1) != new Matrix(3, 4, v2));
 }
 
 TEST(Matrix, sum_operator){
@@ -447,5 +364,157 @@ TEST(Matrix, multiply_operator){
     m2 = m1({1,2}, {0,3});
     EXPECT_THROW(m1*m2, invalid_argument);
     EXPECT_THROW(m1*=m1, invalid_argument);
+}
+
+TEST(Matrix, divide_operator){
+    std::vector<double> v1 =  {1,3,5,9,1,3,1,7,4,3,9,7};
+    std::vector<double> v2 = v1;
+    Matrix m1(3,4,v1);
+
+    // int
+    for(int i=0; i<v2.size(); i++) v2[i]/=2;
+    EXPECT_TRUE(m1/2 == Matrix(3,4, v2));
+    m1/=2;
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)/=2);
+    EXPECT_NO_THROW(Matrix(3,0)/2);
+
+    // double
+    m1 = Matrix(3,4,v1);
+    v2 = v1;
+    for(int i=0; i<v2.size(); i++) v2[i]/=2.5;
+    EXPECT_TRUE(m1/2.5 == Matrix(3,4, v2));
+    m1/=2.5;
+    EXPECT_TRUE(m1 == Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)/=2.5);
+    EXPECT_NO_THROW(Matrix(3,0)/2.5);
+
+    // matrix
+    // TODO, yet to implement
+}
+
+/*
+TEST(Matrix, concatenate_operators){
+    // TODO
+}
+*/
+
+TEST(Matrix, cofactor){
+    Matrix m2;
+
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.submat_del(3,2), invalid_argument);
+    EXPECT_THROW(m1.submat_del(0,4), invalid_argument);
+    EXPECT_NO_THROW(m2 = m1.submat_del(1,2));
+    EXPECT_EQ(m2.getR(), (uint)2);
+    EXPECT_EQ(m2.getC(), (uint)3);
+    for(int i=0; i<2; i++) for(int j=0;j<3;j++){
+        uint k = i > 0 ? i+1 : i;
+        uint l = j > 1 ? j+1 : j;
+        EXPECT_EQ(m2(i,j), m1(k,l));
+    }
+
+    m1 = Matrix(1,5,
+        {10,11,12,13,14}
+    );
+    EXPECT_NO_THROW(m2 = m1.submat_del(0,3));
+    EXPECT_EQ(m2.getR(), (uint)0);
+    EXPECT_EQ(m2.getC(), (uint)4);
+    EXPECT_THROW(m2(0,0), out_of_range);
+
+}
+
+TEST(Matrix, determinant){
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.det(), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    
+    // 1x1
+    EXPECT_EQ(m1({0,0},{0,0}).det(), 1);
+    EXPECT_EQ(m1({2,2},{1,1}).det(), 3);
+    // 2x2
+    EXPECT_EQ(m1({1,2},{2,3}).det(), -56);
+    // 3x3
+    EXPECT_EQ(m1({1,3},{0,2}).det(), 110);
+    // 4x4
+    EXPECT_EQ(m1.det(), -376);
+}
+
+/*
+TEST(Matrix, adj){
+    // TODO
+}
+
+TEST(Matrix, inv){
+    // TODO
+}
+
+TEST(Matrix, pinv_left){
+    // TODO
+}
+*/
+
+TEST(Matrix, norm2){
+    Matrix m1(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+
+    EXPECT_THROW(m1.norm2(), invalid_argument);
+    EXPECT_EQ(m1(2,{0,3}).norm2(), sqrt(155));
+    EXPECT_EQ(m1({0,2},1).norm2(), sqrt(27));
+    EXPECT_EQ(m1({3,3},{1,1}).norm2(), 2);
+}
+
+TEST(Matrix, normalize){
+    Matrix m1(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_THROW(m1.normalize(), invalid_argument);
+
+    Matrix m2(1,4, {4,4,4,4});
+    EXPECT_TRUE(m2.normalize() == Matrix(1,4, {0.5,0.5,0.5,0.5}));
+}
+
+TEST(Matrix, normalize_self){
+    Matrix m1(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_THROW(m1.normalize_self(), invalid_argument);
+
+    Matrix m2(1,4, {4,4,4,4});
+    m2.normalize_self();
+    EXPECT_TRUE(m2 == Matrix(1,4, {0.5,0.5,0.5,0.5}));
+}
+
+
+
+TEST(Matrix, qr_dec){
+    // TODO
+}
+
+TEST(Matrix, lu_dec){
 
 }

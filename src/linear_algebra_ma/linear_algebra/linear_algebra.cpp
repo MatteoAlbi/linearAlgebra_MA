@@ -427,11 +427,11 @@ Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
             tmp = 0;
             // printf("start k loop with i:%d, j:%d\n", i, j);
             for(int k=U.getR()-1; k>j; k--){ //col of U = row of res
-                tmp += U(j, k) * res(k, i);
+                tmp += U(j,k) * res(k,i);
                 // printf("i:%d j:%d k:%d\n",i,j,k);
             }
             
-            res(j, i) = (B(j, i) - tmp) / U(j, j);
+            res(j, i) = (B(j,i) - tmp) / U(j,j);
             // printf("%f\t%f\n",tmp,res[j*B.getC() + i]);
         }
         // printf("\n");
@@ -441,25 +441,33 @@ Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
 }
 
 
-// void forward_sub(const double *const L, const double *const B, 
-//                  double *const res, const uint n, const uint c_b){
-//     double tmp;
+Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
+    if(L.getC() != L.getR()) throw invalid_argument("Coefficient matrix L must be square");
+    if(B.getR() != L.getC()) throw invalid_argument("Rows of B must be equal to the columns of L");
+    // check all L diagonal elements are different from zero
+    for(uint i=0; i<L.getC(); i++) if(L(i,i) == 0){
+        throw runtime_error("System of equation is underdetermined");
+    }
+
+    Matrix res(L.getR(), B.getC());
     
-//     for(uint j=0; j<n; j++){ //row of res == row of L == row of B
-//         // printf("j: %d\n", j);
-//         for(uint i=0; i<c_b; i++){ //col of res == col of B
-//             // printf("i: %d\n", i);
-//             tmp = 0;
-//             for(uint k=0; k<j; k++){ //col of L = row of res
-//                 // printf("k: %d\n", k);
-//                 tmp += L[j*n + k] * res[k*c_b + i];
-//             }
-//             // printf("%f\n", tmp);
-//             res[j*c_b + i] = (B[j*c_b + i] - tmp) / L[j*n + j];
-//         }
-//     }
+    double tmp;
+    for(uint j=0; j<L.getR(); j++){ //row of res == row of L == row of B
+        // printf("j: %d\n", j);
+        for(uint i=0; i<B.getC(); i++){ //col of res == col of B
+            // printf("i: %d\n", i);
+            tmp = 0;
+            for(uint k=0; k<j; k++){ //col of L = row of res
+                // printf("k: %d\n", k);
+                tmp += L(j,k) * res(k,i);
+            }
+            // printf("%f\n", tmp);
+            res(j,i) = (B(j,i) - tmp) / L(j,j);
+        }
+    }
     
-// }
+    return res;
+}
 
 
 // void matrix_l_divide(const double *const A, const double *const B, 

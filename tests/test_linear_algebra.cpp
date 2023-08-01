@@ -579,9 +579,37 @@ TEST(Matrix, backward_sub){
     U(2,2) = 2;
     
     // solve
-    cout << Matrix::backward_sub(U, b) << endl;
+    // cout << Matrix::backward_sub(U, b) << endl;
     EXPECT_TRUE(Matrix::backward_sub(U, b) == Matrix(4,1, {2,2,-3,1}));
 
 }
 
+TEST(Matrix, forward_sub){
+    Matrix L,b;
+    L = Matrix(4,4,
+        {1,3,5,9,
+         0,1,1,7,
+         0,0,2,7,
+         0,0,0,3}
+    ).t();
+    b = Matrix(4,1, {2,6,1,3});
+
+    // L not square
+    EXPECT_THROW(Matrix::forward_sub(L({0,3},{1,3}), b), invalid_argument);
+    // b.rows != L.cols
+    EXPECT_THROW(Matrix::forward_sub(L, b({1,3},0)), invalid_argument);
+    // underdetermined
+    L(2,2) = 0;
+    EXPECT_THROW(Matrix::forward_sub(L, b), runtime_error);
+    L(2,2) = 2;
+    
+    // solve
+    // cout << Matrix::forward_sub(L, b) << endl;
+    EXPECT_TRUE(Matrix::forward_sub(L, b) == Matrix(4,1, {2,0,-4.5,5.5}));
+
+}
+
+TEST(Matrix, matrix_l_divide){
+    
+}
 

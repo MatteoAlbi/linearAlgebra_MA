@@ -2,7 +2,8 @@
 
 namespace MA
 {
-    
+
+#pragma region access
 double& Matrix::operator()(const uint & r, const uint & c){
     if(r >= this->_r) throw out_of_range("Row index out of range");
     if(c >= this->_c) throw out_of_range("Col index out of range");
@@ -50,7 +51,6 @@ Matrix Matrix::operator()(pair<uint,uint> rs, const uint & c) const{
     if(c >= this->_c) throw out_of_range("Col index out of range");
     if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second");
 
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
     Matrix ret = Matrix(rs.second - rs.first + 1, 1);
 
     for(uint i=0; i<ret._r; i++){
@@ -81,8 +81,6 @@ Matrix Matrix::operator()(pair<uint,uint> rs, pair<uint,uint> cs) const{
     if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw invalid_argument("Col first element must be <= of second");
 
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
     Matrix ret = Matrix(rs.second - rs.first + 1, cs.second - cs.first + 1);
 
     for(uint i=0; i<ret._r; i++){
@@ -93,7 +91,9 @@ Matrix Matrix::operator()(pair<uint,uint> rs, pair<uint,uint> cs) const{
 
     return ret;
 }
+#pragma endregion access
 
+#pragma region assign
 Matrix& Matrix::operator=(const Matrix& m){
     if (this == &m) return *this;
 
@@ -105,7 +105,7 @@ Matrix& Matrix::operator=(const Matrix& m){
     // redimension
     if(prev_size != this->size()){
         if(this->_v != nullptr) delete[] this->_v;
-        this->_v = new double[this->_r*this->_c];
+        this->_v = new double[this->size()];
     }
     // set values
     std::copy(m._v, m._v + m.size(), this->_v);
@@ -116,8 +116,35 @@ Matrix& Matrix::operator=(const Matrix& m){
 Matrix& Matrix::operator=(Matrix const * const m){
     return this->operator=(*m);
 }
+#pragma endregion assign
 
+#pragma region comparators
+bool Matrix::operator==(const Matrix & m) const{
+    // check shape
+    if(this->getR() != m.getR()) return false;
+    if(this->getC() != m.getC()) return false;
+    // check values
+    for(uint i=0; i<m.getR(); i++) for(uint j=0; j<m.getC(); j++){
+        if((*this)(i,j) != m(i,j)) return false;
+    }
 
+    return true;
+}
+
+bool Matrix::operator==(const Matrix * const m) const{
+    return this->operator==(*m);
+}
+
+bool Matrix::operator!=(const Matrix & m) const{
+    return ! this->operator==(m);
+}
+
+bool Matrix::operator!=(const Matrix * const m) const{
+    return ! this->operator==(*m);
+}
+#pragma endregion comparators
+
+#pragma region sum
 void Matrix::operator+=(const double & k){
     for(uint i=0; i<this->_r; i++){
         for(uint j=0; j<this->_c; j++){
@@ -144,6 +171,31 @@ void Matrix::operator+=(const Matrix & m){
     }
 }
 
+Matrix operator+(const Matrix& m, const double& k){
+    Matrix ret = m;
+    ret+=k;
+
+    return ret;
+}
+
+Matrix operator+(const Matrix& m, const int& k){
+    Matrix ret = m;
+    ret+=k;
+
+    return ret;
+}
+
+Matrix operator+(const Matrix& m1, const Matrix& m2){
+    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw invalid_argument("Matrices' shapes don't match");
+    
+    Matrix ret = m1;
+    ret+=m2;
+
+    return ret;
+}
+#pragma endregion sum
+
+#pragma region subtract
 void Matrix::operator-=(const double & k){
     for(uint i=0; i<this->_r; i++){
         for(uint j=0; j<this->_c; j++){
@@ -170,6 +222,31 @@ void Matrix::operator-=(const Matrix & m){
     }
 }
 
+Matrix operator-(const Matrix& m, const double& k){
+    Matrix ret = m;
+    ret-=k;
+
+    return ret;
+}
+
+Matrix operator-(const Matrix& m, const int& k){
+    Matrix ret = m;
+    ret-=k;
+
+    return ret;
+}
+
+Matrix operator-(const Matrix& m1, const Matrix& m2){
+    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw invalid_argument("Matrices' shapes don't match");
+    
+    Matrix ret = m1;
+    ret-=m2;
+
+    return ret;
+}
+#pragma endregion subtract
+
+#pragma region multiplication
 void Matrix::operator*=(const double & k){
     for(uint i=0; i<this->_r; i++){
         for(uint j=0; j<this->_c; j++){
@@ -190,6 +267,39 @@ void Matrix::operator*=(const Matrix & m){
     this->operator=((*this) * m);
 }
 
+Matrix operator*(const Matrix& m, const double& k){
+    Matrix ret = m;
+    ret*=k;
+
+    return ret;
+}
+
+Matrix operator*(const Matrix& m, const int& k){
+    Matrix ret = m;
+    ret*=k;
+
+    return ret;
+}
+
+Matrix operator*(const Matrix& m1, const Matrix& m2){
+    if(m1.getC() != m2.getR()) throw invalid_argument("Matrices' shapes don't match");
+    
+    Matrix ret = Matrix(m1.getR(), m2.getC());
+
+    for (uint i = 0; i<m1.getR(); i++) {
+        for (uint j = 0; j<m2.getC(); j++) {
+            ret(i,j) = 0;
+            for (uint k = 0; k<m1.getC(); k++) {
+                ret(i,j) += m1(i,k) * m2(k,j);
+            }
+        }
+    }
+
+    return ret;
+}
+#pragma endregion multiplication
+
+#pragma region right_division
 void Matrix::operator/=(const double & k){
     for(uint i=0; i<this->_r; i++){
         for(uint j=0; j<this->_c; j++){
@@ -224,123 +334,6 @@ void Matrix::operator/=(const Matrix & m){
 }
 */
 
-
-void Matrix::operator&=(const Matrix & m){
-    this->operator=((*this) & m);
-}
-
-void Matrix::operator|=(const Matrix & m){
-    this->operator=((*this) | m);
-}
-
-
-
-ostream& operator<<(ostream& os, const Matrix& m){
-    os << "Matrix(" << m.getR() << "x" << m.getC() << ")" << endl;
-    for(uint i=0; i<m.getR(); i++){
-        if(i>0) os << endl;
-        for(uint j=0; j<m.getC(); j++){
-            if(j>0) os << " ";
-            os << m(i,j);
-        }
-    }
-    
-    return os;
-}
-
-ostream& operator<<(ostream& os, const Matrix * m){
-    os << "Matrix(" << m->getR() << "x" << m->getC() << ")" << endl;
-    for(uint i=0; i<m->getR(); i++){
-        if(i>0) os << endl;
-        for(uint j=0; j<m->getC(); j++){
-            if(j>0) os << " ";
-            os << m->operator()(i,j);
-        }
-    }
-    
-    return os;
-}
-
-
-
-Matrix operator+(const Matrix& m, const double& k){
-    Matrix ret = m;
-    ret+=k;
-
-    return ret;
-}
-
-Matrix operator+(const Matrix& m, const int& k){
-    Matrix ret = m;
-    ret+=k;
-
-    return ret;
-}
-
-Matrix operator+(const Matrix& m1, const Matrix& m2){
-    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw invalid_argument("Matrices' shapes don't match");
-    
-    Matrix ret = m1;
-    ret+=m2;
-
-    return ret;
-}
-
-Matrix operator-(const Matrix& m, const double& k){
-    Matrix ret = m;
-    ret-=k;
-
-    return ret;
-}
-
-Matrix operator-(const Matrix& m, const int& k){
-    Matrix ret = m;
-    ret-=k;
-
-    return ret;
-}
-
-Matrix operator-(const Matrix& m1, const Matrix& m2){
-    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw invalid_argument("Matrices' shapes don't match");
-    
-    Matrix ret = m1;
-    ret-=m2;
-
-    return ret;
-}
-
-Matrix operator*(const Matrix& m, const double& k){
-    Matrix ret = m;
-    ret*=k;
-
-    return ret;
-}
-
-Matrix operator*(const Matrix& m, const int& k){
-    Matrix ret = m;
-    ret*=k;
-
-    return ret;
-}
-
-Matrix operator*(const Matrix& m1, const Matrix& m2){
-    if(m1.getC() != m2.getR()) throw invalid_argument("Matrices' shapes don't match");
-    
-    Matrix ret = Matrix(m1.getR(), m2.getC());
-
-    for (uint i = 0; i<m1.getR(); i++) {
-        for (uint j = 0; j<m2.getC(); j++) {
-            ret(i,j) = 0;
-            for (uint k = 0; k<m1.getC(); k++) {
-                ret(i,j) += m1(i,k) * m2(k,j);
-            }
-        }
-    }
-
-    return ret;
-}
-
-
 Matrix operator/(const Matrix& m, const double& k){
     Matrix ret = m;
     ret/=k;
@@ -372,7 +365,16 @@ Matrix operator/(const Matrix& m1, const Matrix& m2){
     return m1*inv;
 }
 */
+#pragma endregion right_division
 
+#pragma region concatenate
+void Matrix::operator&=(const Matrix & m){
+    this->operator=((*this) & m);
+}
+
+void Matrix::operator|=(const Matrix & m){
+    this->operator=((*this) | m);
+}
 
 Matrix operator&(const Matrix& m1, const Matrix& m2){
     if(m1.getR() != m2.getR()) throw invalid_argument("Matrices must have same number of rows");
@@ -402,6 +404,34 @@ Matrix operator|(const Matrix& m1, const Matrix& m2){
     }
 
     return ret;
+}
+#pragma endregion concatenate
+
+
+ostream& operator<<(ostream& os, const Matrix& m){
+    os << "Matrix(" << m.getR() << "x" << m.getC() << ")" << endl;
+    for(uint i=0; i<m.getR(); i++){
+        if(i>0) os << endl;
+        for(uint j=0; j<m.getC(); j++){
+            if(j>0) os << " ";
+            os << m(i,j);
+        }
+    }
+    
+    return os;
+}
+
+ostream& operator<<(ostream& os, const Matrix * m){
+    os << "Matrix(" << m->getR() << "x" << m->getC() << ")" << endl;
+    for(uint i=0; i<m->getR(); i++){
+        if(i>0) os << endl;
+        for(uint j=0; j<m->getC(); j++){
+            if(j>0) os << " ";
+            os << m->operator()(i,j);
+        }
+    }
+    
+    return os;
 }
 
 

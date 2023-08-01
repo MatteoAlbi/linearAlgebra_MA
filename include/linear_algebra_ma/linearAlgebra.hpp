@@ -72,6 +72,14 @@ public:
     void setV(pair<uint,uint> rs, pair<uint,uint> cs, Matrix m);
 #pragma endregion get_set
 
+#pragma region comparators
+    bool operator==(const Matrix & m) const;
+    bool operator==(const Matrix * const m) const;
+
+    bool operator!=(const Matrix & m) const;
+    bool operator!=(const Matrix * const m) const;
+#pragma endregion comparators
+
 #pragma region math_operators
     void operator+=(const double & k);
     void operator+=(const int & k);

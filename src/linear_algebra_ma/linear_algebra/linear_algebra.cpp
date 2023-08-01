@@ -107,7 +107,7 @@ Matrix Matrix::t() const{
     return ret;
 }
 
-Matrix Matrix::cof(const uint & p, const uint & q) const{
+Matrix Matrix::submat_del(const uint & p, const uint & q) const{
     if(this->_r <= p) throw invalid_argument("p greater than matrix rows");
     if(this->_c <= q) throw invalid_argument("q greater than matrix cols");
 
@@ -158,14 +158,14 @@ double Matrix::det() const{
     else{
         double D = 0; // Initialize result
 
-        Matrix cof = Matrix(); // To store cofactors
+        Matrix sub;
         int sign = 1; // To store sign multiplier
     
         // Iterate for each element of first row
         for (uint j = 0; j < this->_c; j++){
-            // Getting Cofactor of m->v[0][f]
-            cof = this->cof(0, j);
-            D += sign * this->_v[j] * cof.det();
+            // submatrix of m->v[0][f]
+            sub = this->submat_del(0, j);
+            D += sign * this->_v[j] * sub.det();
     
             // terms are to be added with alternate sign
             sign = -sign;
@@ -175,35 +175,36 @@ double Matrix::det() const{
     }
 }
 
+double Matrix::minor(const uint & p, const uint & q) const{
+    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+
+    return this->submat_del(p,q).det();
+}
+
+double Matrix::cof(const uint & p, const uint & q) const{
+    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+
+    int sign = (p+q % 2) == 0 ? 1 : -1;
+    return this->submat_del(p,q).det() * sign;
+}
+
+Matrix Matrix::cof_mat() const{
+    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+
+    Matrix ret(this->_r, this->_c);
+    for(uint i=0; i<this->_r; i++) for(uint j=0; j<this->_c; j++){
+        ret(i,j) = this->cof(i,j);
+    }
+}
+
 Matrix Matrix::adj() const{
     if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
 
-    Matrix ret = Matrix(this->_r, this->_c);
-
-    if (this->_r == 1){
-        ret._v[0] = 1;
-        return ret;
+    // same formula of cofactor matrix, but inverting indeces to get the transpose
+    Matrix ret(this->_r, this->_c);
+    for(uint i=0; i<this->_r; i++) for(uint j=0; j<this->_c; j++){
+        ret(j,i) = this->cof(i,j);
     }
-
-    int sign = 1;
-    Matrix cof; // To store cofactors
-
-    for (uint i=0; i<this->_r; i++){
-        for (uint j=0; j<this->_c; j++){
-            // Get cofactor
-            cof = this->cof(i,j);
- 
-            // sign of adj positive if sum of row
-            // and column indexes is even.
-            sign = ((i+j)%2==0) ? 1 : -1;
- 
-            // Interchanging rows and columns to get the
-            // transpose of the cofactor matrix
-            ret(i,j) = sign*cof.det();
-        }
-    }
-
-    return ret;
 }
 
 Matrix Matrix::inv() const{
@@ -213,8 +214,8 @@ Matrix Matrix::inv() const{
     double det = this->det(); 
     if (det == 0) throw runtime_error("Matrix not invertible: det = 0");
  
-    // Find Inverse using formula "inverse(m) = adj(m)^t/det(m)"
-    return this->adj().t() / det;
+    // Find Inverse using formula "inverse(M) = adj(M)/det(M)"
+    return this->adj() / det;
 }
 
 Matrix Matrix::pinv_left() const{
@@ -290,7 +291,6 @@ double * diag(const Matrix & m){
 }
 
 
-
 // void Matrix::qr_dec(Matrix & Q, Matrix & R){
 //     uint r = this->_r;
 //     uint c = this->_c;
@@ -349,8 +349,7 @@ double * diag(const Matrix & m){
 // }
 
 
-// void lu_dec(const double *const A, const uint n, 
-//                     double *const L, double *const U){
+// void lu_dec(Matrix & L, Matrix & U){
 //     uint i = 0, j = 0, k = 0;
 //     for (i = 0; i < n; i++) {
 //         for (j = 0; j < n; j++) {

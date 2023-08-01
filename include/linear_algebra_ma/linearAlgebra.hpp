@@ -120,13 +120,14 @@ public:
     Matrix t() const;
 
     /**
-     * @brief compute cofactor matrix with respect indeces p and q
+     * @brief compute submatrix matrix obtained by deleting
+     * the p-th row and q-t column
      * 
      * @param p row index
      * @param q column index
-     * @return Matrix: cofactor matrix in position (p,q)
+     * @return Matrix: submatrix
      */
-    Matrix cof(const uint & p, const uint & q) const;
+    Matrix submat_del(const uint & p, const uint & q) const;
 
     /**
      * @brief compute determinant
@@ -134,6 +135,32 @@ public:
      * @return double: determinant
      */
     double det() const;
+
+    /**
+     * @brief computes minor of the matrix wrt row p and column q
+     * (minor: determinant of the submatrix obtained by deletin
+     * the p row and q column). The matrix must be square.
+     * @param p row index
+     * @param q column index
+     * @return double: minor
+    */
+    double minor(const uint & p, const uint & q) const;
+
+    /**
+     * @brief computes cofactor of the matrix wrt row p and column q.
+     * The matrix must be square.
+     * @param p row index
+     * @param q column index
+     * @return double: cofactor
+    */
+    double cof(const uint & p, const uint & q) const;
+
+    /**
+     * @brief computes the cofactors matrix.
+     * The input matrix must be square.
+     * @return Matrix: cofactor matrix
+    */
+    Matrix cof_mat() const;
 
     /**
      * @brief create adjoint of the matrix

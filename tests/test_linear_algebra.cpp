@@ -390,7 +390,44 @@ TEST(Matrix, divide_operator){
     EXPECT_NO_THROW(Matrix(3,0)/2.5);
 
     // matrix
-    // TODO, yet to implement
+    Matrix A(4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1}
+    );
+    Matrix b(1,4, {2,4,1,3});
+    // A not square
+    EXPECT_THROW( b / A({0,3},{1,3}), runtime_error);
+    // shape doesn't match
+    EXPECT_THROW((b(0,{1,3}) / A), invalid_argument);
+    // underdetermined
+    Matrix C(4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(b / C, runtime_error);
+    // solution
+    EXPECT_TRUE(b / A.t() == Matrix(1,4, {1,1,0,-1}));
+
+    // A not square
+    EXPECT_THROW( b/=A({0,3},{1,3}), runtime_error);
+    // shape doesn't match
+    EXPECT_THROW((b(0,{1,3})/=A), invalid_argument);
+    // underdetermined
+    C = Matrix(4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(b/=C, runtime_error);
+    // solution
+    EXPECT_NO_THROW(b /= A.t());
+    EXPECT_TRUE(b == Matrix(1,4, {1,1,0,-1}));
+
 }
 
 /*
@@ -621,6 +658,8 @@ TEST(Matrix, matrix_l_divide){
 
     // A not square
     EXPECT_THROW(Matrix::matrix_l_divide(A({0,3},{1,3}), b), runtime_error);
+    // shape doesn't match
+    EXPECT_THROW(Matrix::matrix_l_divide(A, b({1,3},0)), invalid_argument);
     // underdetermined
     C = Matrix (4,4,
         {1,3,4,2,
@@ -652,6 +691,8 @@ TEST(Matrix, solve_ls){
 
     // A not square
     EXPECT_THROW(Matrix::solve_ls(A({0,3},{1,3}), b), invalid_argument);
+    // shape doesn't match
+    EXPECT_THROW(Matrix::solve_ls(A, b({1,3},0)), invalid_argument);
     // underdetermined
     C = Matrix (4,4,
         {1,3,4,2,
@@ -665,7 +706,6 @@ TEST(Matrix, solve_ls){
     EXPECT_TRUE(Matrix::solve_ls(A,b) == Matrix(4,1, {1,1,0,-1}));
 }
 
-
 TEST(Matrix, matrix_r_divide){
     Matrix A,b,C;
     A = Matrix (4,4,
@@ -678,6 +718,8 @@ TEST(Matrix, matrix_r_divide){
 
     // A not square
     EXPECT_THROW(Matrix::matrix_r_divide(b, A({0,3},{1,3})), runtime_error);
+    // shape doesn't match
+    EXPECT_THROW(Matrix::matrix_r_divide(b(0,{1,3}), A), invalid_argument);
     // underdetermined
     C = Matrix (4,4,
         {1,3,4,2,

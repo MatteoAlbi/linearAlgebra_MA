@@ -316,23 +316,11 @@ void Matrix::operator/=(const int & k){
     }
 }
 
-/*
-void Matrix::operator/=(const Matrix & m){
-    Matrix inv;
-    try
-    {
-        if(m.getC() == m.getR()) inv = m.inv();
-        else inv = m.pinv_left();
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        throw invalid_argument("Matrix m not invertible");
-    }    
 
-    this->operator*=(inv);
+void Matrix::operator/=(const Matrix & m){
+   this->operator=((*this) / m);
 }
-*/
+
 
 Matrix operator/(const Matrix& m, const double& k){
     Matrix ret = m;
@@ -348,23 +336,11 @@ Matrix operator/(const Matrix& m, const int& k){
     return ret;
 }
 
-/*
-Matrix operator/(const Matrix& m1, const Matrix& m2){
-    Matrix inv;
-    try
-    {
-        if(m2.getC() == m2.getR()) inv = m2.inv();
-        else inv = m2.pinv_left();
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-        throw invalid_argument("Matrix m2 not invertible");
-    }    
 
-    return m1*inv;
+Matrix operator/(const Matrix& m1, const Matrix& m2){
+    return Matrix::matrix_r_divide(m1,m2);
 }
-*/
+
 #pragma endregion divide
 
 #pragma region concatenate

@@ -34,6 +34,7 @@ bool Point::operator!=(Point const * const p) const{
 
 double Point::distance(const Point & p) const{
     if(this->isnan() || p.isnan()) return NAN;
+    if(this->isinf() || p.isinf()) return INFINITY;
     return sqrt(pow(this->_x - p._x, 2) + pow(this->_y - p._y,2));
 }
 

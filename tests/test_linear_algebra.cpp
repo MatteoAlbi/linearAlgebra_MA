@@ -399,7 +399,7 @@ TEST(Matrix, concatenate_operators){
 }
 */
 
-TEST(Matrix, cofactor){
+TEST(Matrix, submat_del){
     Matrix m2;
 
     Matrix m1(3,4,
@@ -455,6 +455,18 @@ TEST(Matrix, determinant){
 }
 
 /*
+TEST(Matrix, minor){
+    // TODO
+}
+
+TEST(Matrix, cof){
+    // TODO
+}
+
+TEST(Matrix, cof_mat){
+    // TODO
+}
+
 TEST(Matrix, adj){
     // TODO
 }
@@ -510,11 +522,66 @@ TEST(Matrix, normalize_self){
 }
 
 
-
+/*
 TEST(Matrix, qr_dec){
     // TODO
 }
+*/
 
 TEST(Matrix, lu_dec){
+    // matrix not square
+    Matrix m1,L,U;
+    m1 = Matrix (3,4,
+        {1,3,5,9,
+         0,2,1,7,
+         4,1,8,2,
+         5,2,1,9}
+    );
+    EXPECT_THROW(m1.lu_dec(L,U), invalid_argument);
+
+    // matrix decomposable
+    m1 = Matrix (4,4,
+        {1,3,5,9,
+         0,2,1,7,
+         4,1,8,2,
+         5,2,1,9}
+    );
+    EXPECT_NO_THROW(m1.lu_dec(L,U));
+    EXPECT_TRUE(L*U == m1);
+
+    // matrix not decomposable
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_THROW(m1.lu_dec(L,U), runtime_error);
+}
+
+TEST(Matrix, backward_sub){
+    Matrix U,b;
+    U = Matrix(4,4,
+        {1,3,5,9,
+         0,1,1,7,
+         0,0,2,7,
+         0,0,0,3}
+    );
+    b = Matrix(4,1, {2,6,1,3});
+
+    // U not square
+    EXPECT_THROW(Matrix::backward_sub(U({0,3},{1,3}), b), invalid_argument);
+    // b.rows != U.cols
+    EXPECT_THROW(Matrix::backward_sub(U, b({1,3},0)), invalid_argument);
+    // underdetermined
+    U(2,2) = 0;
+    EXPECT_THROW(Matrix::backward_sub(U, b), runtime_error);
+    U(2,2) = 2;
+    
+    // solve
+    cout << Matrix::backward_sub(U, b) << endl;
+    EXPECT_TRUE(Matrix::backward_sub(U, b) == Matrix(4,1, {2,2,-3,1}));
 
 }
+
+

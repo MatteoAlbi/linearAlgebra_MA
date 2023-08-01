@@ -358,40 +358,50 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
 
 void Matrix::lu_dec(Matrix & L, Matrix & U) const{
     if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
-    uint n = this->_r;
+
+    // check if its decomposable: all leading minors != 0
+    Matrix sub;
+    sub.operator=(this);
+    for(int i=this->_r-1; i>= 0; i--){
+        if(sub.det() == 0) throw runtime_error("Leading minor #" + std::to_string(i+1) + " is null, decompositionis not possible");
+        sub = sub.submat_del(i,i);
+    }
 
     // reshape L and U
     if(L.size() != this->size()){
         if(L._v != nullptr) delete[] L._v;
         L._v = new double[this->size()]();
     }
-    L._r = n;
-    L._c = n;
+    L._r = this->_r;
+    L._c = this->_r;
     if(U.size() != this->size()){
         if(U._v != nullptr) delete[] U._v;
         U._v = new double[this->size()]();
     }
-    U._r = n;
-    U._c = n;
+    U._r = this->_r;
+    U._c = this->_r;
 
-    for (uint i = 0; i < n; i++) {
-        // lower triang
-        for (uint j = 0; j < n; j++) {
-            if (j < i) L(j,i) = 0;
-            else {
-                L(j,i) = this->operator()(j,i);
-                for (uint k = 0; k < i; k++) L(j,i) -= L(j,k) * U(k,i);
-            }
-        }
+    for (uint i = 0; i < this->_r; i++) {
         // upper triang
-        for (uint j = 0; j < n; j++) {
-            if (j < i) U(i,j) = 0;
-            else if (j == i) U(i,j) = 1;
+        for (uint k = 0; k < this->_r; k++) {
+            if (k < i) U(i,k) = 0;
             else {
-                U(i,j) = this->operator()(i,j) / L(i,i);
-                for (uint k = 0; k < i; k++)  U(i,j) -= L(i,k) * U(k,j) / L(i,i);
+                U(i,k) = this->operator()(i,k);
+                for (uint j = 0; j < i; j++)  U(i,k) -= L(i,j) * U(j,k);
             }
         }
+        // lower triang
+        for (uint k = 0; k < this->_r; k++) {
+            if (k < i) L(k,i) = 0;
+            else if (k == i) L(i,i) = 1;
+            else {
+                double sum = 0;
+                for (uint j = 0; j < i; j++) sum += L(k,j) * U(j,i);
+                if(U(i,i) == 0) throw runtime_error("Impossible to decompose matrix, permutations are necessary");
+                L(k,i) = (this->operator()(k,i) - sum) / U(i,i);
+            }
+        }
+        
     }
 }
 
@@ -399,28 +409,36 @@ void Matrix::lu_dec(Matrix & L, Matrix & U) const{
 
 
 #pragma region ls_solution
-// void backward_sub(const double *const U, const double *const B, 
-//                  double *const res, const uint n, const uint c_b){
+Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
+    if(U.getC() != U.getR()) throw invalid_argument("Coefficient matrix U must be square");
+    if(B.getR() != U.getC()) throw invalid_argument("Rows of B must be equal to the columns of U");
+    // check all U diagonal elements are different from zero
+    for(uint i=0; i<U.getC(); i++) if(U(i,i) == 0){
+        throw runtime_error("System of equation is underdetermined");
+    }
+
+    Matrix res(U.getR(), B.getC());
+
+    double tmp;
+    // printf("start i loop\n");
+    for(uint i=0; i<B.getC(); i++){ //col of res == col of B
+        // printf("start j loop with i:%d\n", i);
+        for(int j=U.getR()-1; j>=0; j--){ //row of res == row of U == row of B
+            tmp = 0;
+            // printf("start k loop with i:%d, j:%d\n", i, j);
+            for(int k=U.getR()-1; k>j; k--){ //col of U = row of res
+                tmp += U(j, k) * res(k, i);
+                // printf("i:%d j:%d k:%d\n",i,j,k);
+            }
             
-//     double tmp;
-//     // printf("start i loop\n");
-//     for(uint i=0; i<c_b; i++){ //col of res == col of B
-//         // printf("start j loop with i:%d\n", i);
-//         for(int j=n-1; j>=0; j--){ //row of res == row of U == row of B
-//             tmp = 0;
-//             // printf("start k loop with i:%d, j:%d\n", i, j);
-//             for(int k=n-1; k>j; k--){ //col of U = row of res
-//                 tmp += U[j*n + k] * res[k*c_b + i];
-//                 // printf("i:%d j:%d k:%d\n",i,j,k);
-//             }
-            
-//             res[j*c_b + i] = (B[j*c_b + i] - tmp) / U[j*n + j];
-//             // printf("%f\t%f\n",tmp,res[j*c_b + i]);
-//         }
-//         // printf("\n");
-//     }
+            res(j, i) = (B(j, i) - tmp) / U(j, j);
+            // printf("%f\t%f\n",tmp,res[j*B.getC() + i]);
+        }
+        // printf("\n");
+    }
     
-// }
+    return res;
+}
 
 
 // void forward_sub(const double *const L, const double *const B, 

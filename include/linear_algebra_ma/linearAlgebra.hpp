@@ -295,6 +295,7 @@ public:
      * 
      * @param B             left hand division term 
      * @param A             right hand division term
+     * @return Matrix: result of the division
      */
     static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
 

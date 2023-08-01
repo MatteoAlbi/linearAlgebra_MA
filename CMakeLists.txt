@@ -51,6 +51,10 @@ target_compile_options(geometries PRIVATE
 target_link_libraries(geometries matrices)
 
 
+################################################################################
+# Unit tests
+################################################################################
+
 #-- gtest
 include(FetchContent)
 FetchContent_Declare(

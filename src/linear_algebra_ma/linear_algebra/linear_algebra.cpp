@@ -108,8 +108,8 @@ Matrix Matrix::t() const{
 }
 
 Matrix Matrix::cof(const uint & p, const uint & q) const{
-    if(this->_r < p) throw invalid_argument("p greater than matrix rows");
-    if(this->_c < q) throw invalid_argument("q greater than matrix cols");
+    if(this->_r <= p) throw invalid_argument("p greater than matrix rows");
+    if(this->_c <= q) throw invalid_argument("q greater than matrix cols");
 
     uint i = 0, j = 0;
 
@@ -142,11 +142,15 @@ Matrix Matrix::cof(const uint & p, const uint & q) const{
 double Matrix::det() const{
     if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
 
-    // Base case : if matrix contains single element
+    // empty matrix: return 0
+    if (this->_r == 0){
+        return 0;
+    } 
+    // matrix contains single element
     if (this->_r == 1){
         return this->_v[0];
     } 
-    // if matrix is 2x2
+    // matrix is 2x2
     else if (this->_r == 2){
         return this->_v[0]*this->_v[3] - this->_v[1]*this->_v[2];
     }

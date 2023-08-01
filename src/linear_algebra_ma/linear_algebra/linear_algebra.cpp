@@ -470,33 +470,30 @@ Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
 }
 
 
-// void matrix_l_divide(const double *const A, const double *const B, 
-//                  double *const res, const uint r_a, const uint c_b, const uint c_r_common){
+Matrix Matrix::matrix_l_divide(Matrix const & A, Matrix const & B){
     
-//     if(r_a == c_r_common){ //square A
-//         // printf("matrix A is square, using LU decomposition\n");
-//         double L[r_a*r_a], U[r_a*r_a], res_tmp[r_a*c_b];
+    if(A.getC() == A.getR()){ //square A
+        // printf("matrix A is square, using LU decomposition\n");
+        Matrix L, U, res_tmp;
 
-//         lu_dec(A, r_a, L, U);
-//         forward_sub(L, B, res_tmp, r_a, c_b);
-//         backward_sub(U, res_tmp, res, r_a, c_b);
-//     }
+        A.lu_dec(L, U);
+        res_tmp = forward_sub(L, B);
+        return backward_sub(U, res_tmp);
+    }
+    else{
+        throw runtime_error("Methods for not square A are yet to be implemented");
+    }
 
-// }
+}
 
+Matrix Matrix::solve_ls(Matrix const & A, Matrix const & B){
+    if(A.getC() != A.getR()) throw invalid_argument("Coefficient matrix A must be square");
+    return Matrix::matrix_l_divide(A,B);
+}
 
-// void matrix_r_divide(const double *const B, const double *const A, 
-//                  double *const res, const uint r_b, const uint c_a, const uint c_r_common){
-    
-//     double B_t[r_b*c_r_common], A_t[c_r_common*c_a], res_t[r_b*c_a];
-
-//     transpose(B, B_t, r_b, c_r_common);
-//     transpose(A, A_t, c_r_common, c_a);
-    
-//     matrix_l_divide(A_t, B_t, res_t, c_a, r_b, c_r_common);
-
-//     transpose(res_t, res, c_a, r_b);
-// }
+Matrix Matrix::matrix_r_divide(Matrix const & B, Matrix const & A){
+    return matrix_l_divide(A.t(), B.t()).t();
+}
 #pragma endregion ls_solution
 
 } // namespace MA

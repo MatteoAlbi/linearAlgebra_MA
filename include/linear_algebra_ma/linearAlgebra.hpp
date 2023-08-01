@@ -258,12 +258,12 @@ public:
 
     /**
      * @brief computes the left division A\B, which corresponds to solve the 
-     *        linear equation system A*x=B. The columns of A must be equal 
-     *        the rows of B. The result has dimensions (r_a*c_b).
+     *        linear equation system A*x=B. 
      *        The functions solves the problem depending on the dimensions of the 
      *        given matrices: 
      *        
-     *        - A is a square matrix (r_a*c_r_common): the A amtrix is decomposed using
+     *        - A is a square matrix (r_a*c_r_common): The columns of A must be equal 
+     *          the rows of B. The result has dimensions (r_a*c_b). A is decomposed using
      *          LU decomposition: A*x=B -> L*U*x = B. Then, the problem is solved by
      *          subsequentially solving the two systems:
      *              - L*(U*x) = B, thus solving it using forward substitution the system 
@@ -271,30 +271,30 @@ public:
      *              - U*x=par, thus solving it using backward substitution the system 
      *                U*x=par equal to x=U\par
      * 
-     * @param A             left hand division term (r_a*c_r_common)
-     * @param B             right hand division term (c_r_common*c_b)
-     * @param res           result (r_a*c_b)
-     * @param r_a           rows of A
-     * @param c_b           columns of B
-     * @param c_r_common    columsn of A = rows of B
+     * @param A             left hand division term
+     * @param B             right hand division term
+     * @return Matrix: result of the division
      */
     static Matrix matrix_l_divide(Matrix const & A, Matrix const & B);
 
+    /**
+     * @brief solves the linear system A*x=B. 
+     * Calls matrix_l_divide.
+     * @param A coefficient matrix (must be square nxn)
+     * @param B known terms matrix (B.rows == A.cols)
+     * @return Matrix: x (dimensions A.rows x B.cols)
+     */
+    static Matrix solve_ls(Matrix const & A, Matrix const & B);
 
     /**
      * @brief computes the right division B/A translating it in a left 
      *        division problem following the equality B/A = (A.t\B.t).t
-     *        where .t stands for transpose. The columns of A must be equal 
-     *        the rows of B. The result has dimensions (r_a*c_b).
+     *        where .t stands for transpose. 
      *        The functions solves the problem depending on the dimensions of the 
-     *        given matrices: 
+     *        given matrices, as described in  matrix_l_divide.
      * 
-     * @param B             left hand division term (r_b*c_r_common)
-     * @param A             right hand division term (c_r_common*c_a)
-     * @param res           result (r_b*c_a)
-     * @param r_b           rows of B
-     * @param c_a           columns of A
-     * @param c_r_common    columsn of B = rows of A
+     * @param B             left hand division term 
+     * @param A             right hand division term
      */
     static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
 

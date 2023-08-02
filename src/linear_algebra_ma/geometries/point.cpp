@@ -179,6 +179,24 @@ double Point::slope(const Point & p) const{
 }
 
 
+Matrix Point::to_c_vec() const{
+    return Matrix(2,1, {_x,_y});
+}
+
+Matrix Point::to_r_vec() const{
+    return Matrix(1,2, {_x,_y});
+}
+
+
+Point operator-(const Point & p1, const Point & p2){
+    return Point(p1.x() - p2.x(), p1.y() - p2.y());
+}
+
+Point operator+(const Point & p1, const Point & p2){
+    return Point(p1.x() + p2.x(), p1.y() + p2.y());
+}
+
+
 double distance(const Point & p1, const Point & p2){
     return p1.distance(p2);
 }
@@ -188,5 +206,19 @@ double slope(const Point & p1, const Point & p2){
 }
 
 
+Matrix c_vec(const Point & p){
+    p.to_c_vec();
+}
+
+Matrix r_vec(const Point & p){
+    return p.to_r_vec();
+}
+
+
 } // namespace geometries
 } // namespace MA
+
+
+std::ostream& operator<<(std::ostream& os, const MA::geometries::Point& p){
+    os << "Point(" << p.x() << ", " << p.y() << ")" << std::endl;
+}

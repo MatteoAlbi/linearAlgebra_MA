@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <exception>
 
+#include "linear_algebra_ma/matrices.hpp"
+
 namespace MA
 {
 namespace geometries
@@ -39,16 +41,29 @@ public:
     double distance(const Point & p) const;
     double slope(const Point & p) const;
 
+    Matrix to_c_vec() const;
+    Matrix to_r_vec() const;
+
 private:
     double _x;
     double _y;
 
 };
 
+Point operator-(const Point & p1, const Point & p2);
+Point operator+(const Point & p1, const Point & p2);
+
 double distance(const Point & p1, const Point & p2);
 double slope(const Point & p1, const Point & p2);
 
+Matrix c_vec(const Point & p);
+Matrix r_vec(const Point & p);
+
+
 } // namespace geometries
 } // namespace MA
+
+// cout operators
+std::ostream& operator<<(std::ostream& os, const MA::geometries::Point& p);
 
 #endif // MA_POINT

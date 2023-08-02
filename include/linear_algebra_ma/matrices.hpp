@@ -69,6 +69,16 @@ public:
     void setV(std::vector<double> v);
     void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v);
     void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m);
+
+    /**
+     * @brief returns a matrix with the same underlaying
+     * double array, but different shape. Size must be the same
+     * @param r rows of new matrix
+     * @param c cols of new matrix
+     * @return Matrix: matrix with same data and specified shape
+     */
+    Matrix reshape(const uint & r, const uint & c) const;
+    
 #pragma endregion get_set
 
 #pragma region comparators

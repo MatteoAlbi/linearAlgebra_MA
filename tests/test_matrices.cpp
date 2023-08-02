@@ -112,11 +112,11 @@ TEST(Matrix, access_operator){
     EXPECT_THROW(m1({1,3},{1,5}), out_of_range);
     EXPECT_THROW(m1({4,1},{2,2}), invalid_argument);
     EXPECT_THROW(m1({1,3},{5,3}), invalid_argument);
-    EXPECT_TRUE(m1({1,1},{3,3}) == Matrix(1,1,{17}));
-    EXPECT_TRUE(m1({1,3},{3,3}) == Matrix(3,1,{17,21,25}));
-    EXPECT_TRUE(m1({3,3},{1,2}) == Matrix(1,2,{23,24}));
-    EXPECT_TRUE(m1({1,2},{1,2}) == Matrix(2,2,{15,16,19,20}));
-    EXPECT_TRUE(m1({1,2},{0,3}) == Matrix(2,4,{14,15,16,17,18,19,20,21}));
+    EXPECT_EQ(m1({1,1},{3,3}), Matrix(1,1,{17}));
+    EXPECT_EQ(m1({1,3},{3,3}), Matrix(3,1,{17,21,25}));
+    EXPECT_EQ(m1({3,3},{1,2}), Matrix(1,2,{23,24}));
+    EXPECT_EQ(m1({1,2},{1,2}), Matrix(2,2,{15,16,19,20}));
+    EXPECT_EQ(m1({1,2},{0,3}), Matrix(2,4,{14,15,16,17,18,19,20,21}));
 }
 
 TEST(Matrix, set) {
@@ -182,6 +182,23 @@ TEST(Matrix, set) {
         else EXPECT_EQ(m2(i,j), m3(i, j-2));
     }
     // cout << m2 << endl;
+}
+
+TEST(Matrix, reshape){
+    Matrix m1(4,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21,
+         22,23,24,25}
+    );
+    Matrix m2(2,8,
+        {10,11,12,13,14,15,16,17,
+         18,19,20,21,22,23,24,25}
+    );
+
+    EXPECT_THROW(m1.reshape(3,5), invalid_argument);
+    EXPECT_EQ(m1.reshape(2,8), m2);
+    
 }
 
 TEST(Matrix, transpose){

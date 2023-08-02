@@ -96,6 +96,14 @@ void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m){
 
 }
 
+Matrix Matrix::reshape(const uint & r, const uint & c) const{
+    if(r*c != this->size()) throw std::invalid_argument("New matrix size must match the current one");
+
+    Matrix ret(r,c);
+    std::copy(_v, _v + this->size(), ret._v);
+    return ret;
+}
+
 
 Matrix Matrix::t() const{
     Matrix ret = Matrix(this->_c, this->_r);

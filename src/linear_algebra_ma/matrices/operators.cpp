@@ -5,51 +5,51 @@ namespace MA
 
 #pragma region access
 double& Matrix::operator()(const uint & r, const uint & c){
-    if(r >= this->_r) throw out_of_range("Row index out of range");
-    if(c >= this->_c) throw out_of_range("Col index out of range");
+    if(r >= this->_r) throw std::out_of_range("Row index out of range");
+    if(c >= this->_c) throw std::out_of_range("Col index out of range");
     return this->_v[r * this->_c + c];
 }
 
 const double& Matrix::operator()(const uint & r, const uint & c) const{
-    if(r >= this->_r) throw out_of_range("Row index out of range");
-    if(c >= this->_c) throw out_of_range("Col index out of range");
+    if(r >= this->_r) throw std::out_of_range("Row index out of range");
+    if(c >= this->_c) throw std::out_of_range("Col index out of range");
     return this->_v[r * this->_c + c];
 }
 
 double& Matrix::operator()(const uint & i){
     if(this->_c == 1){
-        if(i >= this->_r) throw out_of_range("Index out of range");
+        if(i >= this->_r) throw std::out_of_range("Index out of range");
         return this->operator()(i,0);
     } 
     else if(this->_r == 1){
-        if(i >= this->_c) throw out_of_range("Index out of range");
+        if(i >= this->_c) throw std::out_of_range("Index out of range");
         return this->operator()(0,i);
     }
     else{
-        if(i >= this->_r || i >= this->_c) throw out_of_range("Index out of range");
+        if(i >= this->_r || i >= this->_c) throw std::out_of_range("Index out of range");
         return this->operator()(i,i);
     }
 }
 
 const double& Matrix::operator()(const uint & i) const{
     if(this->_c == 1){
-        if(i >= this->_r) throw out_of_range("Index out of range");
+        if(i >= this->_r) throw std::out_of_range("Index out of range");
         return this->operator()(i,0);
     } 
     else if(this->_r == 1){
-        if(i >= this->_c) throw out_of_range("Index out of range");
+        if(i >= this->_c) throw std::out_of_range("Index out of range");
         return this->operator()(0,i);
     }
     else{
-        if(i >= this->_r || i >= this->_c) throw out_of_range("Index out of range");
+        if(i >= this->_r || i >= this->_c) throw std::out_of_range("Index out of range");
         return this->operator()(i,i);
     }
 }
 
-Matrix Matrix::operator()(pair<uint,uint> rs, const uint & c) const{
-    if(rs.second >= this->_r) throw out_of_range("Row index out of range");
-    if(c >= this->_c) throw out_of_range("Col index out of range");
-    if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second");
+Matrix Matrix::operator()(std::pair<uint,uint> rs, const uint & c) const{
+    if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
+    if(c >= this->_c) throw std::out_of_range("Col index out of range");
+    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
 
     Matrix ret = Matrix(rs.second - rs.first + 1, 1);
 
@@ -60,10 +60,10 @@ Matrix Matrix::operator()(pair<uint,uint> rs, const uint & c) const{
     return ret;
 }
 
-Matrix Matrix::operator()(const uint & r, pair<uint,uint> cs) const{
-    if(r >= this->_r) throw out_of_range("Row index out of range");
-    if(cs.second >= this->_c) throw out_of_range("Col index out of range");
-    if(cs.first > cs.second) throw invalid_argument("Col first element must be <= of second");
+Matrix Matrix::operator()(const uint & r, std::pair<uint,uint> cs) const{
+    if(r >= this->_r) throw std::out_of_range("Row index out of range");
+    if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
+    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
 
     if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
     Matrix ret = Matrix(1, cs.second - cs.first + 1);
@@ -75,11 +75,11 @@ Matrix Matrix::operator()(const uint & r, pair<uint,uint> cs) const{
     return ret;
 }
 
-Matrix Matrix::operator()(pair<uint,uint> rs, pair<uint,uint> cs) const{
-    if(rs.second >= this->_r) throw out_of_range("Row index out of range");
-    if(cs.second >= this->_c) throw out_of_range("Col index out of range");
-    if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second"); 
-    if(cs.first > cs.second) throw invalid_argument("Col first element must be <= of second");
+Matrix Matrix::operator()(std::pair<uint,uint> rs, std::pair<uint,uint> cs) const{
+    if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
+    if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
+    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
+    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
 
     Matrix ret = Matrix(rs.second - rs.first + 1, cs.second - cs.first + 1);
 
@@ -162,7 +162,7 @@ void Matrix::operator+=(const int & k){
 }
 
 void Matrix::operator+=(const Matrix & m){
-    if(this->_r != m._r || this->_c != m._c) throw invalid_argument("Matrices' shapes don't match");
+    if(this->_r != m._r || this->_c != m._c) throw std::invalid_argument("Matrices' shapes don't match");
     
     for(uint i=0; i<this->_r; i++){
         for(uint j=0; j<this->_c; j++){
@@ -186,7 +186,7 @@ Matrix operator+(const Matrix& m, const int& k){
 }
 
 Matrix operator+(const Matrix& m1, const Matrix& m2){
-    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw invalid_argument("Matrices' shapes don't match");
+    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw std::invalid_argument("Matrices' shapes don't match");
     
     Matrix ret = m1;
     ret+=m2;
@@ -213,7 +213,7 @@ void Matrix::operator-=(const int & k){
 }
 
 void Matrix::operator-=(const Matrix & m){
-    if(this->_r != m._r || this->_c != m._c) throw invalid_argument("Matrices' shapes don't match");
+    if(this->_r != m._r || this->_c != m._c) throw std::invalid_argument("Matrices' shapes don't match");
     
     for(uint i=0; i<this->_r; i++){
         for(uint j=0; j<this->_c; j++){
@@ -237,7 +237,7 @@ Matrix operator-(const Matrix& m, const int& k){
 }
 
 Matrix operator-(const Matrix& m1, const Matrix& m2){
-    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw invalid_argument("Matrices' shapes don't match");
+    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw std::invalid_argument("Matrices' shapes don't match");
     
     Matrix ret = m1;
     ret-=m2;
@@ -282,7 +282,7 @@ Matrix operator*(const Matrix& m, const int& k){
 }
 
 Matrix operator*(const Matrix& m1, const Matrix& m2){
-    if(m1.getC() != m2.getR()) throw invalid_argument("Matrices' shapes don't match");
+    if(m1.getC() != m2.getR()) throw std::invalid_argument("Matrices' shapes don't match");
     
     Matrix ret = Matrix(m1.getR(), m2.getC());
 
@@ -353,7 +353,7 @@ void Matrix::operator|=(const Matrix & m){
 }
 
 Matrix operator&(const Matrix& m1, const Matrix& m2){
-    if(m1.getR() != m2.getR()) throw invalid_argument("Matrices must have same number of rows");
+    if(m1.getR() != m2.getR()) throw std::invalid_argument("Matrices must have same number of rows");
 
     Matrix ret = Matrix(m1.getR(), m1.getC()+m2.getC());
 
@@ -368,7 +368,7 @@ Matrix operator&(const Matrix& m1, const Matrix& m2){
 }
 
 Matrix operator|(const Matrix& m1, const Matrix& m2){
-    if(m1.getC() != m2.getC()) throw invalid_argument("Matrices must have same number of columns");
+    if(m1.getC() != m2.getC()) throw std::invalid_argument("Matrices must have same number of columns");
 
     Matrix ret = Matrix(m1.getR()+m2.getR(), m1.getC());
 
@@ -384,10 +384,10 @@ Matrix operator|(const Matrix& m1, const Matrix& m2){
 #pragma endregion concatenate
 
 
-ostream& operator<<(ostream& os, const Matrix& m){
-    os << "Matrix(" << m.getR() << "x" << m.getC() << ")" << endl;
+std::ostream& operator<<(std::ostream& os, const Matrix& m){
+    os << "Matrix(" << m.getR() << "x" << m.getC() << ")" << std::endl;
     for(uint i=0; i<m.getR(); i++){
-        if(i>0) os << endl;
+        if(i>0) os << std::endl;
         for(uint j=0; j<m.getC(); j++){
             if(j>0) os << " ";
             os << m(i,j);
@@ -397,10 +397,10 @@ ostream& operator<<(ostream& os, const Matrix& m){
     return os;
 }
 
-ostream& operator<<(ostream& os, const Matrix * m){
-    os << "Matrix(" << m->getR() << "x" << m->getC() << ")" << endl;
+std::ostream& operator<<(std::ostream& os, const Matrix * m){
+    os << "Matrix(" << m->getR() << "x" << m->getC() << ")" << std::endl;
     for(uint i=0; i<m->getR(); i++){
-        if(i>0) os << endl;
+        if(i>0) os << std::endl;
         for(uint j=0; j<m->getC(); j++){
             if(j>0) os << " ";
             os << m->operator()(i,j);

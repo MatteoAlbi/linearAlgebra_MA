@@ -84,26 +84,32 @@ double Point::distance(const Point & p) const{
 
 double Point::slope(const Point & p) const{
     if(this->isnan() || p.isnan()) throw std::runtime_error("One of the point is NAN");
-    if(this->operator==(p)) throw std::runtime_error("The two points are the same: 0/0"); // 0/0 = ?
+    if(this->operator==(p)){
+        // throw std::runtime_error("The two points are the same: 0/0"); // 0/0 = ?
+        return NAN;
+    } 
     // both points are infinite
     if(this->isinf() && p.isinf()) {
         // a point has both coordinates = inf
         if( (std::isinf(_x) && std::isinf(_y)) ||
             (std::isinf(p._x) && std::isinf(p._y))
         ){
-            throw std::runtime_error("One point has both coordinates equal to INFINITY: inf/inf"); // inf/inf = ?
+            // throw std::runtime_error("One point has both coordinates equal to INFINITY: inf/inf"); // inf/inf = ?
+            return NAN;
         }
         // points have different coordinates = inf
         else if( (std::isinf(_x) && std::isinf(p._y)) ||
                  (std::isinf(_y) && std::isinf(p._x))
         ){
-            throw std::runtime_error("Points have different inf coordinates: inf/inf"); // inf/inf = ?
+            // throw std::runtime_error("Points have different inf coordinates: inf/inf"); // inf/inf = ?
+            return NAN;
         }
         // both points have x coordinate = inf
         else if( (std::isinf(_x) && std::isinf(p._x))){
             // same sign
             if(_x * p._x > 0){
-                throw std::runtime_error("Points have x coordinates = inf with same sign: inf-inf"); // inf-inf = ?
+                // throw std::runtime_error("Points have x coordinates = inf with same sign: inf-inf"); // inf-inf = ?
+                return NAN;
             }
             // diff sign
             else{
@@ -114,7 +120,8 @@ double Point::slope(const Point & p) const{
         else if( (std::isinf(_y) && std::isinf(p._y))){
             // same sign
             if(_y * p._y > 0){
-                throw std::runtime_error("Points have y coordinates = inf with same sign: inf-inf"); // inf-inf = ?
+                // throw std::runtime_error("Points have y coordinates = inf with same sign: inf-inf"); // inf-inf = ?
+                return NAN;
             }
             // diff sign
             else{
@@ -130,7 +137,8 @@ double Point::slope(const Point & p) const{
     else if(this->isinf()){
         // both coordinates = inf
         if(std::isinf(_x) && std::isinf(_y)){
-            throw std::runtime_error("This point coordinates are both INFINITY: inf/inf"); // inf/inf = ?
+            // throw std::runtime_error("This point coordinates are both INFINITY: inf/inf"); // inf/inf = ?
+            return NAN;
         }
         // only x coordinate = inf
         else if(std::isinf(_x)){
@@ -149,7 +157,8 @@ double Point::slope(const Point & p) const{
     else if(p.isinf()){
         // both coordinates = inf
         if(std::isinf(p._x) && std::isinf(p._y)){
-            throw std::runtime_error("p point coordinates are both INFINITY: inf/inf"); // inf/inf = ?
+            // throw std::runtime_error("p point coordinates are both INFINITY: inf/inf"); // inf/inf = ?
+            return NAN;
         }
         // only x coordinate = inf
         else if(std::isinf(p._x)){
@@ -164,7 +173,7 @@ double Point::slope(const Point & p) const{
             throw std::runtime_error("Unkown error");
         }
     }
-    
+
     if(_x == p.x()) return INFINITY; // a/0 = inf
     return (_y-p.y()) / (_x-p.x());
 }

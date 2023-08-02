@@ -73,8 +73,10 @@ Point Segment::intersection(const Segment & l) const{
     Point q2 = l.p2();
 
     Matrix b = c_vec(q1 - _p1);
-    Matrix A = c_vec(_p2 - _p1) | c_vec(q1 - q2);
+    Matrix A = c_vec(_p2 - _p1) & c_vec(q1 - q2);
 
+    // non singular A
+    
     Matrix x = Matrix::solve_ls(A, b);
 
     if( (0 <= x(0) && x(0) <= 1) && (0 <= x(1) && x(1) <= 1)){
@@ -86,9 +88,11 @@ Point Segment::intersection(const Segment & l) const{
     return l.p1();
 }
 
+
+std::ostream& operator<<(std::ostream& os, const Segment& s){
+    os << "Segment[ (" << s.p1().x() << ", " << s.p1().y() << ") - (" << s.p2().x() << ", " << s.p2().y() << ") ]" << std::endl;
+    return os;
+}
+
 } // namespace geometries
 } // namespace MA
-
-std::ostream& operator<<(std::ostream& os, const MA::geometries::Segment& s){
-    os << "Segment[ (" << s.p1().x() << ", " << s.p1().y() << ") - (" << s.p2().x() << ", " << s.p2().y() << ") ]" << std::endl;
-}

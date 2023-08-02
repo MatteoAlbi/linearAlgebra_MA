@@ -60,10 +60,11 @@ Matrix c_vec(const Point & p);
 Matrix r_vec(const Point & p);
 
 
+// cout operators
+std::ostream& operator<<(std::ostream& os, const Point& p);
+
 } // namespace geometries
 } // namespace MA
 
-// cout operators
-std::ostream& operator<<(std::ostream& os, const MA::geometries::Point& p);
 
 #endif // MA_POINT

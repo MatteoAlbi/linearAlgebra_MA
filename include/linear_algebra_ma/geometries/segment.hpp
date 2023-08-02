@@ -53,5 +53,7 @@ private:
 } // namespace geometries
 } // namespace MA
 
+// cout operators
+std::ostream& operator<<(std::ostream& os, const MA::geometries::Segment& s);
 
 #endif // MA_LINE

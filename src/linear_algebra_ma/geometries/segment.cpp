@@ -66,11 +66,29 @@ Point Segment::intersection(const Segment & l) const{
     // TODO: inf and nan management
     if(this->isnan()) throw std::runtime_error("This segment has NAN values");
     if(this->isinf()) throw std::runtime_error("This segment has INFINITY values");
+    if(l.isnan()) throw std::runtime_error("Given segment has NAN values");
+    if(l.isinf()) throw std::runtime_error("Given segment has INFINITY values");
 
-    
+    Point q1 = l.p1();
+    Point q2 = l.p2();
+
+    Matrix b = c_vec(q1 - _p1);
+    Matrix A = c_vec(_p2 - _p1) | c_vec(q1 - q2);
+
+    Matrix x = Matrix::solve_ls(A, b);
+
+    if( (0 <= x(0) && x(0) <= 1) && (0 <= x(1) && x(1) <= 1)){
+        Matrix tmp = c_vec(_p1) * (1 - x(0)) + c_vec(_p2) * x(0);
+        return Point(tmp(0), tmp(1));
+    }
+    else return Point();
     
     return l.p1();
 }
 
 } // namespace geometries
 } // namespace MA
+
+std::ostream& operator<<(std::ostream& os, const MA::geometries::Segment& s){
+    os << "Segment[ (" << s.p1().x() << ", " << s.p1().y() << ") - (" << s.p2().x() << ", " << s.p2().y() << ") ]" << std::endl;
+}

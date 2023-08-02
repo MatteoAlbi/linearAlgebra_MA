@@ -38,7 +38,6 @@ public:
 #pragma region get_set
     /**
      * @brief get operator using ()
-     * 
      * @param r row index
      * @param c columns index
      * @return double& element in position (r,c)
@@ -47,7 +46,6 @@ public:
 
     /**
      * @brief const get operator using ()
-     * 
      * @param r row index
      * @param c columns index
      * @return const double& element in position (r,c)
@@ -78,7 +76,7 @@ public:
      * @return Matrix: matrix with same data and specified shape
      */
     Matrix reshape(const uint & r, const uint & c) const;
-    
+
 #pragma endregion get_set
 
 #pragma region comparators
@@ -109,21 +107,18 @@ public:
 
     /**
      * @brief concatenate matrices per columns
-     * 
      * @param m matrix to concatenate
      */
     void operator&=(const Matrix & m);
 
     /**
      * @brief concatenate matrices per rows
-     * 
      * @param m matrix to concatenate
      */
     void operator|=(const Matrix & m);
     
     /**
      * @brief compute transpose
-     * 
      * @return Matrix: transpose
      */
     Matrix t() const;
@@ -140,10 +135,17 @@ public:
 
     /**
      * @brief compute determinant
-     * 
+     * matrix must be square
      * @return double: determinant
      */
     double det() const;
+
+    /**
+     * @brief test if the given matrix is singular
+     * matrix must be square
+     * @return bool: true if it's singular
+     */
+    bool is_sing() const;
 
     /**
      * @brief computes minor of the matrix wrt row p and column q

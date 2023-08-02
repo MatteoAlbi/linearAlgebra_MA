@@ -183,6 +183,11 @@ double Matrix::det() const{
     }
 }
 
+bool Matrix::is_sing() const{
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
+    return this->det() == 0;
+}
+
 double Matrix::minor(const uint & p, const uint & q) const{
     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 

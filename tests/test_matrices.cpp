@@ -509,6 +509,30 @@ TEST(Matrix, determinant){
     EXPECT_EQ(m1.det(), -376);
 }
 
+TEST(Matrix, is_sing){
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.det(), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_FALSE(m1.is_sing());
+
+    m1 = Matrix(3,3,
+        {1,1,0,
+         1,2,1,
+         1,3,2}
+    );
+    EXPECT_TRUE(m1.is_sing());
+}
+
 /*
 TEST(Matrix, minor){
     // TODO

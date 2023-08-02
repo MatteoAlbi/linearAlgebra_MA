@@ -71,6 +71,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
 )
 
+# following actions are performed only if this is the root project (not included by other modules)
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 
 ################################################################################
 # Unit tests
@@ -114,3 +116,20 @@ gtest_discover_tests(
     matrices_unit_test
     geometries_unit_test
 )
+
+
+################################################################################
+# Create package
+################################################################################
+
+# https://www.foonathan.net/2022/06/cmake-fetchcontent/
+
+set(package_files include/ src/ CMakeLists.txt LICENSE)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip
+    COMMAND ${CMAKE_COMMAND} -E tar c ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip --format=zip -- ${package_files}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DEPENDS ${package_files})
+add_custom_target(${PROJECT_NAME}_package DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-src.zip)
+
+
+endif() # CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR

@@ -31,11 +31,12 @@ bool Segment::operator!=(Segment const * const l) const{
     return ! this->operator==(*l);
 }
 
+double Segment::length() const{
+    return _p1.distance(_p2);
+}
+
 double Segment::slope() const{
-    if(_p1.isnan() || _p2.isnan()) throw std::runtime_error("One of the point is NAN");
-    if(_p1 == _p2) throw std::runtime_error("The two points are the same");
-    if(_p2.x()-_p1.x() == 0) return INFINITY;
-    return (_p2.y()-_p1.y()) / (_p2.x()-_p1.x());
+    return _p1.slope(_p2);
 }
 
 double Segment::distance(const Point & p) const{

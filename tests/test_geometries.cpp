@@ -4,9 +4,37 @@
 
 using namespace MA::geometries;
 
-using std::cout, std::endl, std::string;
+using std::cout, std::endl, std::string, std::pair;
 using std::invalid_argument, std::runtime_error, std::out_of_range;
-using pdd = std::pair<double, double>;
+using pdd = pair<double, double>;
+using ppp = pair<Point, Point>;
+
+// custom equal operator
+namespace std{
+    template<typename T>
+    bool operator==(pair<const T &, const T &> p1, pair<T,T> p2){return p1.first==p2.first && p1.second==p2.second;}
+}
+
+
+TEST(infinity, expected_behavior){
+    /**
+     * if one of this test fails, following 
+     * functions will have undefined behavior:
+     * Point::distance
+     * Point::slope
+     * distance(Point,Point)
+     * Segment::length
+    */
+
+    EXPECT_TRUE(INFINITY > 0);
+    EXPECT_FALSE(INFINITY < 0);
+    EXPECT_TRUE(-INFINITY < 0);
+    EXPECT_FALSE(-INFINITY > 0);
+    EXPECT_TRUE((-INFINITY)*INFINITY < 0);
+    EXPECT_TRUE(INFINITY*INFINITY > 0);
+    EXPECT_TRUE((-INFINITY)*(-INFINITY) > 0);
+}
+
 
 TEST(Point, constructor_get) {
     EXPECT_NO_THROW(Point p);
@@ -106,16 +134,47 @@ TEST(Point, distance){
     Point p1(2,2), p2(2,2);
     EXPECT_EQ(p1.distance(p2), 0);
     p2.x(5);
-    EXPECT_EQ(p1.distance(p2), 3);
+    EXPECT_EQ(p2.distance(p1), 3);
     p2.y(6);
     EXPECT_EQ(p1.distance(p2), 5);
     p2.y(-2);
-    EXPECT_EQ(p1.distance(p2), 5);
+    EXPECT_EQ(distance(p2,p1), 5);
+    // only one point has infinite coordinate
+    p2.x(INFINITY);
+    EXPECT_EQ(distance(p2,p1), INFINITY);
+    // points have different infinite coordinates
+    p1.y(INFINITY);
+    EXPECT_EQ(p1.distance(p2), INFINITY);
+    // points have same infinite coordinate with same sign
+    p1.y(7);
+    p1.x(INFINITY);
+    EXPECT_TRUE(std::isnan(distance(p2,p1)));
+    // points have same infinite coordinate with opposite sign
+    p2.x(-INFINITY);
+    EXPECT_EQ(distance(p1,p2), INFINITY);
 
     p2.x(NAN);
     EXPECT_THROW(p1.distance(p2), invalid_argument);
-    p2.x(INFINITY);
-    EXPECT_THROW(p1.distance(p2), invalid_argument);
+}
+
+TEST(Point, slope){
+    Point p1(1,1), p2(1,1);
+
+    // same points
+    EXPECT_THROW(p1.slope(p2), runtime_error);
+    p1.x() = NAN;
+    // one of the point is NAN
+    EXPECT_THROW(p2.slope(p1), runtime_error);
+
+    p1.x(1);
+    p2 = Point(2,2);
+    EXPECT_EQ(p1.slope(p2), 1);
+    EXPECT_EQ(p1.slope(p2), p2.slope(p1));
+    p2.y() = 1;
+    EXPECT_EQ(slope(p2,p1), 0);
+    EXPECT_EQ(slope(p2,p1), slope(p1,p2));
+    p2 = Point(1,2);
+    EXPECT_EQ(p1.slope(p2), INFINITY);
 }
 
 
@@ -125,9 +184,95 @@ TEST(Segment, constructor_get) {
     EXPECT_TRUE(s.p1().isnan());
     EXPECT_TRUE(s.p2().isnan());
 
-    EXPECT_NO_THROW(s = Point(2,3));
-    EXPECT_EQ(s.x(), 2);
-    EXPECT_EQ(s.y(), 3);
-    EXPECT_NO_THROW(s = Point(9,9));
-    EXPECT_EQ(s.get(), (pdd{9,9}));
+    EXPECT_NO_THROW(s = Segment({2,3},{4,5}));
+    EXPECT_EQ(s.p1(), Point(2,3));
+    EXPECT_EQ(s.p2(), Point(4,5));
+    EXPECT_NO_THROW(s = Segment({6,7},{8,9}));
+    EXPECT_EQ(s.get(), (ppp{{6,7},{8,9}}));
 }
+
+TEST(Segment, set) {
+    Segment s;
+
+    s.p1({1,1});
+    s.p2({2,2});
+    EXPECT_EQ(s.get(), (ppp{{1,1},{2,2}}));
+    s.set({3,3},{4,4});
+    EXPECT_EQ(s.get(), (ppp{{3,3},{4,4}}));
+}
+
+TEST(Segment, equal_operator) {
+    Segment s1, s2;
+    // points are NAN
+    EXPECT_FALSE(s1==s2);
+
+    s1 = Segment({1,1},{2,2});
+    s2 = Segment({1,1},{2,2});
+    EXPECT_TRUE(s1==s2);
+    s2.p1().x(3);
+    EXPECT_FALSE(s1==s2);
+    // one coordinate is NAN
+    s2.p1().x(NAN);
+    EXPECT_FALSE(s1==s2);
+    // same coordinates are NAN
+    s1.p1().x(NAN);
+    EXPECT_FALSE(s1==s2);
+    // one coordinate is NAN
+    s2.p1().x(INFINITY);
+    EXPECT_FALSE(s1==s2);
+    // same coordinates are +INF
+    s1.p1().x(INFINITY);
+    EXPECT_TRUE(s1==s2);
+    // same coordinates are +/-INF
+    s1.p1().x(-INFINITY);
+    EXPECT_FALSE(s1==s2);
+}
+
+TEST(Segment, unequal_operator) {
+    Segment s1, s2;
+    // points are NAN
+    EXPECT_TRUE(s1!=s2);
+
+    s1 = Segment({1,1},{2,2});
+    s2 = Segment({1,1},{2,2});
+    EXPECT_FALSE(s1!=s2);
+    s2.p1().x(3);
+    EXPECT_TRUE(s1!=s2);
+    // one coordinate is NAN
+    s2.p1().x(NAN);
+    EXPECT_TRUE(s1!=s2);
+    // same coordinates are NAN
+    s1.p1().x(NAN);
+    EXPECT_TRUE(s1!=s2);
+    // one coordinate is NAN
+    s2.p1().x(INFINITY);
+    EXPECT_TRUE(s1!=s2);
+    // same coordinates are +INF
+    s1.p1().x(INFINITY);
+    EXPECT_FALSE(s1!=s2);
+    // same coordinates are +/-INF
+    s1.p1().x(-INFINITY);
+    EXPECT_TRUE(s1!=s2);
+}
+
+TEST(Segment, length){
+    
+}
+
+TEST(Segment, slope){
+    Segment s({1,1},{1,1});
+
+    // same points
+    EXPECT_THROW(s.slope(), runtime_error);
+    s.p1().x() = NAN;
+    // one of the point is NAN
+    EXPECT_THROW(s.slope(), runtime_error);
+
+    s = Segment({1,1},{2,2});
+    EXPECT_EQ(s.slope(), 1);
+    s.p2().y() = 1;
+    EXPECT_EQ(s.slope(), 0);
+    s.p2() = {1,2};
+    EXPECT_EQ(s.slope(), INFINITY);
+}
+

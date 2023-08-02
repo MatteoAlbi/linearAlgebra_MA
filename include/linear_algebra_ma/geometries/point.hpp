@@ -33,16 +33,20 @@ public:
     bool operator!=(const Point & p) const;
     bool operator!=(Point const * const p) const;
 
-    double distance(const Point & p) const;
-
     bool isnan() const;
     bool isinf() const;
+
+    double distance(const Point & p) const;
+    double slope(const Point & p) const;
 
 private:
     double _x;
     double _y;
 
 };
+
+double distance(const Point & p1, const Point & p2);
+double slope(const Point & p1, const Point & p2);
 
 } // namespace geometries
 } // namespace MA

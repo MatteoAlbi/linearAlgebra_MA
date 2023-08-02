@@ -35,6 +35,7 @@ public:
     bool operator!=(const Segment & l) const;
     bool operator!=(Segment const * const l) const;
 
+    double length() const;
     double slope() const;
 
     double distance(const Point & p) const;

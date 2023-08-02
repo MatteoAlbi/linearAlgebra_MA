@@ -35,6 +35,9 @@ public:
     bool operator!=(const Segment & l) const;
     bool operator!=(Segment const * const l) const;
 
+    bool isnan() const;
+    bool isinf() const;
+
     double length() const;
     double slope() const;
 

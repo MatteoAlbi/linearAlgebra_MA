@@ -31,6 +31,14 @@ bool Segment::operator!=(Segment const * const l) const{
     return ! this->operator==(*l);
 }
 
+bool Segment::isnan() const{
+    return (_p1.isnan() || _p2.isnan());
+}
+
+bool Segment::isinf() const{
+    return (_p1.isinf() || _p2.isinf());
+}
+
 double Segment::length() const{
     return _p1.distance(_p2);
 }
@@ -40,6 +48,10 @@ double Segment::slope() const{
 }
 
 double Segment::distance(const Point & p) const{
+    // TODO: inf and nan management
+    if(this->isnan()) throw std::runtime_error("This segment has NAN values");
+    if(this->isinf()) throw std::runtime_error("This segment has INFINITY values");
+
     double line_points_dist = _p2.distance(_p1);
     if(line_points_dist == 0) return _p2.distance(p);
 
@@ -49,6 +61,10 @@ double Segment::distance(const Point & p) const{
 }
 
 Point Segment::intersection(const Segment & l) const{
+    // TODO: inf and nan management
+    if(this->isnan()) throw std::runtime_error("This segment has NAN values");
+    if(this->isinf()) throw std::runtime_error("This segment has INFINITY values");
+    
     return l.p1();
 }
 

@@ -83,7 +83,7 @@ double Point::distance(const Point & p) const{
 }
 
 double Point::slope(const Point & p) const{
-    if(this->isnan() || p.isnan()) throw std::runtime_error("One of the point is NAN");
+    if(this->isnan() || p.isnan()) throw std::invalid_argument("One of the point is NAN");
     if(this->operator==(p)){
         // throw std::runtime_error("The two points are the same: 0/0"); // 0/0 = ?
         return NAN;

@@ -24,6 +24,7 @@ TEST(infinity, expected_behavior){
      * Point::slope
      * distance(Point,Point)
      * Segment::length
+     * Segment::slope
     */
 
     EXPECT_TRUE(INFINITY > 0);
@@ -139,6 +140,7 @@ TEST(Point, distance){
     EXPECT_EQ(p1.distance(p2), 5);
     p2.y(-2);
     EXPECT_EQ(distance(p2,p1), 5);
+
     // only one point has infinite coordinate
     p2.x(INFINITY);
     EXPECT_EQ(distance(p2,p1), INFINITY);
@@ -161,11 +163,12 @@ TEST(Point, slope){
     Point p1(1,1), p2(1,1);
 
     // same points
-    EXPECT_THROW(p1.slope(p2), runtime_error);
+    EXPECT_TRUE(std::isnan(p1.slope(p2)));
     p1.x() = NAN;
     // one of the point is NAN
-    EXPECT_THROW(p2.slope(p1), runtime_error);
+    EXPECT_THROW(p2.slope(p1), invalid_argument);
 
+    // no coord = inf
     p1.x(1);
     p2 = Point(2,2);
     EXPECT_EQ(p1.slope(p2), 1);
@@ -173,8 +176,56 @@ TEST(Point, slope){
     p2.y() = 1;
     EXPECT_EQ(slope(p2,p1), 0);
     EXPECT_EQ(slope(p2,p1), slope(p1,p2));
+    // vertical
     p2 = Point(1,2);
     EXPECT_EQ(p1.slope(p2), INFINITY);
+
+    // both inf
+        // one as both coordinate = inf
+    p1 = Point(2, INFINITY);
+    p2 = Point(INFINITY, INFINITY);
+    EXPECT_TRUE(std::isnan(p1.slope(p2)));
+        // diff coordinate = inf
+    p2 = Point(INFINITY, 2);
+    EXPECT_TRUE(std::isnan(p2.slope(p1)));
+        // y coordinate, same sign
+    p2 = Point(1, INFINITY);
+    EXPECT_TRUE(std::isnan(p2.slope(p1)));
+        // y coordinate, diff sign
+    p1 = Point(2, -INFINITY);
+    EXPECT_EQ(slope(p1,p2), INFINITY);
+        // x coordinate, same sign
+    p1 = Point(-INFINITY, 3);
+    p2 = Point(-INFINITY, 1);
+    EXPECT_TRUE(std::isnan(p2.slope(p1)));
+        // x coordinate, diff sign
+    p1 = Point(INFINITY, 3);
+    EXPECT_EQ(slope(p2,p1), 0);
+
+    // only first is inf
+    p2 = Point(4,5);
+        // both coordinate = inf
+    p1 = Point(INFINITY, -INFINITY);
+    EXPECT_TRUE(std::isnan(slope(p1,p2)));
+        // only x
+    p1 = Point(INFINITY, 3);
+    EXPECT_EQ(slope(p1,p2), 0);
+        // only y
+    p1 = Point(6, -INFINITY);
+    EXPECT_EQ(slope(p1,p2), INFINITY);
+
+    // only second is inf
+    p1 = Point(4,5);
+        // both coordinate = inf
+    p2 = Point(INFINITY, -INFINITY);
+    EXPECT_TRUE(std::isnan(slope(p1,p2)));
+        // only x
+    p2 = Point(INFINITY, 3);
+    EXPECT_EQ(slope(p1,p2), 0);
+        // only y
+    p2 = Point(6, -INFINITY);
+    EXPECT_EQ(slope(p1,p2), INFINITY);
+
 }
 
 
@@ -263,10 +314,10 @@ TEST(Segment, slope){
     Segment s({1,1},{1,1});
 
     // same points
-    EXPECT_THROW(s.slope(), runtime_error);
+    EXPECT_TRUE(std::isnan(s.slope()));
     s.p1().x() = NAN;
     // one of the point is NAN
-    EXPECT_THROW(s.slope(), runtime_error);
+    EXPECT_THROW(s.slope(), invalid_argument);
 
     s = Segment({1,1},{2,2});
     EXPECT_EQ(s.slope(), 1);

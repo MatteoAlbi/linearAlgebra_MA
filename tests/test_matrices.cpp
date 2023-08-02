@@ -184,6 +184,26 @@ TEST(Matrix, set) {
     // cout << m2 << endl;
 }
 
+TEST(Matrix, is_vec){
+    EXPECT_FALSE(
+        Matrix(2,3,
+            {10,11,13,
+            14,15,17}
+        ).is_vec()
+    );
+    EXPECT_TRUE(
+        Matrix(1,3,
+            {10,11,13}
+        ).is_vec()
+    );
+    EXPECT_TRUE(
+        Matrix(3,1,
+            {10,11,13}
+        ).is_vec()
+    );
+
+}
+
 TEST(Matrix, reshape){
     Matrix m1(4,4,
         {10,11,12,13,
@@ -196,9 +216,22 @@ TEST(Matrix, reshape){
          18,19,20,21,22,23,24,25}
     );
 
+    EXPECT_THROW(Matrix().reshape(0,0), runtime_error);
     EXPECT_THROW(m1.reshape(3,5), invalid_argument);
     EXPECT_EQ(m1.reshape(2,8), m2);
     
+}
+
+TEST(Matrix, to_rc_vec){
+    Matrix m1(2,3,{10,11,13,14,15,17});
+    Matrix m2(1,6,{10,11,13,14,15,17});
+    Matrix m3(6,1,{10,11,13,14,15,17});
+
+    EXPECT_THROW(Matrix().to_c_vec(), runtime_error);
+    EXPECT_THROW(Matrix().to_r_vec(), runtime_error);
+    EXPECT_EQ(m1.to_c_vec(), m3);
+    EXPECT_EQ(m1.to_r_vec(), m2);
+    EXPECT_EQ(m1.to_c_vec().t(), m1.to_r_vec());
 }
 
 TEST(Matrix, transpose){

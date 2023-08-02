@@ -69,6 +69,13 @@ public:
     void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m);
 
     /**
+     * @brief check if matrix is a vector
+     * i.e. one of the dimension is 1
+     * @return true if is at least one dim is == 1
+     */
+    bool is_vec() const;
+
+    /**
      * @brief returns a matrix with the same underlaying
      * double array, but different shape. Size must be the same
      * @param r rows of new matrix
@@ -76,6 +83,19 @@ public:
      * @return Matrix: matrix with same data and specified shape
      */
     Matrix reshape(const uint & r, const uint & c) const;
+
+    /**
+     * @brief rehsape matrix into column vec
+     * @return Matrix: column vec
+     */
+    Matrix to_c_vec() const;
+
+    /**
+     * @brief rehsape matrix into row vec
+     * @return Matrix: row vec
+     */
+    Matrix to_r_vec() const;
+
 
 #pragma endregion get_set
 

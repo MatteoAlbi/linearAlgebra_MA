@@ -96,12 +96,28 @@ void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m){
 
 }
 
+
+bool Matrix::is_vec() const{
+    return this->_r == 1 || this->_c == 1;
+}
+
 Matrix Matrix::reshape(const uint & r, const uint & c) const{
+    if(this->size() == 0) throw std::runtime_error("Matrix size is null");
     if(r*c != this->size()) throw std::invalid_argument("New matrix size must match the current one");
 
     Matrix ret(r,c);
     std::copy(_v, _v + this->size(), ret._v);
     return ret;
+}
+
+Matrix Matrix::to_c_vec() const{
+    if(this->size() == 0) throw std::runtime_error("Matrix size is null");
+    return this->reshape(this->size(), 1);
+}
+
+Matrix Matrix::to_r_vec() const{
+    if(this->size() == 0) throw std::runtime_error("Matrix size is null");
+    return this->reshape(1, this->size());
 }
 
 

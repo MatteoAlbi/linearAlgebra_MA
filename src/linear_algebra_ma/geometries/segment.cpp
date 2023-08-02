@@ -62,6 +62,30 @@ double Segment::distance(const Point & p) const{
                 / seg_length;
 }
 
+
+bool Segment::point_on_seg(const Point & p) const{
+    // A and B are the extremities of the current segment
+    // C is the point to check
+
+    // Create the vector AB
+    Matrix AB = c_vec(_p2 - _p1);
+    // Create the vector AC
+    Matrix AC = c_vec(p - _p1);
+
+    // check if points are not aligned using cross prod
+    Matrix AB3 = AB | Matrix(1,1, {0});
+    Matrix AC3 = AC | Matrix(1,1, {0});
+    if(AB3.cross(AC3) != Matrix(3,1,{0,0,0})) return false;
+
+    // Compute the dot product of vectors
+    double KAC = AB.dot(AC);
+    // Compute the square of the segment length 
+    double KAB = AB.dot(AB); 
+
+    if (KAC<0 || KAC>KAB) return false; 
+    else return true;
+}
+
 Point Segment::intersection(const Segment & l) const{
     // TODO: inf and nan management
     if(this->isnan()) throw std::runtime_error("This segment has NAN values");
@@ -76,16 +100,26 @@ Point Segment::intersection(const Segment & l) const{
     Matrix A = c_vec(_p2 - _p1) & c_vec(q1 - q2);
 
     // non singular A
+    if(! A.is_sing()){
+        Matrix x = Matrix::solve_ls(A, b);
+        if( (0 <= x(0) && x(0) <= 1) && (0 <= x(1) && x(1) <= 1)){
+            Matrix tmp = c_vec(_p1) * (1 - x(0)) + c_vec(_p2) * x(0);
+            return Point(tmp(0), tmp(1));
+        }
+        else return Point();
+    }
     
-    Matrix x = Matrix::solve_ls(A, b);
-
-    if( (0 <= x(0) && x(0) <= 1) && (0 <= x(1) && x(1) <= 1)){
-        Matrix tmp = c_vec(_p1) * (1 - x(0)) + c_vec(_p2) * x(0);
-        return Point(tmp(0), tmp(1));
+    // parallel segments
+    //this start inside l
+    if(l.point_on_seg(_p1)){
+        return _p1;
+    }
+    //this end inside l
+    else if(l.point_on_seg(_p2)){
+        if(this->point_on_seg(l._p1)) return l._p1;
+        else return l._p2;
     }
     else return Point();
-    
-    return l.p1();
 }
 
 

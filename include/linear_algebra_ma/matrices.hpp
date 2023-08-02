@@ -144,6 +144,21 @@ public:
     Matrix t() const;
 
     /**
+     * @brief computes dot product this.v
+     * @param v second vector
+     * @return double: dot product 
+     */
+    double dot(const Matrix & v) const;
+
+    /**
+     * @brief computes cross product this*v
+     * implemented only for vectors of length 2 and 3
+     * @param v second vector
+     * @return Matrix: cross product (as column vec)
+     */
+    Matrix cross(const Matrix & v) const;
+
+    /**
      * @brief compute submatrix matrix obtained by deleting
      * the p-th row and q-t column
      * 

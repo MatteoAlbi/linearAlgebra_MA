@@ -131,6 +131,28 @@ Matrix Matrix::t() const{
     return ret;
 }
 
+double Matrix::dot(const Matrix & v) const{
+    if(! this->is_vec()) throw std::invalid_argument("This obj is not a vector");
+    if(! v.is_vec()) throw std::invalid_argument("Given obj is not a vector");
+    if(this->size() != v.size()) throw std::invalid_argument("Vectors length don't match");
+
+    double ret = 0;
+    for(uint i=0; i<v.size(); i++) ret += this->operator()(i) * v(i);
+    return ret;
+}
+
+Matrix Matrix::cross(const Matrix & v) const{
+    if(! this->is_vec()) throw std::invalid_argument("This obj is not a vector");
+    if(! v.is_vec()) throw std::invalid_argument("Given obj is not a vector");
+    if(v.size() != 3 || this->size() != v.size()) throw std::invalid_argument("Cross product defined only for 3d vectors");
+
+    Matrix ret(3,1);
+    ret(0) =   ((*this)(1) * v(2)) - ((*this)(2) * v(1));
+    ret(1) = -(((*this)(0) * v(2)) - ((*this)(2) * v(0)));
+    ret(2) =   ((*this)(0) * v(1)) - ((*this)(1) * v(0));
+    return ret;
+}
+
 Matrix Matrix::submat_del(const uint & p, const uint & q) const{
     if(this->_r <= p) throw std::invalid_argument("p greater than matrix rows");
     if(this->_c <= q) throw std::invalid_argument("q greater than matrix cols");

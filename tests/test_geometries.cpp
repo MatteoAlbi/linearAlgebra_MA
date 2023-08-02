@@ -307,7 +307,18 @@ TEST(Segment, unequal_operator) {
 }
 
 TEST(Segment, length){
-    
+    Segment s({2,2}, {2,2});
+
+    EXPECT_EQ(s.length(), 0);
+    s.p2().x(5);
+    EXPECT_EQ(s.length(), 3);
+    s.p2().y(6);
+    EXPECT_EQ(s.length(), 5);
+    s.p2().y(-2);
+    EXPECT_EQ(s.length(), 5);
+
+    s.p2().x(NAN);
+    EXPECT_THROW(s.length(), invalid_argument);
 }
 
 TEST(Segment, slope){

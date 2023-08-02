@@ -48,23 +48,23 @@ double const * Matrix::getV() const{return this->_v;}
 
 
 void Matrix::setV(std::vector<double> v){
-    if(v.size() < this->size()) throw out_of_range("Not enough values in v to init the matrix");
+    if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
 
     std::copy(v.begin(), v.begin() + this->size(), this->_v);
 }
 
-void Matrix::setV(pair<uint,uint> rs, pair<uint,uint> cs, std::vector<double> v){
-    if(rs.second >= this->_r) throw out_of_range("Row index greater than this matrix rows");
-    if(cs.second >= this->_c) throw out_of_range("Col index greater than this matrix cols");
-    if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second"); 
-    if(cs.first > cs.second) throw invalid_argument("Col first element must be <= of second");
+void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v){
+    if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
+    if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
+    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
+    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
 
     if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
     if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     uint nRows = rs.second - rs.first + 1;
     uint nCols = cs.second - cs.first + 1;
-    if(v.size() < nRows*nCols) throw out_of_range("Given vector doesn't have enough elements");
+    if(v.size() < nRows*nCols) throw std::out_of_range("Given vector doesn't have enough elements");
 
     for (uint i = 0; i < nRows; i++){
         for (uint j = 0; j < nCols; j++){
@@ -74,19 +74,19 @@ void Matrix::setV(pair<uint,uint> rs, pair<uint,uint> cs, std::vector<double> v)
 
 }
 
-void Matrix::setV(pair<uint,uint> rs, pair<uint,uint> cs, Matrix m){
-    if(rs.second >= this->_r) throw out_of_range("Row index greater than this matrix rows");
-    if(cs.second >= this->_c) throw out_of_range("Col index greater than this matrix cols");
-    if(rs.first > rs.second) throw invalid_argument("Row first element must be <= of second"); 
-    if(cs.first > cs.second) throw invalid_argument("Col first element must be <= of second");
+void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m){
+    if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
+    if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
+    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
+    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
 
     if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
     if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     uint nRows = rs.second - rs.first + 1;
     uint nCols = cs.second - cs.first + 1;
-    if(m.getR() < nRows) throw out_of_range("Given matrix doesn't have enough rows");
-    if(m.getC() < nCols) throw out_of_range("Given matrix doesn't have enough cols");
+    if(m.getR() < nRows) throw std::out_of_range("Given matrix doesn't have enough rows");
+    if(m.getC() < nCols) throw std::out_of_range("Given matrix doesn't have enough cols");
 
     for (uint i = 0; i < nRows; i++){
         for (uint j = 0; j < nCols; j++){
@@ -108,8 +108,8 @@ Matrix Matrix::t() const{
 }
 
 Matrix Matrix::submat_del(const uint & p, const uint & q) const{
-    if(this->_r <= p) throw invalid_argument("p greater than matrix rows");
-    if(this->_c <= q) throw invalid_argument("q greater than matrix cols");
+    if(this->_r <= p) throw std::invalid_argument("p greater than matrix rows");
+    if(this->_c <= q) throw std::invalid_argument("q greater than matrix cols");
 
     uint i = 0, j = 0;
 
@@ -140,7 +140,7 @@ Matrix Matrix::submat_del(const uint & p, const uint & q) const{
 }
 
 double Matrix::det() const{
-    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
     // empty matrix: return 0
     if (this->_r == 0){
@@ -176,20 +176,20 @@ double Matrix::det() const{
 }
 
 double Matrix::minor(const uint & p, const uint & q) const{
-    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
     return this->submat_del(p,q).det();
 }
 
 double Matrix::cof(const uint & p, const uint & q) const{
-    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
     int sign = (p+q % 2) == 0 ? 1 : -1;
     return this->submat_del(p,q).det() * sign;
 }
 
 Matrix Matrix::cof_mat() const{
-    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
     Matrix ret(this->_r, this->_c);
     for(uint i=0; i<this->_r; i++) for(uint j=0; j<this->_c; j++){
@@ -200,7 +200,7 @@ Matrix Matrix::cof_mat() const{
 }
 
 Matrix Matrix::adj() const{
-    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
     // same formula of cofactor matrix, but inverting indeces to get the transpose
     Matrix ret(this->_r, this->_c);
@@ -212,11 +212,11 @@ Matrix Matrix::adj() const{
 }
 
 Matrix Matrix::inv() const{
-    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
     // Find determinant of A
     double det = this->det(); 
-    if (det == 0) throw runtime_error("Matrix not invertible: det = 0");
+    if (det == 0) throw std::runtime_error("Matrix not invertible: det = 0");
  
     // Find Inverse using formula "inverse(M) = adj(M)/det(M)"
     return this->adj() / det;
@@ -226,13 +226,13 @@ Matrix Matrix::pinv_left() const{
     try{
         return (this->t() * (*this)).inv() * this->t();
     }
-    catch(const runtime_error& rte){
+    catch(const std::runtime_error& rte){
         std::cerr << rte.what() << '\n';
-        throw runtime_error("Matrix (m.t * m) not invertible");
+        throw std::runtime_error("Matrix (m.t * m) not invertible");
     }
-    catch(const exception& e){
+    catch(const std::exception& e){
         std::cerr << e.what() << '\n';
-        throw runtime_error("Unknown error occured");
+        throw std::runtime_error("Unknown error occured");
     }
 }
 
@@ -247,7 +247,7 @@ double Matrix::norm2() const{
     else{
         // cout << "Norm only appliable to row/column vectors" << endl;
         // return NULL;
-        throw invalid_argument("Norm only appliable to row/column vectors");
+        throw std::invalid_argument("Norm only appliable to row/column vectors");
     }
 }
 
@@ -284,7 +284,7 @@ Matrix diag(const uint & dim, double * v){
 }
 
 double * diag(const Matrix & m){
-    uint dim = min(m.getC(),m.getR());
+    uint dim = std::min(m.getC(),m.getR());
     double * v = new double[dim]();
 
     for(uint i=0;i<dim; i++){
@@ -357,13 +357,13 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
 */
 
 void Matrix::lu_dec(Matrix & L, Matrix & U) const{
-    if(this->_r != this->_c) throw invalid_argument("The matrix must be square");
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
     // check if its decomposable: all leading minors != 0
     Matrix sub;
     sub.operator=(this);
     for(int i=this->_r-1; i>= 0; i--){
-        if(sub.det() == 0) throw runtime_error("Leading minor #" + std::to_string(i+1) + " is null, decompositionis not possible");
+        if(sub.det() == 0) throw std::runtime_error("Leading minor #" + std::to_string(i+1) + " is null, decompositionis not possible");
         sub = sub.submat_del(i,i);
     }
 
@@ -397,7 +397,7 @@ void Matrix::lu_dec(Matrix & L, Matrix & U) const{
             else {
                 double sum = 0;
                 for (uint j = 0; j < i; j++) sum += L(k,j) * U(j,i);
-                if(U(i,i) == 0) throw runtime_error("Impossible to decompose matrix, permutations are necessary");
+                if(U(i,i) == 0) throw std::runtime_error("Impossible to decompose matrix, permutations are necessary");
                 L(k,i) = (this->operator()(k,i) - sum) / U(i,i);
             }
         }
@@ -410,11 +410,11 @@ void Matrix::lu_dec(Matrix & L, Matrix & U) const{
 
 #pragma region ls_solution
 Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
-    if(U.getC() != U.getR()) throw invalid_argument("Coefficient matrix U must be square");
-    if(B.getR() != U.getC()) throw invalid_argument("Rows of B must be equal to the columns of U");
+    if(U.getC() != U.getR()) throw std::invalid_argument("Coefficient matrix U must be square");
+    if(B.getR() != U.getC()) throw std::invalid_argument("Rows of B must be equal to the columns of U");
     // check all U diagonal elements are different from zero
     for(uint i=0; i<U.getC(); i++) if(U(i,i) == 0){
-        throw runtime_error("System of equation is underdetermined");
+        throw std::runtime_error("System of equation is underdetermined");
     }
 
     Matrix res(U.getR(), B.getC());
@@ -442,11 +442,11 @@ Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
 
 
 Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
-    if(L.getC() != L.getR()) throw invalid_argument("Coefficient matrix L must be square");
-    if(B.getR() != L.getC()) throw invalid_argument("Rows of B must be equal to the columns of L");
+    if(L.getC() != L.getR()) throw std::invalid_argument("Coefficient matrix L must be square");
+    if(B.getR() != L.getC()) throw std::invalid_argument("Rows of B must be equal to the columns of L");
     // check all L diagonal elements are different from zero
     for(uint i=0; i<L.getC(); i++) if(L(i,i) == 0){
-        throw runtime_error("System of equation is underdetermined");
+        throw std::runtime_error("System of equation is underdetermined");
     }
 
     Matrix res(L.getR(), B.getC());
@@ -481,13 +481,13 @@ Matrix Matrix::matrix_l_divide(Matrix const & A, Matrix const & B){
         return backward_sub(U, res_tmp);
     }
     else{
-        throw runtime_error("Methods for not square A are yet to be implemented");
+        throw std::runtime_error("Methods for not square A are yet to be implemented");
     }
 
 }
 
 Matrix Matrix::solve_ls(Matrix const & A, Matrix const & B){
-    if(A.getC() != A.getR()) throw invalid_argument("Coefficient matrix A must be square");
+    if(A.getC() != A.getR()) throw std::invalid_argument("Coefficient matrix A must be square");
     return Matrix::matrix_l_divide(A,B);
 }
 

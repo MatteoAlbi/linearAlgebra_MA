@@ -4,6 +4,7 @@
 using namespace MA;
 
 using std::cout, std::endl, std::string;
+using std::invalid_argument, std::runtime_error, std::out_of_range;
 
 TEST(Matrix, constructor_get) {
     EXPECT_NO_THROW(Matrix());

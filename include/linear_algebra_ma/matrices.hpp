@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-using namespace std;
 typedef unsigned int uint;
 
 namespace MA
@@ -57,9 +56,9 @@ public:
 
     double& operator()(const uint & i);
     const double& operator()(const uint & i) const;
-    Matrix operator()(pair<uint,uint> rs, const uint & c) const;
-    Matrix operator()(const uint & r, pair<uint,uint> cs) const;
-    Matrix operator()(pair<uint,uint> rs, pair<uint,uint> cs) const;
+    Matrix operator()(std::pair<uint,uint> rs, const uint & c) const;
+    Matrix operator()(const uint & r, std::pair<uint,uint> cs) const;
+    Matrix operator()(std::pair<uint,uint> rs, std::pair<uint,uint> cs) const;
     Matrix& operator=(const Matrix& m);
     Matrix& operator=(Matrix const * const m);
 
@@ -68,8 +67,8 @@ public:
     uint size() const;
     double const * getV() const;
     void setV(std::vector<double> v);
-    void setV(pair<uint,uint> rs, pair<uint,uint> cs, std::vector<double> v);
-    void setV(pair<uint,uint> rs, pair<uint,uint> cs, Matrix m);
+    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v);
+    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m);
 #pragma endregion get_set
 
 #pragma region comparators
@@ -303,8 +302,8 @@ public:
 };
 
 // cout operators
-ostream& operator<<(ostream& os, const Matrix& m);
-ostream& operator<<(ostream& os, const Matrix * m);
+std::ostream& operator<<(std::ostream& os, const Matrix& m);
+std::ostream& operator<<(std::ostream& os, const Matrix * m);
 
 #pragma region math_operators
 Matrix operator+(const Matrix& m, const double& k);

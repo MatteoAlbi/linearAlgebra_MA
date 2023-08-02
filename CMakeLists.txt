@@ -51,6 +51,27 @@ target_compile_options(geometries PRIVATE
 target_link_libraries(geometries matrices)
 
 
+#-- all
+# add library
+add_library( ${PROJECT_NAME}
+    "src/linear_algebra_ma/matrices/matrices.cpp"
+    "src/linear_algebra_ma/matrices/operators.cpp"
+    "src/linear_algebra_ma/geometries/point.cpp"
+    "src/linear_algebra_ma/geometries/segment.cpp"
+)
+
+# include directories
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+# turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
+target_compile_options(${PROJECT_NAME} PRIVATE 
+    "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
+)
+
+
 ################################################################################
 # Unit tests
 ################################################################################

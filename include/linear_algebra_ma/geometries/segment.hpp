@@ -43,6 +43,22 @@ public:
 
     double distance(const Point & p) const;
 
+    /**
+     * @brief check if given point intersect this segment
+     * i.e. the point belongs to the segment
+     * https://lucidar.me/en/mathematics/check-if-a-point-belongs-on-a-line-segment/
+     * @param p given point
+     * @return true if point intersect the segment
+     */
+    bool point_on_seg(const Point & p) const;
+
+    /**
+     * @brief check if this segment intersects segment l
+     * code from:
+     * https://blogs.sas.com/content/iml/2018/07/09/intersection-line-segments.html
+     * @param l second segment
+     * @return point of intersection
+     */
     Point intersection(const Segment & l) const;
 
 private:

@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <string>
 #include <math.h>
+#include <stdexcept>
+#include <exception>
 
 namespace MA
 {
@@ -20,8 +22,10 @@ public:
     const double & y() const;
     double & x();
     double & y();
+    std::pair<const double &, const double &> get() const;
     void x(const double & x);
     void y(const double & y);
+    void set(const double & x, const double & y);
 
     bool operator==(const Point & p) const;
     bool operator==(Point const * const p) const;

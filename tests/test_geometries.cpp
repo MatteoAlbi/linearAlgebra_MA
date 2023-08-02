@@ -227,6 +227,10 @@ TEST(Point, slope){
     EXPECT_EQ(slope(p1,p2), INFINITY);
 
 }
+// test to_vec
+// test sum and diff operator
+
+
 
 
 TEST(Segment, constructor_get) {
@@ -338,3 +342,21 @@ TEST(Segment, slope){
     EXPECT_EQ(s.slope(), INFINITY);
 }
 
+TEST(Segment, intersection){
+    // intersection at (0.95, 1.25)
+    Segment p({1.8,2.1},{0.8,1.1});
+    Segment q({1,1.25},{0,1.25});
+    // cout << p.intersection(q) << endl;
+    EXPECT_EQ(p.intersection(q), Point(0.95, 1.25));
+
+    // no intersection
+    p = Segment({-1,0.5},{1,0.5});
+    q = Segment({0,1},{0,2});
+    // cout << p.intersection(q) << endl;
+    EXPECT_TRUE(p.intersection(q).isnan());
+
+    // overlapping
+    p = Segment({-1,1},{1,1});
+    q = Segment({0,1},{2,1});
+    EXPECT_EQ(p.intersection(q), Point(0, 1));
+}

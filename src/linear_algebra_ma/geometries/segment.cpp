@@ -52,18 +52,22 @@ double Segment::distance(const Point & p) const{
     if(this->isnan()) throw std::runtime_error("This segment has NAN values");
     if(this->isinf()) throw std::runtime_error("This segment has INFINITY values");
 
-    double line_points_dist = _p2.distance(_p1);
-    if(line_points_dist == 0) return _p2.distance(p);
+    // TODO: if projection of point does not belong to the segment
+    // take closest extreme
+    double seg_length = this->length();
+    if(seg_length == 0) return _p2.distance(p);
 
     return fabs((_p2.x() - _p1.x()) * (_p1.y() - p.y()) - 
                 (_p2.y() - _p1.y()) * (_p1.x() - p.x())) 
-                / sqrt(line_points_dist);
+                / seg_length;
 }
 
 Point Segment::intersection(const Segment & l) const{
     // TODO: inf and nan management
     if(this->isnan()) throw std::runtime_error("This segment has NAN values");
     if(this->isinf()) throw std::runtime_error("This segment has INFINITY values");
+
+    
     
     return l.p1();
 }

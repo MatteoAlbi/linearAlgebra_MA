@@ -16,28 +16,30 @@ namespace MA
 namespace geometries
 {
 
-class Line{
+class Segment{
 public:
-    Line(Point p1 = {NAN,NAN}, Point p2 = {NAN,NAN});
+    Segment(Point p1 = {NAN,NAN}, Point p2 = {NAN,NAN});
 
     const Point & p1() const;
     const Point & p2() const;
     Point & p1();
     Point & p2();
+    std::pair<const Point &,const Point &> get() const;
     void p1(const Point & p1);
     void p2(const Point & p2);
+    void set(const Point & p1, const Point & p2);
 
-    bool operator==(const Line & l) const;
-    bool operator==(Line const * const l) const;
+    bool operator==(const Segment & l) const;
+    bool operator==(Segment const * const l) const;
 
-    bool operator!=(const Line & l) const;
-    bool operator!=(Line const * const l) const;
+    bool operator!=(const Segment & l) const;
+    bool operator!=(Segment const * const l) const;
 
     double slope() const;
 
     double distance(const Point & p) const;
 
-    Point intersection(const Line & l) const;
+    Point intersection(const Segment & l) const;
 
 private:
     Point _p1;

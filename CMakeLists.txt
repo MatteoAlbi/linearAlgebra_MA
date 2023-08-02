@@ -34,7 +34,7 @@ target_compile_options(matrices PRIVATE
 # add library
 add_library(geometries
     "src/linear_algebra_ma/geometries/point.cpp"
-    "src/linear_algebra_ma/geometries/line.cpp"
+    "src/linear_algebra_ma/geometries/segment.cpp"
 )
 
 # include directories

@@ -110,15 +110,22 @@ Point Segment::intersection(const Segment & l) const{
     }
     
     // parallel segments
-    //this start inside l
+    // this.start inside l
     if(l.point_on_seg(_p1)){
         return _p1;
     }
-    //this end inside l
+    // this.end inside l
     else if(l.point_on_seg(_p2)){
         if(this->point_on_seg(l._p1)) return l._p1;
         else return l._p2;
     }
+    // l starts and finishes inside this
+    else if(this->point_on_seg(l._p1) && this->point_on_seg(l._p2)){
+        // take the point closest to this.start
+        if(l._p1.distance(_p1) < l._p2.distance(_p1)) return l._p1;
+        else return l._p2;
+    }
+    // no intersection
     else return Point();
 }
 

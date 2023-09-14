@@ -125,7 +125,7 @@ bool Matrix::operator==(const Matrix & m) const{
     if(this->c() != m.c()) return false;
     // check values
     for(uint i=0; i<m.r(); i++) for(uint j=0; j<m.c(); j++){
-        if((*this)(i,j) != m(i,j)) return false;
+        if( std::fabs((*this)(i,j) - m(i,j)) > Matrix::epsilon) return false;
     }
 
     return true;

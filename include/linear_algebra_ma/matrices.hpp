@@ -19,12 +19,37 @@ namespace MA
 {
 
 class Matrix {
-protected: 
+protected:
+
+    // number of decimals used in double comparison
+    inline static uint double_precision = 10;
+    // epsilon used in double comparison
+    inline static double epsilon = std::pow(10,-10);
+
     uint _r;
     uint _c;
     double * _v;
 
 public:
+
+    /**
+     * @brief set the double precision used in comparison
+     * @param dp number of digits considered during comparison
+     */
+    inline static void set_double_precision(uint dp){ 
+        if(dp > 15) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
+        Matrix::double_precision = dp; 
+        Matrix::epsilon = std::pow(10,-dp);
+    }
+
+    /**
+     * @brief get the double precision used in comparison
+     * @return number of digits considered during comparison
+     */
+    inline static uint get_double_precision(){ 
+        return Matrix::double_precision; 
+    }
+    
 
 #pragma region constructor_destructor
     Matrix();

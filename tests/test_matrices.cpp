@@ -222,6 +222,38 @@ TEST(Matrix, reshape){
     
 }
 
+TEST(Matrix, swap){
+    Matrix m1(4,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21,
+         22,23,24,25}
+    );
+
+    // throws out of range
+    EXPECT_THROW(m1.swap_rows(1,4), out_of_range);
+    EXPECT_THROW(m1.swap_rows(4,1), out_of_range);
+    EXPECT_THROW(m1.swap_cols(1,4), out_of_range);
+    EXPECT_THROW(m1.swap_cols(4,1), out_of_range);
+
+    // swap
+    m1.swap_rows(1,3);
+    EXPECT_EQ(m1, Matrix(4,4,
+        {10,11,12,13,
+         22,23,24,25,
+         18,19,20,21,
+         14,15,16,17}
+    ));
+
+    m1.swap_cols(0,2);
+    EXPECT_EQ(m1, Matrix(4,4,
+        {12,11,10,13,
+         24,23,22,25,
+         20,19,18,21,
+         16,15,14,17}
+    ));
+}
+
 TEST(Matrix, to_rc_vec){
     Matrix m1(2,3,{10,11,13,14,15,17});
     Matrix m2(1,6,{10,11,13,14,15,17});
@@ -417,70 +449,6 @@ TEST(Matrix, multiply_operator){
     EXPECT_THROW(m1*=m1, invalid_argument);
 }
 
-TEST(Matrix, divide_operator){
-    std::vector<double> v1 =  {1,3,5,9,1,3,1,7,4,3,9,7};
-    std::vector<double> v2 = v1;
-    Matrix m1(3,4,v1);
-
-    // int
-    for(int i=0; i<v2.size(); i++) v2[i]/=2;
-    EXPECT_EQ(m1/2, Matrix(3,4, v2));
-    m1/=2;
-    EXPECT_EQ(m1, Matrix(3,4, v2));
-    EXPECT_NO_THROW(Matrix(0,3)/=2);
-    EXPECT_NO_THROW(Matrix(3,0)/2);
-
-    // double
-    m1 = Matrix(3,4,v1);
-    v2 = v1;
-    for(int i=0; i<v2.size(); i++) v2[i]/=2.5;
-    EXPECT_EQ(m1/2.5, Matrix(3,4, v2));
-    m1/=2.5;
-    EXPECT_EQ(m1, Matrix(3,4, v2));
-    EXPECT_NO_THROW(Matrix(0,3)/=2.5);
-    EXPECT_NO_THROW(Matrix(3,0)/2.5);
-
-    // matrices
-    Matrix A(4,4,
-        {1,3,4,2,
-         0,2,1,-2,
-         2,1,-3,2,
-         0,2,1,-1}
-    );
-    Matrix b(1,4, {2,4,1,3});
-    // A not square
-    EXPECT_THROW( b / A({0,3},{1,3}), runtime_error);
-    // shape doesn't match
-    EXPECT_THROW((b(0,{1,3}) / A), invalid_argument);
-    // underdetermined
-    Matrix C(4,4,
-        {1,3,4,2,
-         0,2,1,-2,
-         2,1,-3,2,
-         0,0,0,0}
-    );
-    EXPECT_THROW(b / C, runtime_error);
-    // solution
-    EXPECT_EQ(b / A.t(), Matrix(1,4, {1,1,0,-1}));
-
-    // A not square
-    EXPECT_THROW( b/=A({0,3},{1,3}), runtime_error);
-    // shape doesn't match
-    EXPECT_THROW((b(0,{1,3})/=A), invalid_argument);
-    // underdetermined
-    C = Matrix(4,4,
-        {1,3,4,2,
-         0,2,1,-2,
-         2,1,-3,2,
-         0,0,0,0}
-    );
-    EXPECT_THROW(b/=C, runtime_error);
-    // solution
-    EXPECT_NO_THROW(b /= A.t());
-    EXPECT_EQ(b, Matrix(1,4, {1,1,0,-1}));
-
-}
-
 /*
 TEST(Matrix, concatenate_operators){
     // TODO
@@ -642,14 +610,14 @@ TEST(Matrix, qr_dec){
 
 TEST(Matrix, lup_dec){
     // matrices not square
-    Matrix m1,L,U;
+    Matrix m1,L,U,P;
     m1 = Matrix (3,4,
         {1,3,5,9,
          0,2,1,7,
          4,1,8,2,
          5,2,1,9}
     );
-    EXPECT_THROW(m1.lup_dec(L,U), invalid_argument);
+    EXPECT_THROW(m1.lup_dec(L,U,P), invalid_argument);
 
     // matrices decomposable
     m1 = Matrix (4,4,
@@ -658,17 +626,19 @@ TEST(Matrix, lup_dec){
          4,1,3,2,
          5,2,1,4}
     );
-    EXPECT_NO_THROW(m1.lup_dec(L,U));
-    EXPECT_EQ(L*U, m1);
+    EXPECT_NO_THROW(m1.lup_dec(L,U,P));
+    EXPECT_EQ(L*U, P*m1);
 
-    // matrices not decomposable
-    m1 = Matrix(4,4,
-        {1,3,5,9,
-         1,3,1,7,
-         4,3,9,7,
-         5,2,0,9}
+    m1 = Matrix (4,4,
+        {2, 0, 2, 0.6,
+         3, 3, 4, -2,
+         5, 5, 4, 2,
+        -1, -2, 3.4, -1}
     );
-    EXPECT_THROW(m1.lup_dec(L,U), runtime_error);
+    EXPECT_NO_THROW(m1.lup_dec(L,U,P));
+    // cout << L << endl << U << endl << P << endl;
+    EXPECT_EQ(L*U, P*m1);
+
 }
 
 TEST(Matrix, backward_sub){
@@ -752,6 +722,70 @@ TEST(Matrix, matrix_l_divide){
     // cout << L << endl;
     // cout << U << endl;
     // cout << Matrix::matrix_l_divide(A,b) << endl;
+}
+
+TEST(Matrix, divide_operator){
+    std::vector<double> v1 =  {1,3,5,9,1,3,1,7,4,3,9,7};
+    std::vector<double> v2 = v1;
+    Matrix m1(3,4,v1);
+
+    // int
+    for(int i=0; i<v2.size(); i++) v2[i]/=2;
+    EXPECT_EQ(m1/2, Matrix(3,4, v2));
+    m1/=2;
+    EXPECT_EQ(m1, Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)/=2);
+    EXPECT_NO_THROW(Matrix(3,0)/2);
+
+    // double
+    m1 = Matrix(3,4,v1);
+    v2 = v1;
+    for(int i=0; i<v2.size(); i++) v2[i]/=2.5;
+    EXPECT_EQ(m1/2.5, Matrix(3,4, v2));
+    m1/=2.5;
+    EXPECT_EQ(m1, Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(0,3)/=2.5);
+    EXPECT_NO_THROW(Matrix(3,0)/2.5);
+
+    // matrices
+    Matrix A(4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1}
+    );
+    Matrix b(1,4, {2,4,1,3});
+    // A not square
+    EXPECT_THROW( b / A({0,3},{1,3}), runtime_error);
+    // shape doesn't match
+    EXPECT_THROW((b(0,{1,3}) / A), invalid_argument);
+    // underdetermined
+    Matrix C(4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(b / C, runtime_error);
+    // solution
+    EXPECT_EQ(b / A.t(), Matrix(1,4, {1,1,0,-1}));
+
+    // A not square
+    EXPECT_THROW( b/=A({0,3},{1,3}), runtime_error);
+    // shape doesn't match
+    EXPECT_THROW((b(0,{1,3})/=A), invalid_argument);
+    // underdetermined
+    C = Matrix(4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(b/=C, runtime_error);
+    // solution
+    EXPECT_NO_THROW(b /= A.t());
+    EXPECT_EQ(b, Matrix(1,4, {1,1,0,-1}));
+
 }
 
 TEST(Matrix, solve_ls){

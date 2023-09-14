@@ -80,9 +80,6 @@ void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m){
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
 
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
-
     uint nRows = rs.second - rs.first + 1;
     uint nCols = cs.second - cs.first + 1;
     if(m.r() < nRows) throw std::out_of_range("Given matrix doesn't have enough rows");
@@ -124,7 +121,7 @@ void Matrix::swap_rows(const uint & r1, const uint & r2){
     if(r1 >= _r || r2 >= _r) throw std::out_of_range("Given parameters exceed the matrix rows indeces");
 
     // extract r1
-    auto tmp = this->operator()(r1, {0, _c-1});
+    Matrix tmp = this->operator()(r1, {0, _c-1});
     // substitute r2 into r1
     this->setV({r1,r1}, {0, _c-1}, this->operator()(r2, {0, _c-1}));
     // substitute r1 into r2
@@ -135,7 +132,7 @@ void Matrix::swap_cols(const uint & c1, const uint & c2){
     if(c1 >= _c || c2 >= _c) throw std::out_of_range("Given parameters exceed the matrix columns indeces");
 
     // extract c1
-    auto tmp = this->operator()({0, _r-1}, c1);
+    Matrix tmp = this->operator()({0, _r-1}, c1);
     // substitute c2 into c1
     this->setV({0, _r-1}, {c1,c1}, this->operator()({0, _r-1}, c2));
     // substitute c1 into c2
@@ -428,35 +425,49 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
 }
 */
 
+
 void Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
     if(_r != _c) throw std::invalid_argument("The matrix must be square");
 
-    L = Matrix(_r, _r);
-    U = Matrix(_r, _r);
+    U = *this;
+    L = IdMat(_r);
     P = IdMat(_r);
 
-    for (uint i = 0; i < _r; i++) {
-        // upper triang
-        for (uint k = 0; k < _r; k++) {
-            // if (k < i) U(i,k) = 0;
-            if (k < i) continue;
-            else {
-                U(i,k) = this->operator()(i,k);
-                for (uint j = 0; j < i; j++)  U(i,k) -= L(i,j) * U(j,k);
+    for (uint i = 0; i < _c; i++) { // scroll columns
+        // pivoting
+        double u_max = 0;
+        uint max_index = i;
+        for (uint j = i; j < _r; j++){ // scroll rows
+            // find max value
+            if(u_max < std::fabs(U(j,i))){
+                max_index = j;
+                u_max = std::fabs(U(j,i));
             }
         }
-        // lower triang
-        for (uint k = 0; k < _r; k++) {
-            if (k < i) L(k,i) = 0;
-            else if (k == i) L(i,i) = 1;
-            else {
-                double sum = 0;
-                for (uint j = 0; j < i; j++) sum += L(k,j) * U(j,i);
-                if(U(i,i) == 0) throw std::runtime_error("Impossible to decompose matrix, permutations are necessary");
-                L(k,i) = (this->operator()(k,i) - sum) / U(i,i);
+        // if max value is zero we can skip this iteration
+        if(u_max == 0) continue;
+
+        // swap rows
+        P.swap_rows(i, max_index);
+        U.swap_rows(i, max_index);
+
+        // elimination
+        for (uint j = i+1; j < _r; j++){ // scroll rows
+            // compute l(j,i)
+            U(j,i) = U(j,i) / U(i,i);
+            // apply elimination over all elements of the row
+            for (uint k = i+1; k < _c; k++){ // scroll columns
+                U(j,k) -= U(j,i) * U(i,k);
             }
+        }    
+    }
+
+    // compose matrices
+    for(uint i=1; i<_r; i++) { //scroll rows
+        for(uint j=0; j<i; j++){ //scroll columns
+            L(i,j) = U(i,j);
+            U(i,j) = 0;
         }
-        
     }
 }
 

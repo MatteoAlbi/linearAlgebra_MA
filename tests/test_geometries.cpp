@@ -359,4 +359,10 @@ TEST(Segment, intersection){
     p = Segment({-1,1},{1,1});
     q = Segment({0,1},{2,1});
     EXPECT_EQ(p.intersection(q), Point(0, 1));
+
+    // error with LU dec with no permutation
+    p = Segment({0,0},{0,350});
+    q = Segment({100,500},{-100,500});
+    // EXPECT_EQ(p.intersection(q), Point(0, 1));
+    EXPECT_NO_THROW(p.intersection(q));
 }

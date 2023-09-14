@@ -121,10 +121,10 @@ Matrix& Matrix::operator=(Matrix const * const m){
 #pragma region comparators
 bool Matrix::operator==(const Matrix & m) const{
     // check shape
-    if(this->getR() != m.getR()) return false;
-    if(this->getC() != m.getC()) return false;
+    if(this->r() != m.r()) return false;
+    if(this->c() != m.c()) return false;
     // check values
-    for(uint i=0; i<m.getR(); i++) for(uint j=0; j<m.getC(); j++){
+    for(uint i=0; i<m.r(); i++) for(uint j=0; j<m.c(); j++){
         if((*this)(i,j) != m(i,j)) return false;
     }
 
@@ -186,7 +186,7 @@ Matrix operator+(const Matrix& m, const int& k){
 }
 
 Matrix operator+(const Matrix& m1, const Matrix& m2){
-    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw std::invalid_argument("Matrices' shapes don't match");
+    if(m1.r() != m2.r() || m1.c() != m2.c()) throw std::invalid_argument("Matrices' shapes don't match");
     
     Matrix ret = m1;
     ret+=m2;
@@ -237,7 +237,7 @@ Matrix operator-(const Matrix& m, const int& k){
 }
 
 Matrix operator-(const Matrix& m1, const Matrix& m2){
-    if(m1.getR() != m2.getR() || m1.getC() != m2.getC()) throw std::invalid_argument("Matrices' shapes don't match");
+    if(m1.r() != m2.r() || m1.c() != m2.c()) throw std::invalid_argument("Matrices' shapes don't match");
     
     Matrix ret = m1;
     ret-=m2;
@@ -282,14 +282,14 @@ Matrix operator*(const Matrix& m, const int& k){
 }
 
 Matrix operator*(const Matrix& m1, const Matrix& m2){
-    if(m1.getC() != m2.getR()) throw std::invalid_argument("Matrices' shapes don't match");
+    if(m1.c() != m2.r()) throw std::invalid_argument("Matrices' shapes don't match");
     
-    Matrix ret = Matrix(m1.getR(), m2.getC());
+    Matrix ret = Matrix(m1.r(), m2.c());
 
-    for (uint i = 0; i<m1.getR(); i++) {
-        for (uint j = 0; j<m2.getC(); j++) {
+    for (uint i = 0; i<m1.r(); i++) {
+        for (uint j = 0; j<m2.c(); j++) {
             ret(i,j) = 0;
-            for (uint k = 0; k<m1.getC(); k++) {
+            for (uint k = 0; k<m1.c(); k++) {
                 ret(i,j) += m1(i,k) * m2(k,j);
             }
         }
@@ -353,14 +353,14 @@ void Matrix::operator|=(const Matrix & m){
 }
 
 Matrix operator&(const Matrix& m1, const Matrix& m2){
-    if(m1.getR() != m2.getR()) throw std::invalid_argument("Matrices must have same number of rows");
+    if(m1.r() != m2.r()) throw std::invalid_argument("Matrices must have same number of rows");
 
-    Matrix ret = Matrix(m1.getR(), m1.getC()+m2.getC());
+    Matrix ret = Matrix(m1.r(), m1.c()+m2.c());
 
-    for(uint i=0; i<ret.getR(); i++){
-        for(uint j=0; j<ret.getC(); j++){
-            if(j < m1.getC()) ret(i,j) = m1(i,j);
-            else ret(i,j) = m2(i,j-m1.getC());
+    for(uint i=0; i<ret.r(); i++){
+        for(uint j=0; j<ret.c(); j++){
+            if(j < m1.c()) ret(i,j) = m1(i,j);
+            else ret(i,j) = m2(i,j-m1.c());
         }
     }
 
@@ -368,14 +368,14 @@ Matrix operator&(const Matrix& m1, const Matrix& m2){
 }
 
 Matrix operator|(const Matrix& m1, const Matrix& m2){
-    if(m1.getC() != m2.getC()) throw std::invalid_argument("Matrices must have same number of columns");
+    if(m1.c() != m2.c()) throw std::invalid_argument("Matrices must have same number of columns");
 
-    Matrix ret = Matrix(m1.getR()+m2.getR(), m1.getC());
+    Matrix ret = Matrix(m1.r()+m2.r(), m1.c());
 
-    for(uint i=0; i<ret.getR(); i++){
-        for(uint j=0; j<ret.getC(); j++){
-            if(i < m1.getR()) ret(i,j) = m1(i,j);
-            else ret(i,j) = m2(i-m1.getR(),j);
+    for(uint i=0; i<ret.r(); i++){
+        for(uint j=0; j<ret.c(); j++){
+            if(i < m1.r()) ret(i,j) = m1(i,j);
+            else ret(i,j) = m2(i-m1.r(),j);
         }
     }
 
@@ -385,10 +385,10 @@ Matrix operator|(const Matrix& m1, const Matrix& m2){
 
 
 std::ostream& operator<<(std::ostream& os, const Matrix& m){
-    os << "Matrix(" << m.getR() << "x" << m.getC() << ")" << std::endl;
-    for(uint i=0; i<m.getR(); i++){
+    os << "Matrix(" << m.r() << "x" << m.c() << ")" << std::endl;
+    for(uint i=0; i<m.r(); i++){
         if(i>0) os << std::endl;
-        for(uint j=0; j<m.getC(); j++){
+        for(uint j=0; j<m.c(); j++){
             if(j>0) os << " ";
             os << m(i,j);
         }
@@ -398,10 +398,10 @@ std::ostream& operator<<(std::ostream& os, const Matrix& m){
 }
 
 std::ostream& operator<<(std::ostream& os, const Matrix * m){
-    os << "Matrix(" << m->getR() << "x" << m->getC() << ")" << std::endl;
-    for(uint i=0; i<m->getR(); i++){
+    os << "Matrix(" << m->r() << "x" << m->c() << ")" << std::endl;
+    for(uint i=0; i<m->r(); i++){
         if(i>0) os << std::endl;
-        for(uint j=0; j<m->getC(); j++){
+        for(uint j=0; j<m->c(); j++){
             if(j>0) os << " ";
             os << m->operator()(i,j);
         }

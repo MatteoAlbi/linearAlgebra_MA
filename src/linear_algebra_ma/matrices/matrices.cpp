@@ -41,10 +41,10 @@ Matrix::~Matrix() {
 }
 
 
-uint Matrix::getR() const{return this->_r;}
-uint Matrix::getC() const{return this->_c;}
+uint Matrix::r() const{return this->_r;}
+uint Matrix::c() const{return this->_c;}
 uint Matrix::size() const{return this->_r * this->_c;}
-double const * Matrix::getV() const{return this->_v;}
+double const * Matrix::v() const{return this->_v;}
 
 
 void Matrix::setV(std::vector<double> v){
@@ -85,8 +85,8 @@ void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m){
 
     uint nRows = rs.second - rs.first + 1;
     uint nCols = cs.second - cs.first + 1;
-    if(m.getR() < nRows) throw std::out_of_range("Given matrix doesn't have enough rows");
-    if(m.getC() < nCols) throw std::out_of_range("Given matrix doesn't have enough cols");
+    if(m.r() < nRows) throw std::out_of_range("Given matrix doesn't have enough rows");
+    if(m.c() < nCols) throw std::out_of_range("Given matrix doesn't have enough cols");
 
     for (uint i = 0; i < nRows; i++){
         for (uint j = 0; j < nCols; j++){
@@ -120,6 +120,27 @@ Matrix Matrix::to_r_vec() const{
     return this->reshape(1, this->size());
 }
 
+void Matrix::swap_rows(const uint & r1, const uint & r2){
+    if(r1 >= _r || r2 >= _r) throw std::out_of_range("Given parameters exceed the matrix rows indeces");
+
+    // extract r1
+    auto tmp = this->operator()(r1, {0, _c-1});
+    // substitute r2 into r1
+    this->setV({r1,r1}, {0, _c-1}, this->operator()(r2, {0, _c-1}));
+    // substitute r1 into r2
+    this->setV({r2,r2}, {0, _c-1}, tmp);
+}
+
+void Matrix::swap_cols(const uint & c1, const uint & c2){
+    if(c1 >= _c || c2 >= _c) throw std::out_of_range("Given parameters exceed the matrix columns indeces");
+
+    // extract c1
+    auto tmp = this->operator()({0, _r-1}, c1);
+    // substitute c2 into c1
+    this->setV({0, _r-1}, {c1,c1}, this->operator()({0, _r-1}, c2));
+    // substitute c1 into c2
+    this->setV({0, _r-1}, {c2,c2}, tmp);
+}
 
 Matrix Matrix::t() const{
     Matrix ret = Matrix(this->_c, this->_r);
@@ -335,7 +356,7 @@ Matrix diag(const uint & dim, double * v){
 }
 
 double * diag(const Matrix & m){
-    uint dim = std::min(m.getC(),m.getR());
+    uint dim = std::min(m.c(),m.r());
     double * v = new double[dim]();
 
     for(uint i=0;i<dim; i++){
@@ -407,42 +428,25 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
 }
 */
 
-void Matrix::lu_dec(Matrix & L, Matrix & U) const{
-    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
+void Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
+    if(_r != _c) throw std::invalid_argument("The matrix must be square");
 
-    // check if its decomposable: all leading minors != 0
-    Matrix sub;
-    sub.operator=(this);
-    for(int i=this->_r-1; i>= 0; i--){
-        if(sub.det() == 0) throw std::runtime_error("Leading minor #" + std::to_string(i+1) + " is null, decompositionis not possible");
-        sub = sub.submat_del(i,i);
-    }
+    L = Matrix(_r, _r);
+    U = Matrix(_r, _r);
+    P = IdMat(_r);
 
-    // reshape L and U
-    if(L.size() != this->size()){
-        if(L._v != nullptr) delete[] L._v;
-        L._v = new double[this->size()]();
-    }
-    L._r = this->_r;
-    L._c = this->_r;
-    if(U.size() != this->size()){
-        if(U._v != nullptr) delete[] U._v;
-        U._v = new double[this->size()]();
-    }
-    U._r = this->_r;
-    U._c = this->_r;
-
-    for (uint i = 0; i < this->_r; i++) {
+    for (uint i = 0; i < _r; i++) {
         // upper triang
-        for (uint k = 0; k < this->_r; k++) {
-            if (k < i) U(i,k) = 0;
+        for (uint k = 0; k < _r; k++) {
+            // if (k < i) U(i,k) = 0;
+            if (k < i) continue;
             else {
                 U(i,k) = this->operator()(i,k);
                 for (uint j = 0; j < i; j++)  U(i,k) -= L(i,j) * U(j,k);
             }
         }
         // lower triang
-        for (uint k = 0; k < this->_r; k++) {
+        for (uint k = 0; k < _r; k++) {
             if (k < i) L(k,i) = 0;
             else if (k == i) L(i,i) = 1;
             else {
@@ -461,29 +465,29 @@ void Matrix::lu_dec(Matrix & L, Matrix & U) const{
 
 #pragma region ls_solution
 Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
-    if(U.getC() != U.getR()) throw std::invalid_argument("Coefficient matrix U must be square");
-    if(B.getR() != U.getC()) throw std::invalid_argument("Rows of B must be equal to the columns of U");
+    if(U.c() != U.r()) throw std::invalid_argument("Coefficient matrix U must be square");
+    if(B.r() != U.c()) throw std::invalid_argument("Rows of B must be equal to the columns of U");
     // check all U diagonal elements are different from zero
-    for(uint i=0; i<U.getC(); i++) if(U(i,i) == 0){
+    for(uint i=0; i<U.c(); i++) if(U(i,i) == 0){
         throw std::runtime_error("System of equation is underdetermined");
     }
 
-    Matrix res(U.getR(), B.getC());
+    Matrix res(U.r(), B.c());
 
     double tmp;
     // printf("start i loop\n");
-    for(uint i=0; i<B.getC(); i++){ //col of res == col of B
+    for(uint i=0; i<B.c(); i++){ //col of res == col of B
         // printf("start j loop with i:%d\n", i);
-        for(int j=U.getR()-1; j>=0; j--){ //row of res == row of U == row of B
+        for(int j=U.r()-1; j>=0; j--){ //row of res == row of U == row of B
             tmp = 0;
             // printf("start k loop with i:%d, j:%d\n", i, j);
-            for(int k=U.getR()-1; k>j; k--){ //col of U = row of res
+            for(int k=U.r()-1; k>j; k--){ //col of U = row of res
                 tmp += U(j,k) * res(k,i);
                 // printf("i:%d j:%d k:%d\n",i,j,k);
             }
             
             res(j, i) = (B(j,i) - tmp) / U(j,j);
-            // printf("%f\t%f\n",tmp,res[j*B.getC() + i]);
+            // printf("%f\t%f\n",tmp,res[j*B.c() + i]);
         }
         // printf("\n");
     }
@@ -493,19 +497,19 @@ Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
 
 
 Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
-    if(L.getC() != L.getR()) throw std::invalid_argument("Coefficient matrix L must be square");
-    if(B.getR() != L.getC()) throw std::invalid_argument("Rows of B must be equal to the columns of L");
+    if(L.c() != L.r()) throw std::invalid_argument("Coefficient matrix L must be square");
+    if(B.r() != L.c()) throw std::invalid_argument("Rows of B must be equal to the columns of L");
     // check all L diagonal elements are different from zero
-    for(uint i=0; i<L.getC(); i++) if(L(i,i) == 0){
+    for(uint i=0; i<L.c(); i++) if(L(i,i) == 0){
         throw std::runtime_error("System of equation is underdetermined");
     }
 
-    Matrix res(L.getR(), B.getC());
+    Matrix res(L.r(), B.c());
     
     double tmp;
-    for(uint j=0; j<L.getR(); j++){ //row of res == row of L == row of B
+    for(uint j=0; j<L.r(); j++){ //row of res == row of L == row of B
         // printf("j: %d\n", j);
-        for(uint i=0; i<B.getC(); i++){ //col of res == col of B
+        for(uint i=0; i<B.c(); i++){ //col of res == col of B
             // printf("i: %d\n", i);
             tmp = 0;
             for(uint k=0; k<j; k++){ //col of L = row of res
@@ -523,12 +527,17 @@ Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
 
 Matrix Matrix::matrix_l_divide(Matrix const & A, Matrix const & B){
     
-    if(A.getC() == A.getR()){ //square A
+    if(A.c() == A.r()){ //square A
+        // check rows of B
+        if(A.c() != B.r()){
+            throw std::invalid_argument("Rows of B=(" + std::to_string(B.r()) + ") \
+            must be equal the columns of A=" + std::to_string(A.c()));
+        }
         // printf("matrix A is square, using LU decomposition\n");
-        Matrix L, U, res_tmp;
+        Matrix L, U, P, res_tmp;
 
-        A.lu_dec(L, U);
-        res_tmp = forward_sub(L, B);
+        A.lup_dec(L, U, P);
+        res_tmp = forward_sub(L, P*B);
         return backward_sub(U, res_tmp);
     }
     else{
@@ -538,7 +547,7 @@ Matrix Matrix::matrix_l_divide(Matrix const & A, Matrix const & B){
 }
 
 Matrix Matrix::solve_ls(Matrix const & A, Matrix const & B){
-    if(A.getC() != A.getR()) throw std::invalid_argument("Coefficient matrix A must be square");
+    if(A.c() != A.r()) throw std::invalid_argument("Coefficient matrix A must be square");
     return Matrix::matrix_l_divide(A,B);
 }
 

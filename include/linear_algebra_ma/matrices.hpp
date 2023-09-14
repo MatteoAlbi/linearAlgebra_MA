@@ -60,12 +60,56 @@ public:
     Matrix& operator=(const Matrix& m);
     Matrix& operator=(Matrix const * const m);
 
-    uint getR() const;
-    uint getC() const;
+    /**
+     * @brief get number of rows
+     * @return number of rows
+     */
+    uint r() const;
+
+    /**
+     * @brief get number of columns
+     * @return number of columns
+     */
+    uint c() const;
+
+    /**
+     * @brief get size of the amtrix i.e. number od stored elements
+     * @return size
+    */
     uint size() const;
-    double const * getV() const;
+
+    /**
+     * @brief return underlaying array storing the elements
+     * @return underlaying array
+     */
+    double const * v() const;
+
+    /**
+     * @brief uses the vecotr to fill in the elements of the matrix
+     * @param v used vector
+     * @throw out_of_range if v.size < this.size
+     */
     void setV(std::vector<double> v);
+
+    /**
+     * @brief uses the vecotr to fill in the elements of submatrix
+     * of this matrix defined by indeces rs and cs, extremes included
+     * @param rs rows indeces
+     * @param cs columns vector
+     * @param v used vector
+     * @throw out_of_range if v.size < submatrix size
+     */
     void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v);
+
+    /**
+     * @brief uses the given matrix to fill in the elements of submatrix
+     * of this matrix defined by indeces rs and cs, extremes included
+     * @param rs rows indeces
+     * @param cs columns vector
+     * @param m used matrix
+     * @throw out_of_range if m has not enough rows or columns to fill in the 
+     * submatrix
+     */
     void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m);
 
     /**
@@ -95,6 +139,22 @@ public:
      * @return Matrix: row vec
      */
     Matrix to_r_vec() const;
+
+    /**
+     * @brief swap the given rows of the matrix
+     * @param r1 first row to swap
+     * @param r2 second row to swap
+     * @throw invalid argument if r1 or r2 exceeds the matric row indeces
+     */
+    void swap_rows(const uint & r1, const uint & r2);
+
+    /**
+     * @brief swap the given columns of the matrix
+     * @param c1 first column to swap
+     * @param c2 second column to swap
+     * @throw invalid argument if c1 or c2 exceeds the matric column indeces
+     */
+    void swap_cols(const uint & c1, const uint & c2);
 
 
 #pragma endregion get_set
@@ -265,13 +325,15 @@ public:
 
     //https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
     /**
-     * @brief Compute LU decomposition of the given matrix: A = L*U with
-     *        L lower triangular matrix and U upper triangular matrix
+     * @brief Compute LUP decomposition of the given matrix: PA = LU with
+     *        L lower triangular matrix and U upper triangular matrix and
+     *        P permutation matrix
      * 
      * @param L lower triangular matrix
      * @param U upper triangular matrix
+     * @param P permutation matrix
      */
-    void lu_dec(Matrix & L, Matrix & U) const;
+    void lup_dec(Matrix & L, Matrix & U, Matrix & P) const;
 #pragma endregion decomposition_methods
 
 #pragma region ls_solution
@@ -282,9 +344,6 @@ public:
      * 
      * @param U     upper triangular matrix (n*n)
      * @param B     known terms matrix (n*c_b)
-     * @param res   matrix where to save the result (n*c_b)
-     * @param n     dim of U
-     * @param c_b   columns of B
      */
     static Matrix backward_sub(Matrix const & U, Matrix const & B);
 
@@ -295,27 +354,24 @@ public:
      * 
      * @param L     lower triangular matrix (n*n)
      * @param B     known terms matrix (n*c_b)
-     * @param res   matrix where to save the result (n*c_b)
-     * @param n     dim of L
-     * @param c_b   columns of B
      */
     static Matrix forward_sub(Matrix const & L, Matrix const & B);
 
 
     /**
      * @brief computes the left division A\B, which corresponds to solve the 
-     *        linear equation system A*x=B. 
+     *        linear equation system Ax=B. 
      *        The functions solves the problem depending on the dimensions of the 
      *        given matrices: 
      *        
      *        - A is a square matrix (r_a*c_r_common): The columns of A must be equal 
      *          the rows of B. The result has dimensions (r_a*c_b). A is decomposed using
-     *          LU decomposition: A*x=B -> L*U*x = B. Then, the problem is solved by
+     *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
      *          subsequentially solving the two systems:
-     *              - L*(U*x) = B, thus solving it using forward substitution the system 
-     *                L*par=B equal to par=L\B
-     *              - U*x=par, thus solving it using backward substitution the system 
-     *                U*x=par equal to x=U\par
+     *              - L*(U*x) = PB, thus solving it using forward substitution the system 
+     *                L*y=PB equal to y=L\PB
+     *              - U*x=y, thus solving it using backward substitution the system 
+     *                U*x=y equal to x=U\y
      * 
      * @param A             left hand division term
      * @param B             right hand division term

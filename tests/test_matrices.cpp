@@ -9,22 +9,22 @@ using std::invalid_argument, std::runtime_error, std::out_of_range;
 TEST(Matrix, constructor_get) {
     EXPECT_NO_THROW(Matrix());
     Matrix m1, m2;
-    EXPECT_EQ(m1.getR(), (uint)0);
-    EXPECT_EQ(m1.getC(), (uint)0);
+    EXPECT_EQ(m1.r(), (uint)0);
+    EXPECT_EQ(m1.c(), (uint)0);
     EXPECT_EQ(m1.size(), (uint)0);
-    EXPECT_EQ(m1.getV(), nullptr);
+    EXPECT_EQ(m1.v(), nullptr);
 
     EXPECT_NO_THROW(m1 = Matrix(2,2));
-    EXPECT_EQ(m1.getR(), (uint)2);
-    EXPECT_EQ(m1.getC(), (uint)2);
+    EXPECT_EQ(m1.r(), (uint)2);
+    EXPECT_EQ(m1.c(), (uint)2);
     EXPECT_EQ(m1.size(), (uint)4);
-    EXPECT_NO_THROW(m1.getV()[3]);
+    EXPECT_NO_THROW(m1.v()[3]);
 
     std::vector<double> v = {1,2,3,4,5,6};
     EXPECT_THROW(m1 = Matrix(4, 2, v), out_of_range);
     EXPECT_NO_THROW(m1 = Matrix(2, 3, v));
-    EXPECT_EQ(m1.getR(), (uint)2);
-    EXPECT_EQ(m1.getC(), (uint)3);
+    EXPECT_EQ(m1.r(), (uint)2);
+    EXPECT_EQ(m1.c(), (uint)3);
     EXPECT_EQ(m1.size(), (uint)6);
     EXPECT_EQ(m1(0,0), 1);
     EXPECT_EQ(m1(0,1), 2);
@@ -34,8 +34,8 @@ TEST(Matrix, constructor_get) {
     EXPECT_EQ(m1(1,2), 6);
 
     EXPECT_NO_THROW(m2 = Matrix(m1));
-    EXPECT_EQ(m1.getR(), (uint)2);
-    EXPECT_EQ(m1.getC(), (uint)3);
+    EXPECT_EQ(m1.r(), (uint)2);
+    EXPECT_EQ(m1.c(), (uint)3);
     EXPECT_EQ(m1.size(), (uint)6);
     EXPECT_EQ(m2(0,0), 1);
     EXPECT_EQ(m2(0,1), 2);
@@ -44,7 +44,7 @@ TEST(Matrix, constructor_get) {
     EXPECT_EQ(m2(1,1), 5);
     EXPECT_EQ(m2(1,2), 6);
 
-    const double * tmp = m2.getV();
+    const double * tmp = m2.v();
     EXPECT_EQ(tmp[0], 1);
     EXPECT_EQ(tmp[1], 2);
     EXPECT_EQ(tmp[2], 3);
@@ -72,14 +72,14 @@ TEST(Matrix, access_operator){
     EXPECT_THROW(m1({1,3},5), out_of_range);
     EXPECT_THROW(m1({3,2},1), invalid_argument);
     EXPECT_NO_THROW(m2 = m1({1,3},1));
-    EXPECT_EQ(m2.getR(), (uint)3);
-    EXPECT_EQ(m2.getC(), (uint)1);
+    EXPECT_EQ(m2.r(), (uint)3);
+    EXPECT_EQ(m2.c(), (uint)1);
     EXPECT_EQ(m2(0,0), 15);
     EXPECT_EQ(m2(1,0), 19);
     EXPECT_EQ(m2(2,0), 23);
     EXPECT_NO_THROW(m2 = m1({2,2},1));
-    EXPECT_EQ(m2.getR(), (uint)1);
-    EXPECT_EQ(m2.getC(), (uint)1);
+    EXPECT_EQ(m2.r(), (uint)1);
+    EXPECT_EQ(m2.c(), (uint)1);
     EXPECT_EQ(m2(0,0), 19);
 
     // row vector
@@ -87,14 +87,14 @@ TEST(Matrix, access_operator){
     EXPECT_THROW(m1(5,{1,3}), out_of_range);
     EXPECT_THROW(m1(1,{3,2}), invalid_argument);
     EXPECT_NO_THROW(m2 = m1(1,{1,3}));
-    EXPECT_EQ(m2.getR(), (uint)1);
-    EXPECT_EQ(m2.getC(), (uint)3);
+    EXPECT_EQ(m2.r(), (uint)1);
+    EXPECT_EQ(m2.c(), (uint)3);
     EXPECT_EQ(m2(0,0), 15);
     EXPECT_EQ(m2(0,1), 16);
     EXPECT_EQ(m2(0,2), 17);
     EXPECT_NO_THROW(m2 = m1(1,{3,3}));
-    EXPECT_EQ(m2.getR(), (uint)1);
-    EXPECT_EQ(m2.getC(), (uint)1);
+    EXPECT_EQ(m2.r(), (uint)1);
+    EXPECT_EQ(m2.c(), (uint)1);
     EXPECT_EQ(m2(0,0), 17);
 
     // single index
@@ -243,8 +243,8 @@ TEST(Matrix, transpose){
          18,19,20,21}
     );
     EXPECT_NO_THROW(m2 = m1.t());
-    EXPECT_EQ(m2.getR(), (uint)4);
-    EXPECT_EQ(m2.getC(), (uint)3);
+    EXPECT_EQ(m2.r(), (uint)4);
+    EXPECT_EQ(m2.c(), (uint)3);
     for(int i=0; i<3; i++) for(int j=0;j<4;j++){
         EXPECT_EQ(m1(i,j), m2(j,i));
     }
@@ -253,8 +253,8 @@ TEST(Matrix, transpose){
         {10,11,12,13,14}
     );
     EXPECT_NO_THROW(m2 = m1.t());
-    EXPECT_EQ(m2.getR(), (uint)5);
-    EXPECT_EQ(m2.getC(), (uint)1);
+    EXPECT_EQ(m2.r(), (uint)5);
+    EXPECT_EQ(m2.c(), (uint)1);
     for(int i=0; i<1; i++) for(int j=0;j<5;j++){
         EXPECT_EQ(m1(i,j), m2(j,i));
     }
@@ -498,8 +498,8 @@ TEST(Matrix, submat_del){
     EXPECT_THROW(m1.submat_del(3,2), invalid_argument);
     EXPECT_THROW(m1.submat_del(0,4), invalid_argument);
     EXPECT_NO_THROW(m2 = m1.submat_del(1,2));
-    EXPECT_EQ(m2.getR(), (uint)2);
-    EXPECT_EQ(m2.getC(), (uint)3);
+    EXPECT_EQ(m2.r(), (uint)2);
+    EXPECT_EQ(m2.c(), (uint)3);
     for(int i=0; i<2; i++) for(int j=0;j<3;j++){
         uint k = i > 0 ? i+1 : i;
         uint l = j > 1 ? j+1 : j;
@@ -510,8 +510,8 @@ TEST(Matrix, submat_del){
         {10,11,12,13,14}
     );
     EXPECT_NO_THROW(m2 = m1.submat_del(0,3));
-    EXPECT_EQ(m2.getR(), (uint)0);
-    EXPECT_EQ(m2.getC(), (uint)4);
+    EXPECT_EQ(m2.r(), (uint)0);
+    EXPECT_EQ(m2.c(), (uint)4);
     EXPECT_THROW(m2(0,0), out_of_range);
 
 }
@@ -640,7 +640,7 @@ TEST(Matrix, qr_dec){
 }
 */
 
-TEST(Matrix, lu_dec){
+TEST(Matrix, lup_dec){
     // matrices not square
     Matrix m1,L,U;
     m1 = Matrix (3,4,
@@ -649,7 +649,7 @@ TEST(Matrix, lu_dec){
          4,1,8,2,
          5,2,1,9}
     );
-    EXPECT_THROW(m1.lu_dec(L,U), invalid_argument);
+    EXPECT_THROW(m1.lup_dec(L,U), invalid_argument);
 
     // matrices decomposable
     m1 = Matrix (4,4,
@@ -658,7 +658,7 @@ TEST(Matrix, lu_dec){
          4,1,3,2,
          5,2,1,4}
     );
-    EXPECT_NO_THROW(m1.lu_dec(L,U));
+    EXPECT_NO_THROW(m1.lup_dec(L,U));
     EXPECT_EQ(L*U, m1);
 
     // matrices not decomposable
@@ -668,7 +668,7 @@ TEST(Matrix, lu_dec){
          4,3,9,7,
          5,2,0,9}
     );
-    EXPECT_THROW(m1.lu_dec(L,U), runtime_error);
+    EXPECT_THROW(m1.lup_dec(L,U), runtime_error);
 }
 
 TEST(Matrix, backward_sub){
@@ -748,7 +748,7 @@ TEST(Matrix, matrix_l_divide){
     EXPECT_EQ(Matrix::matrix_l_divide(A,b), Matrix(4,1, {1,1,0,-1}));
 
     // Matrix L,U;
-    // A.lu_dec(L,U);
+    // A.lup_dec(L,U);
     // cout << L << endl;
     // cout << U << endl;
     // cout << Matrix::matrix_l_divide(A,b) << endl;
@@ -808,7 +808,7 @@ TEST(Matrix, matrix_r_divide){
     EXPECT_EQ(Matrix::matrix_r_divide(b,A.t()), Matrix(1,4, {1,1,0,-1}));
 
     // Matrix L,U;
-    // A.lu_dec(L,U);
+    // A.lup_dec(L,U);
     // cout << L << endl;
     // cout << U << endl;
     // cout << Matrix::matrix_r_divide(b,A.t()) << endl;

@@ -98,7 +98,7 @@ public:
     uint c() const;
 
     /**
-     * @brief get size of the amtrix i.e. number od stored elements
+     * @brief get size of the matrix i.e. number of stored elements
      * @return size
     */
     uint size() const;

@@ -508,6 +508,15 @@ TEST(Matrix, determinant){
     EXPECT_EQ(m1({1,3},{0,2}).det(), 110);
     // 4x4
     EXPECT_EQ(m1.det(), -376);
+
+    m1 = Matrix(4,4,
+        {1,3,5,0,
+         1,3,1,0,
+         4,3,9,0,
+         5,2,0,0}
+    );
+    EXPECT_EQ(m1.det(), 0);
+
 }
 
 TEST(Matrix, is_sing){
@@ -550,11 +559,50 @@ TEST(Matrix, cof_mat){
 TEST(Matrix, adj){
     // TODO
 }
+*/
 
 TEST(Matrix, inv){
-    // TODO
+    // not square
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.inv(), invalid_argument);
+
+    // singular
+    m1 = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(m1.inv(), runtime_error);
+    m1 = Matrix (4,4,
+        {1,3, 4, 0,
+         0,2, 1, 0,
+         2,1,-3, 0,
+         7,0, 2, 0}
+    );
+    EXPECT_THROW(m1.inv(), runtime_error);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    Matrix res(4,4, 
+        {-104,  16,  56,  48,
+         -235, 329,  94, -94,
+           39, -53,  26, -18,
+          110, -82, -52,  36}
+    );
+    EXPECT_EQ(m1.inv(), res/376);
+
 }
 
+/*
 TEST(Matrix, pinv_left){
     // TODO
 }
@@ -602,11 +650,53 @@ TEST(Matrix, normalize_self){
 }
 
 
-/*
+
 TEST(Matrix, qr_dec){
-    // TODO
+    Matrix A(3,3, {2, -2, 18,
+                   2, 1, 0,
+                   1, 2, 0});
+    Matrix Q, R;
+
+    EXPECT_NO_THROW(A.qr_dec(Q,R));
+    EXPECT_EQ(Q, Matrix(3,3, {-2.0/3.0,  2.0/3.0, -1.0/3.0,
+                              -2.0/3.0, -1.0/3.0,  2.0/3.0,
+                              -1.0/3.0, -2.0/3.0, -2.0/3.0}));
+    EXPECT_EQ(R, Matrix(3,3, {-3.0,  0.0, -12.0,
+                               0.0, -3.0,  12.0,
+                               0.0,  0.0,  -6.0}));
+    EXPECT_EQ(A, Q*R);
+
+    A = Matrix (3,3, {12, -51, 4,
+                      6, 167, -68,
+                      -4, 24, -41});
+
+    EXPECT_NO_THROW(A.qr_dec(Q,R));
+    EXPECT_EQ(Q, Matrix(3,3, {-6.0/7.0,   69.0/175.0, -58.0/175.0,
+                              -3.0/7.0, -158.0/175.0,   6.0/175.0,
+                               2.0/7.0,    -6.0/35.0,  -33.0/35.0}));
+    EXPECT_EQ(R, Matrix(3,3, { -14.0,  -21.0,  14.0,
+                                 0.0, -175.0,  70.0,
+                                 0.0,    0.0,  35.0}));
+    EXPECT_EQ(A, Q*R);
+
+    A = Matrix(4,6,{ 14,   4, -16, -20, -3,  -4,
+                     17,  17, -16,   5,  6, -13,
+                     -2,  12,  -7,  15, -1,  -3,
+                     19,   4,  -3,   5, 16,  -9});
+    EXPECT_NO_THROW(A.qr_dec(Q,R));
+    Matrix::set_double_precision(5);
+    EXPECT_EQ(Q, Matrix(4,4, {-0.480196,  0.151838,   -0.827698, -0.247534,
+                              -0.583095, -0.541847,   0.0587147,  0.602457,
+                              0.0685994, -0.773545,  0.00670213, -0.629982,
+                              -0.651695,  0.291504,    0.558054,  -0.42296}));
+    EXPECT_EQ(R, Matrix(4,6, { -29.1548,  -13.617, 18.4875,  4.45896, -12.5537,  15.1605,
+                                      0, -16.7206, 10.7804, -15.8917,  1.73101,  6.13376,
+                                      0,        0, 10.5827,  19.7383,  11.7575, -2.49509,
+                                      0,        0,       0, -3.60156, -1.78004, -1.14521}));
+    Matrix::set_double_precision(10);
+    EXPECT_EQ(A, Q*R);
 }
-*/
+
 
 TEST(Matrix, lup_dec){
     // matrices not square
@@ -711,6 +801,14 @@ TEST(Matrix, matrix_l_divide){
          0,2,1,-2,
          2,1,-3,2,
          0,0,0,0}
+    );
+    EXPECT_THROW(Matrix::matrix_l_divide(C, b), runtime_error);
+
+    C = Matrix (4,4,
+        {1,3, 4, 0,
+         0,2, 1, 0,
+         2,1,-3, 0,
+         7,0, 2, 0}
     );
     EXPECT_THROW(Matrix::matrix_l_divide(C, b), runtime_error);
 

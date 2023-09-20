@@ -218,24 +218,13 @@ double Matrix::det() const{
     else if (this->_r == 2){
         return this->_v[0]*this->_v[3] - this->_v[1]*this->_v[2];
     }
-
+    // matrix is bigger then 2x2
     else{
-        double D = 0; // Initialize result
-
-        Matrix sub;
-        int sign = 1; // To store sign multiplier
-    
-        // Iterate for each element of first row
-        for (uint j = 0; j < this->_c; j++){
-            // submatrix of m->v[0][f]
-            sub = this->submat_del(0, j);
-            D += sign * this->_v[j] * sub.det();
-    
-            // terms are to be added with alternate sign
-            sign = -sign;
-        }
-
-        return D;
+        Matrix L, U, P;
+        uint n_swaps = this->lup_dec(L,U,P);
+        double determinant = std::pow(-1.0, n_swaps);
+        for(uint i=0; i<U.c(); i++) determinant *= U(i,i);
+        return determinant;
     }
 }
 
@@ -283,12 +272,7 @@ Matrix Matrix::adj() const{
 Matrix Matrix::inv() const{
     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-    // Find determinant of A
-    double det = this->det(); 
-    if (det == 0) throw std::runtime_error("Matrix not invertible: det = 0");
- 
-    // Find Inverse using formula "inverse(M) = adj(M)/det(M)"
-    return this->adj() / det;
+    return matrix_l_divide(*this, IdMat(_r));
 }
 
 Matrix Matrix::pinv_left() const{
@@ -366,72 +350,48 @@ double * diag(const Matrix & m){
 
 #pragma region decomposition_methods
 
-/*
+
 void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
-    uint r = this->_r;
-    uint c = this->_c;
+    uint n = std::min<double>(_r, _c);
+    Matrix H_list[n];
 
     //set R to A
     R = this;
-    Matrix Rtmp{r, c};
     
-    uint n = std::min<double>(r, c);
-
-    double v[r], tmp[r*r], hk[r*r];
-    double H_list[n][r*r];
-    double sign, vtv;
-    uint v_dim;
-
     for(uint i=0; i<n; i++){
-        //extract column of R
-        Matrix v = R({i, r}, i);
-        for(uint j=i; j<r; j++) v[j-i] = R[j*c + i];
-        v_dim = r-i;
-
         //compute vk
-        sign = v[0] < 0 ? -1 : 1;
-        v[0] += sign * norm2(v, v_dim);
+        Matrix v = R({i, _r-1}, i);
+        v(0) += (v(0) < 0 ? -1 : 1) * v.norm2();
 
-        normalize(v, v_dim);
-
-        //compute H matrix
-        matrix_mult_T(v, v, tmp, v_dim, v_dim, 1);
-        for(uint j=0; j<v_dim*v_dim; j++) tmp[j] *= -2;
-        for(uint j=0; j<v_dim; j++) tmp[j * v_dim + j] += 1;
-
-        for(uint j=0; j<r; j++){
-            for(uint k=0; k<r; k++){
-                if(j >= i && k >= i) hk[j*r+k] = tmp[(j-i)*v_dim + (k-i)];
-                else if(j == k) hk[j*r+k] = 1;
-                else hk[j*r+k] = 0;
-            }
-        }
+        // compute H matrix
+        v.normalize_self();
+        Matrix H = IdMat(v.size()) - (v * v.t()) *2;
 
         //store H matrix to compute Q
-        memcpy(H_list[i], hk, sizeof(double)*r*r);
-        //update R
-        matrix_mult(hk, R, Rtmp, r, c, r);
-        memcpy(R, Rtmp, sizeof(double)*r*c);
+        H_list[i] = IdMat(_r);
+        H_list[i].setV({i, _r-1},{i, _r-1}, H);
 
+        //update R
+        R = H_list[i] * R;
     }
 
-    //compute Q
-    matrix_mult(H_list[0], H_list[1], Q, r, r, r);
-    for(uint i=2; i<n; i++){
-        matrix_mult(Q, H_list[i], tmp, r, r, r);
-        memcpy(Q, tmp, sizeof(double)*r*r);
+    // compute Q
+    Q = IdMat(_r);
+    for(uint i=0; i<n; i++){
+        Q = Q * H_list[i];
     }
 
 }
-*/
 
 
-void Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
+
+uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
     if(_r != _c) throw std::invalid_argument("The matrix must be square");
 
     U = *this;
     L = IdMat(_r);
     P = IdMat(_r);
+    uint ret = 0;
 
     for (uint i = 0; i < _c; i++) { // scroll columns
         // pivoting
@@ -448,8 +408,11 @@ void Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
         if(u_max == 0) continue;
 
         // swap rows
-        P.swap_rows(i, max_index);
-        U.swap_rows(i, max_index);
+        if(max_index != i){
+            P.swap_rows(i, max_index);
+            U.swap_rows(i, max_index);
+            ret++;
+        }
 
         // elimination
         for (uint j = i+1; j < _r; j++){ // scroll rows
@@ -469,6 +432,8 @@ void Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
             U(i,j) = 0;
         }
     }
+
+    return ret;
 }
 
 #pragma endregion decomposition_methods

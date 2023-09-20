@@ -508,6 +508,15 @@ TEST(Matrix, determinant){
     EXPECT_EQ(m1({1,3},{0,2}).det(), 110);
     // 4x4
     EXPECT_EQ(m1.det(), -376);
+
+    m1 = Matrix(4,4,
+        {1,3,5,0,
+         1,3,1,0,
+         4,3,9,0,
+         5,2,0,0}
+    );
+    EXPECT_EQ(m1.det(), 0);
+
 }
 
 TEST(Matrix, is_sing){
@@ -550,11 +559,50 @@ TEST(Matrix, cof_mat){
 TEST(Matrix, adj){
     // TODO
 }
+*/
 
 TEST(Matrix, inv){
-    // TODO
+    // not square
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.inv(), invalid_argument);
+
+    // singular
+    m1 = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(m1.inv(), runtime_error);
+    m1 = Matrix (4,4,
+        {1,3, 4, 0,
+         0,2, 1, 0,
+         2,1,-3, 0,
+         7,0, 2, 0}
+    );
+    EXPECT_THROW(m1.inv(), runtime_error);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    Matrix res(4,4, 
+        {-104,  16,  56,  48,
+         -235, 329,  94, -94,
+           39, -53,  26, -18,
+          110, -82, -52,  36}
+    );
+    EXPECT_EQ(m1.inv(), res/376);
+
 }
 
+/*
 TEST(Matrix, pinv_left){
     // TODO
 }
@@ -753,6 +801,14 @@ TEST(Matrix, matrix_l_divide){
          0,2,1,-2,
          2,1,-3,2,
          0,0,0,0}
+    );
+    EXPECT_THROW(Matrix::matrix_l_divide(C, b), runtime_error);
+
+    C = Matrix (4,4,
+        {1,3, 4, 0,
+         0,2, 1, 0,
+         2,1,-3, 0,
+         7,0, 2, 0}
     );
     EXPECT_THROW(Matrix::matrix_l_divide(C, b), runtime_error);
 

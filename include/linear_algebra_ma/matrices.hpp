@@ -357,8 +357,9 @@ public:
      * @param L lower triangular matrix
      * @param U upper triangular matrix
      * @param P permutation matrix
+     * @return number of swap performed during permutation
      */
-    void lup_dec(Matrix & L, Matrix & U, Matrix & P) const;
+    uint lup_dec(Matrix & L, Matrix & U, Matrix & P) const;
 #pragma endregion decomposition_methods
 
 #pragma region ls_solution

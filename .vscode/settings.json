@@ -1,5 +1,11 @@
 {
-    "ros.distro": "foxy",
+    "cmake.buildDirectory": "${workspaceFolder}/build/${buildKit}/${buildType}",
+    "cmake.configureArgs": [
+
+    ],
+    "cmake.configureOnEdit": false,
+    "cmake.configureOnOpen": false,
+
     "files.associations": {
         "cctype": "cpp",
         "clocale": "cpp",

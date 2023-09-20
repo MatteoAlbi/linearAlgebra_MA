@@ -272,12 +272,7 @@ Matrix Matrix::adj() const{
 Matrix Matrix::inv() const{
     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-    // Find determinant of A
-    double det = this->det(); 
-    if (det == 0) throw std::runtime_error("Matrix not invertible: det = 0");
- 
-    // Find Inverse using formula "inverse(M) = adj(M)/det(M)"
-    return this->adj() / det;
+    return matrix_l_divide(*this, IdMat(_r));
 }
 
 Matrix Matrix::pinv_left() const{

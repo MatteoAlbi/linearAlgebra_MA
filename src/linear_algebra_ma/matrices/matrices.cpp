@@ -218,24 +218,13 @@ double Matrix::det() const{
     else if (this->_r == 2){
         return this->_v[0]*this->_v[3] - this->_v[1]*this->_v[2];
     }
-
+    // matrix is bigger then 2x2
     else{
-        double D = 0; // Initialize result
-
-        Matrix sub;
-        int sign = 1; // To store sign multiplier
-    
-        // Iterate for each element of first row
-        for (uint j = 0; j < this->_c; j++){
-            // submatrix of m->v[0][f]
-            sub = this->submat_del(0, j);
-            D += sign * this->_v[j] * sub.det();
-    
-            // terms are to be added with alternate sign
-            sign = -sign;
-        }
-
-        return D;
+        Matrix L, U, P;
+        uint n_swaps = this->lup_dec(L,U,P);
+        double determinant = std::pow(-1.0, n_swaps);
+        for(uint i=0; i<U.c(); i++) determinant *= U(i,i);
+        return determinant;
     }
 }
 
@@ -426,12 +415,13 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
 */
 
 
-void Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
+uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
     if(_r != _c) throw std::invalid_argument("The matrix must be square");
 
     U = *this;
     L = IdMat(_r);
     P = IdMat(_r);
+    uint ret = 0;
 
     for (uint i = 0; i < _c; i++) { // scroll columns
         // pivoting
@@ -448,8 +438,11 @@ void Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
         if(u_max == 0) continue;
 
         // swap rows
-        P.swap_rows(i, max_index);
-        U.swap_rows(i, max_index);
+        if(max_index != i){
+            P.swap_rows(i, max_index);
+            U.swap_rows(i, max_index);
+            ret++;
+        }
 
         // elimination
         for (uint j = i+1; j < _r; j++){ // scroll rows
@@ -469,6 +462,8 @@ void Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
             U(i,j) = 0;
         }
     }
+
+    return ret;
 }
 
 #pragma endregion decomposition_methods

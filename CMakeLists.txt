@@ -17,13 +17,11 @@ add_library(matrices
     "src/linear_algebra_ma/matrices/matrices.cpp"
     "src/linear_algebra_ma/matrices/operators.cpp"
 )
-
 # include directories
 target_include_directories(matrices PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-
 # turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
 target_compile_options(matrices PRIVATE 
     "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
@@ -36,40 +34,37 @@ add_library(geometries
     "src/linear_algebra_ma/geometries/point.cpp"
     "src/linear_algebra_ma/geometries/segment.cpp"
 )
-
 # include directories
 target_include_directories(geometries PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-
 # turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
 target_compile_options(geometries PRIVATE 
     "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
 )
-
 target_link_libraries(geometries matrices)
 
 
-#-- all
-# add library
-add_library( ${PROJECT_NAME}
-    "src/linear_algebra_ma/matrices/matrices.cpp"
-    "src/linear_algebra_ma/matrices/operators.cpp"
-    "src/linear_algebra_ma/geometries/point.cpp"
-    "src/linear_algebra_ma/geometries/segment.cpp"
-)
+# #-- all
+# # add library
+# add_library( ${PROJECT_NAME}
+#     "src/linear_algebra_ma/matrices/matrices.cpp"
+#     "src/linear_algebra_ma/matrices/operators.cpp"
+#     "src/linear_algebra_ma/geometries/point.cpp"
+#     "src/linear_algebra_ma/geometries/segment.cpp"
+# )
 
-# include directories
-target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
+# # include directories
+# target_include_directories(${PROJECT_NAME} PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>
+# )
 
-# turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
-target_compile_options(${PROJECT_NAME} PRIVATE 
-    "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
-)
+# # turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
+# target_compile_options(${PROJECT_NAME} PRIVATE 
+#     "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
+# )
 
 # following actions are performed only if this is the root project (not included by other modules)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -90,32 +85,31 @@ if(WIN32)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 endif()
 FetchContent_MakeAvailable(googletest)
+add_library(GTest::GTest INTERFACE IMPORTED)
+# gtest_main automatically linked together with GTest::GTest
+target_link_libraries(GTest::GTest INTERFACE gtest_main)
 
+# enables ctesting
 enable_testing()
 
-# test linear algebra
-add_executable(matrices_unit_test
+add_executable(${PROJECT_NAME}_unit_tests
     "tests/test_matrices.cpp"
-)
-target_link_libraries(matrices_unit_test
-    GTest::gtest_main
-    matrices
-)
-
-#test geometries
-add_executable(geometries_unit_test
     "tests/test_geometries.cpp"
 )
-target_link_libraries(geometries_unit_test
-    GTest::gtest_main
+target_link_libraries(${PROJECT_NAME}_unit_tests
+    PRIVATE
+    GTest::GTest
+    gtest_main
+    matrices
     geometries
 )
 
-include(GoogleTest)
-gtest_discover_tests(
-    matrices_unit_test
-    geometries_unit_test
-)
+# add the gtest target as a ctest. CTests will be run in block
+add_test(${PROJECT_NAME}_gtests ${PROJECT_NAME}_unit_tests)
+
+# make google test register the tests. CTests will run the single defined tests 
+# include(GoogleTest)
+# gtest_discover_tests( ${PROJECT_NAME}_unit_tests )
 
 
 ################################################################################

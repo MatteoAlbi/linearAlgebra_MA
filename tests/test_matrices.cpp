@@ -449,11 +449,27 @@ TEST(Matrix, multiply_operator){
     EXPECT_THROW(m1*=m1, invalid_argument);
 }
 
-/*
+
 TEST(Matrix, concatenate_operators){
-    // TODO
+    Matrix v1{1,1,{1}};
+    Matrix v2, v3;
+    EXPECT_NO_THROW(v2 = v1 | v1 | v1);
+    EXPECT_NO_THROW(v3 = v2 & v2*2 & v2*3); 
+    EXPECT_EQ(v3,
+        (Matrix{3,3,{
+            1,2,3,
+            1,2,3,
+            1,2,3}})
+    );
+
+    v1 = Matrix{1,3,{1,1,1}};
+    v2 = Matrix{1,4,{1,1,1,1}};
+    EXPECT_THROW(v1 | v2, invalid_argument);
+    EXPECT_THROW(v3 | v2, invalid_argument);
+    EXPECT_THROW(v3 & v2, invalid_argument);
+    EXPECT_THROW(v3 & v1, invalid_argument);
 }
-*/
+
 
 TEST(Matrix, submat_del){
     Matrix m2;

@@ -212,12 +212,15 @@ public:
 
     /**
      * @brief concatenate matrices per columns
+     * this, m
      * @param m matrix to concatenate
      */
     void operator&=(const Matrix & m);
 
     /**
-     * @brief concatenate matrices per rows
+     * @brief concatenate matrices per rows:
+     * this;
+     * m
      * @param m matrix to concatenate
      */
     void operator|=(const Matrix & m);
@@ -436,24 +439,35 @@ std::ostream& operator<<(std::ostream& os, const Matrix * m);
 
 #pragma region math_operators
 Matrix operator+(const Matrix& m, const double& k);
+Matrix operator+(const double& k, const Matrix& m);
 Matrix operator+(const Matrix& m, const int & k);
+Matrix operator+(const int & k, const Matrix& m);
 Matrix operator+(const Matrix& m1, const Matrix& m2);
 
+Matrix operator-(const Matrix& m);
 Matrix operator-(const Matrix& m, const double& k);
+Matrix operator-(const double& k, const Matrix& m);
 Matrix operator-(const Matrix& m, const int & k);
+Matrix operator-(const int & k, const Matrix& m);
 Matrix operator-(const Matrix& m1, const Matrix& m2);
 
 Matrix operator*(const Matrix& m, const double& k);
+Matrix operator*(const double& k, const Matrix& m);
 Matrix operator*(const Matrix& m, const int & k);
+Matrix operator*(const int & k, const Matrix& m);
 Matrix operator*(const Matrix& m1, const Matrix& m2);
 
 Matrix operator/(const Matrix& m, const double& k);
+Matrix operator/(const double& k, const Matrix& m);
 Matrix operator/(const Matrix& m, const int & k);
+Matrix operator/(const int & k, const Matrix& m);
 Matrix operator/(const Matrix& m1, const Matrix& m2);
 #pragma endregion math_operators
 
 /**
  * @brief concatenates matrices per columns
+ * m1;
+ * m2
  * 
  * @param m1 first matrix
  * @param m2 second matrix
@@ -463,6 +477,7 @@ Matrix operator&(const Matrix& m1, const Matrix& m2);
 
 /**
  * @brief concatenates matrices per rows
+ * m1, m2
  * 
  * @param m1 first matrix
  * @param m2 second matrix

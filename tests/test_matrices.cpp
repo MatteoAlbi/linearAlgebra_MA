@@ -340,6 +340,7 @@ TEST(Matrix, sum_operator){
     // int
     for(int i=0; i<v2.size(); i++) v2[i]+=7;
     EXPECT_EQ(m1+7, Matrix(3,4, v2));
+    EXPECT_EQ(7+m1, Matrix(3,4, v2));
     m1+=7;
     EXPECT_EQ(m1, Matrix(3,4, v2));
     EXPECT_NO_THROW(Matrix(0,3)+=3);
@@ -350,6 +351,7 @@ TEST(Matrix, sum_operator){
     v2 = v1;
     for(int i=0; i<v2.size(); i++) v2[i]+=(-3.14);
     EXPECT_EQ(m1+(-3.14) ,Matrix(3,4, v2));
+    EXPECT_EQ((-3.14)+m1 ,Matrix(3,4, v2));
     m1+=(-3.14);
     EXPECT_EQ(m1, Matrix(3,4, v2));
     EXPECT_NO_THROW(Matrix(0,3)+=7.72);
@@ -377,6 +379,7 @@ TEST(Matrix, subtract_operator){
     // int
     for(int i=0; i<v2.size(); i++) v2[i]-=7;
     EXPECT_EQ(m1-7, Matrix(3,4, v2));
+    EXPECT_EQ(7-m1, -Matrix(3,4, v2));
     m1-=7;
     EXPECT_EQ(m1, Matrix(3,4, v2));
     EXPECT_NO_THROW(Matrix(0,3)-=3);
@@ -387,6 +390,7 @@ TEST(Matrix, subtract_operator){
     v2 = v1;
     for(int i=0; i<v2.size(); i++) v2[i]-=(-3.14);
     EXPECT_EQ(m1-(-3.14), Matrix(3,4, v2));
+    EXPECT_EQ((-3.14)-m1, -Matrix(3,4, v2));
     m1-=(-3.14);
     EXPECT_EQ(m1, Matrix(3,4, v2));
     EXPECT_NO_THROW(Matrix(0,3)-=7.72);
@@ -417,6 +421,7 @@ TEST(Matrix, multiply_operator){
     // int
     for(int i=0; i<v2.size(); i++) v2[i]*=2;
     EXPECT_EQ(m1*2, Matrix(3,4, v2));
+    EXPECT_EQ(2*m1, Matrix(3,4, v2));
     m1*=2;
     EXPECT_EQ(m1, Matrix(3,4, v2));
     EXPECT_NO_THROW(Matrix(0,3)*=2);
@@ -427,6 +432,7 @@ TEST(Matrix, multiply_operator){
     v2 = v1;
     for(int i=0; i<v2.size(); i++) v2[i]*=2.5;
     EXPECT_EQ(m1*2.5, Matrix(3,4, v2));
+    EXPECT_EQ(2.5*m1, Matrix(3,4, v2));
     m1*=2.5;
     EXPECT_EQ(m1, Matrix(3,4, v2));
     EXPECT_NO_THROW(Matrix(0,3)*=2.5);
@@ -830,6 +836,7 @@ TEST(Matrix, divide_operator){
     // int
     for(int i=0; i<v2.size(); i++) v2[i]/=2;
     EXPECT_EQ(m1/2, Matrix(3,4, v2));
+    // EXPECT_EQ(2/m1, Matrix(3,4, v2).inv());
     m1/=2;
     EXPECT_EQ(m1, Matrix(3,4, v2));
     EXPECT_NO_THROW(Matrix(0,3)/=2);
@@ -840,6 +847,7 @@ TEST(Matrix, divide_operator){
     v2 = v1;
     for(int i=0; i<v2.size(); i++) v2[i]/=2.5;
     EXPECT_EQ(m1/2.5, Matrix(3,4, v2));
+    // EXPECT_EQ(2.5/m1, Matrix(3,4, v2).inv());
     m1/=2.5;
     EXPECT_EQ(m1, Matrix(3,4, v2));
     EXPECT_NO_THROW(Matrix(0,3)/=2.5);

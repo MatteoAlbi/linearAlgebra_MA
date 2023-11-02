@@ -178,11 +178,19 @@ Matrix operator+(const Matrix& m, const double& k){
     return ret;
 }
 
+Matrix operator+(const double& k, const Matrix& m){
+    return m + k;
+}
+
 Matrix operator+(const Matrix& m, const int& k){
     Matrix ret = m;
     ret+=k;
 
     return ret;
+}
+
+Matrix operator+(const int& k, const Matrix& m){
+    return m + k;
 }
 
 Matrix operator+(const Matrix& m1, const Matrix& m2){
@@ -222,6 +230,10 @@ void Matrix::operator-=(const Matrix & m){
     }
 }
 
+Matrix operator-(const Matrix& m){
+    return m * (-1);
+}
+
 Matrix operator-(const Matrix& m, const double& k){
     Matrix ret = m;
     ret-=k;
@@ -229,11 +241,19 @@ Matrix operator-(const Matrix& m, const double& k){
     return ret;
 }
 
+Matrix operator-(const double& k, const Matrix& m){
+    return m * (-1) + k;
+}
+
 Matrix operator-(const Matrix& m, const int& k){
     Matrix ret = m;
     ret-=k;
 
     return ret;
+}
+
+Matrix operator-(const int& k, const Matrix& m){
+    return m * (-1) + k;
 }
 
 Matrix operator-(const Matrix& m1, const Matrix& m2){
@@ -274,11 +294,19 @@ Matrix operator*(const Matrix& m, const double& k){
     return ret;
 }
 
+Matrix operator*(const double& k, const Matrix& m){
+    return m * k;
+}
+
 Matrix operator*(const Matrix& m, const int& k){
     Matrix ret = m;
     ret*=k;
 
     return ret;
+}
+
+Matrix operator*(const int& k, const Matrix& m){
+    return m * k;
 }
 
 Matrix operator*(const Matrix& m1, const Matrix& m2){
@@ -316,17 +344,19 @@ void Matrix::operator/=(const int & k){
     }
 }
 
-
 void Matrix::operator/=(const Matrix & m){
    this->operator=((*this) / m);
 }
-
 
 Matrix operator/(const Matrix& m, const double& k){
     Matrix ret = m;
     ret/=k;
 
     return ret;
+}
+
+Matrix operator/(const double& k, const Matrix& m){
+    return m.inv() * k;
 }
 
 Matrix operator/(const Matrix& m, const int& k){
@@ -336,6 +366,9 @@ Matrix operator/(const Matrix& m, const int& k){
     return ret;
 }
 
+Matrix operator/(const int& k, const Matrix& m){
+    return m.inv() * k;
+}
 
 Matrix operator/(const Matrix& m1, const Matrix& m2){
     return Matrix::matrix_r_divide(m1,m2);

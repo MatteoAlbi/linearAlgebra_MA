@@ -269,7 +269,7 @@ public:
 
     /**
      * @brief computes minor of the matrix wrt row p and column q
-     * (minor: determinant of the submatrix obtained by deletin
+     * (minor: determinant of the submatrix obtained by deleting
      * the p row and q column). The matrix must be square.
      * @param p row index
      * @param q column index

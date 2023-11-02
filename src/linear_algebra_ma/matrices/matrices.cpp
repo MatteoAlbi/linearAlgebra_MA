@@ -242,8 +242,8 @@ double Matrix::minor(const uint & p, const uint & q) const{
 double Matrix::cof(const uint & p, const uint & q) const{
     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-    int sign = (p+q % 2) == 0 ? 1 : -1;
-    return this->submat_del(p,q).det() * sign;
+    int sign = ((p+q) % 2) == 0 ? 1 : -1;
+    return sign * this->minor(p,q);
 }
 
 Matrix Matrix::cof_mat() const{

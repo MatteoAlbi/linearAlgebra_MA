@@ -449,7 +449,6 @@ TEST(Matrix, multiply_operator){
     EXPECT_THROW(m1*=m1, invalid_argument);
 }
 
-
 TEST(Matrix, concatenate_operators){
     Matrix v1{1,1,{1}};
     Matrix v2, v3;
@@ -470,6 +469,44 @@ TEST(Matrix, concatenate_operators){
     EXPECT_THROW(v3 & v1, invalid_argument);
 }
 
+TEST(Matrix, dot){
+    Matrix v1{5,1,{1,2,3,4,5}};
+    Matrix v2{5,1,{5,4,3,2,1}};
+    Matrix v3{4,1,{4,3,2,1}};
+    Matrix m{2,3,{1,2,3,4,5,6}};
+
+    EXPECT_THROW(v1.dot(m), invalid_argument);
+    EXPECT_THROW(m.dot(v1), invalid_argument);
+    EXPECT_THROW(v2.dot(v3), invalid_argument);
+
+    EXPECT_EQ(v1.dot(v2), 35);
+    EXPECT_EQ(v1.dot(v2), v2.dot(v1));
+    EXPECT_EQ(v1.t().dot(v2), v2.t().dot(v1));
+    EXPECT_EQ(v1.dot(v2.t()), v2.dot(v1.t()));
+    EXPECT_EQ(v1.t().dot(v2.t()), v2.t().dot(v1.t()));
+}
+
+TEST(Matrix,  cross){
+    Matrix v1{3,1,{1,2,3}};
+    Matrix v2{3,1,{5,4,3}};
+    Matrix v3{4,1,{4,3,2,1}};
+    Matrix m{2,3,{1,2,3,4,5,6}};
+
+    EXPECT_THROW(v1.cross(m), invalid_argument);
+    EXPECT_THROW(m.cross(v1), invalid_argument);
+    EXPECT_THROW(v2.cross(v3), invalid_argument);
+
+    EXPECT_EQ(v1.cross(v2), (Matrix{3,1,{-6,12,-6}}));
+    EXPECT_EQ(v1.t().cross(v2), (Matrix{3,1,{-6,12,-6}}));
+    EXPECT_EQ(v1.cross(v2.t()), (Matrix{3,1,{-6,12,-6}}));
+    EXPECT_EQ(v1.t().cross(v2.t()), (Matrix{3,1,{-6,12,-6}}));
+
+    EXPECT_EQ(v2.cross(v1), (Matrix{3,1,{6,-12,6}}));
+    EXPECT_EQ(v2.t().cross(v1), (Matrix{3,1,{6,-12,6}}));
+    EXPECT_EQ(v2.cross(v1.t()), (Matrix{3,1,{6,-12,6}}));
+    EXPECT_EQ(v2.t().cross(v1.t()), (Matrix{3,1,{6,-12,6}}));
+
+}
 
 TEST(Matrix, submat_del){
     Matrix m2;
@@ -559,23 +596,90 @@ TEST(Matrix, is_sing){
     EXPECT_TRUE(m1.is_sing());
 }
 
-/*
 TEST(Matrix, minor){
-    // TODO
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.minor(2,1), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_THROW(m1.minor(2,4), invalid_argument);
+    EXPECT_EQ(m1.minor(2,1), 94);
 }
 
 TEST(Matrix, cof){
-    // TODO
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.cof(2,1), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_THROW(m1.cof(2,4), invalid_argument);
+    EXPECT_EQ(m1.cof(2,1), -94);
 }
 
 TEST(Matrix, cof_mat){
-    // TODO
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.cof_mat(), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_EQ(m1.cof_mat(),
+        (Matrix{4,4,
+            {104,  235,  -39, -110,
+             -16, -329,   53,   82,
+             -56,  -94,  -26,   52,
+             -48,   94,   18,  -36}
+        })
+    );
 }
 
 TEST(Matrix, adj){
-    // TODO
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.adj(), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_EQ(m1.adj(),
+        (Matrix{4,4,
+            {104,  235,  -39, -110,
+             -16, -329,   53,   82,
+             -56,  -94,  -26,   52,
+             -48,   94,   18,  -36}
+        }.t())
+    );
 }
-*/
+
 
 TEST(Matrix, inv){
     // not square
@@ -712,7 +816,6 @@ TEST(Matrix, qr_dec){
     Matrix::set_double_precision(10);
     EXPECT_EQ(A, Q*R);
 }
-
 
 TEST(Matrix, lup_dec){
     // matrices not square

@@ -15,7 +15,7 @@ Matrix::Matrix(const uint & r, const uint & c) {
     this->_v = new double[this->size()]();
 }
 
-Matrix::Matrix(const uint & r, const uint & c, std::vector<double> v) {
+Matrix::Matrix(const uint & r, const uint & c, const std::vector<double> & v) {
     this->_r = r;
     this->_c = c;
     this->_v = new double[this->size()];
@@ -47,13 +47,13 @@ uint Matrix::size() const{return this->_r * this->_c;}
 double const * Matrix::v() const{return this->_v;}
 
 
-void Matrix::setV(std::vector<double> v){
+void Matrix::setV(const std::vector<double> & v){
     if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
 
     std::copy(v.begin(), v.begin() + this->size(), this->_v);
 }
 
-void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v){
+void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, const std::vector<double> & v){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -322,11 +322,23 @@ Matrix IdMat(const uint & dim){
     return ret;
 }
 
+Matrix IdMat(const uint & r, const uint & c){
+    Matrix ret = Matrix(r,c);
+    for(uint i=0; i<std::min(r,c); i++){
+        ret(i,i) = 1;
+    }
+    return ret;
+}
+
 Matrix Ones(const uint & r, const uint & c){
     return Matrix(r,c)+1;
 }
 
-Matrix diag(const uint & dim, double * v){
+Matrix Zeros(const uint & r, const uint & c){
+    return Matrix(r,c);
+}
+
+Matrix diag(const uint & dim, const std::vector<double> & v){
     Matrix ret = Matrix(dim,dim);
     
     for(uint i=0; i<dim; i++){
@@ -336,9 +348,20 @@ Matrix diag(const uint & dim, double * v){
     return ret;
 }
 
-double * diag(const Matrix & m){
+Matrix diag(const uint & r, const uint & c, const std::vector<double> & v){
+    Matrix ret = Matrix(r,c);
+    uint dim = std::min(r,c);
+
+    for(uint i=0; i<dim; i++){
+        ret(i,i) = v[i];
+    }
+
+    return ret;
+}
+
+std::vector<double> diag(const Matrix & m){
     uint dim = std::min(m.c(),m.r());
-    double * v = new double[dim]();
+    std::vector<double> v(dim);
 
     for(uint i=0;i<dim; i++){
         v[i] = m(i,i);
@@ -353,7 +376,7 @@ double * diag(const Matrix & m){
 
 void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
     uint n = std::min<double>(_r, _c);
-    Matrix H_list[n];
+    std::vector<Matrix> H_list(n);
 
     //set R to A
     R = this;

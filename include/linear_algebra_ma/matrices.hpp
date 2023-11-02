@@ -12,6 +12,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <array>
 
 typedef unsigned int uint;
 
@@ -54,7 +55,7 @@ public:
 #pragma region constructor_destructor
     Matrix();
     Matrix(const uint & r, const uint & c);
-    Matrix(const uint & r, const uint & c, std::vector<double> v);
+    Matrix(const uint & r, const uint & c, const std::vector<double> & v);
     Matrix(Matrix & m);
     Matrix(const Matrix & m);
     ~Matrix();
@@ -114,7 +115,7 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < this.size
      */
-    void setV(std::vector<double> v);
+    void setV(const std::vector<double> & v);
 
     /**
      * @brief uses the vecotr to fill in the elements of submatrix
@@ -124,7 +125,7 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < submatrix size
      */
-    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v);
+    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, const std::vector<double> & v);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -482,6 +483,15 @@ Matrix operator|(const Matrix& m1, const Matrix& m2);
 Matrix IdMat(const uint & dim);
 
 /**
+ * @brief create identity matrix of shape r*c
+ * 
+ * @param r rows 
+ * @param c columns 
+ * @return Matrix 
+ */
+Matrix IdMat(const uint & r, const uint & c);
+
+/**
  * @brief create matrix of only ones of shape r*c
  * 
  * @param r 
@@ -490,9 +500,35 @@ Matrix IdMat(const uint & dim);
  */
 Matrix Ones(const uint & r, const uint & c);
 
+/**
+ * @brief create matrix of only zeros of shape r*c
+ * 
+ * @param r 
+ * @param c 
+ * @return Matrix 
+ */
+Matrix Zeros(const uint & r, const uint & c);
 
-Matrix diag(const uint & dim, double * v);
-double * diag(const Matrix & m);
+/**
+ * @brief create matrix of shape dim*dim with
+ * diagonal elements equal to v
+ * 
+ * @param dim 
+ * @return Matrix 
+ */
+Matrix diag(const uint & dim, const std::vector<double> & v);
+
+/**
+ * @brief create matrix of shape r*c with
+ * diagonal elements equal to v
+ * 
+ * @param r 
+ * @param c 
+ * @return Matrix 
+ */
+Matrix diag(const uint & r, const uint & c, const std::vector<double> & v);
+
+std::vector<double> diag(const Matrix & m);
 
 
 } // namespace MA

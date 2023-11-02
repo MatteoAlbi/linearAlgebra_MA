@@ -1064,3 +1064,8 @@ TEST(Matrix, matrix_r_divide){
     // cout << U << endl;
     // cout << Matrix::matrix_r_divide(b,A.t()) << endl;
 }
+
+
+TEST(Matrix, IdMat){
+    
+}

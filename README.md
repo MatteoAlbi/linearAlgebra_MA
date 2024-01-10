@@ -19,6 +19,6 @@ cmake --build build
 
 ## Run tests
 
-'''bash
+```bash
 ./build/linear_algebra_ma_unit_tests
-'''
+```

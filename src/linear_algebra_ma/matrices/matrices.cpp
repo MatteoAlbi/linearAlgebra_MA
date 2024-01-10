@@ -120,6 +120,9 @@ Matrix Matrix::to_r_vec() const{
 void Matrix::swap_rows(const uint & r1, const uint & r2){
     if(r1 >= _r || r2 >= _r) throw std::out_of_range("Given parameters exceed the matrix rows indeces");
 
+    // swap not necessary
+    if(r1 == r2) return;
+
     // extract r1
     Matrix tmp = this->operator()(r1, {0, _c-1});
     // substitute r2 into r1
@@ -130,6 +133,9 @@ void Matrix::swap_rows(const uint & r1, const uint & r2){
 
 void Matrix::swap_cols(const uint & c1, const uint & c2){
     if(c1 >= _c || c2 >= _c) throw std::out_of_range("Given parameters exceed the matrix columns indeces");
+
+    // swap not necessary
+    if(c1 == c2) return;
 
     // extract c1
     Matrix tmp = this->operator()({0, _r-1}, c1);
@@ -313,6 +319,28 @@ void Matrix::normalize_self(){
 }
 
 
+bool Matrix::is_upper_triang() const{
+    uint n = std::min(_r, _c);
+    for(uint i=1; i<n; i++){
+        for(uint j=0; j<i; j++){
+            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
+        }
+    }
+
+    return true;
+}
+    
+bool Matrix::is_lower_triang() const{
+    uint n = std::min(_r, _c);
+    for(uint j=1; j<n; j++){
+        for(uint i=0; i<j; i++){
+            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
+        }
+    }
+
+    return true;
+}
+
 
 Matrix IdMat(const uint & dim){
     Matrix ret = Matrix(dim,dim);
@@ -383,6 +411,56 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
 
 }
 
+
+void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
+
+    uint n = std::min<double>(_r, _c);
+    Matrix H_list[n];
+
+    // set P to identity matrix to keep track of the permutations
+    P = IdMat(_c);
+    //set R to A
+    R = this;
+    
+    for(uint i=0; i<n; i++){ // main loop
+
+        // find column with largest norm
+        uint j = 0;
+        double max_norm = -1;
+        for(uint k=i; k<n; k++){
+            double norm = R({i, _r-1}, k).norm2();
+            if(norm > max_norm){
+                max_norm = norm;
+                j = k;
+            }
+        }
+
+        // swap columns
+        R.swap_cols(i, j);
+        P.swap_cols(i, j);
+
+        //compute vk
+        Matrix v = R({i, _r-1}, i);
+        v(0) += (v(0) < 0 ? -1 : 1) * v.norm2();
+
+        // compute H matrix
+        v.normalize_self();
+        Matrix H = IdMat(v.size()) - (v * v.t()) *2;
+
+        //store H matrix to compute Q
+        H_list[i] = IdMat(_r);
+        H_list[i].setV({i, _r-1},{i, _r-1}, H);
+
+        //update R
+        R = H_list[i] * R;
+    }
+
+    // compute Q
+    Q = IdMat(_r);
+    for(uint i=0; i<n; i++){
+        Q = Q * H_list[i];
+    }
+}
 
 
 uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{

@@ -335,6 +335,18 @@ public:
      */
     void normalize_self();
 
+    /**
+     * @brief return true if the matrix is upper triangular
+     */
+    bool is_upper_triang() const;
+    
+    /**
+     * @brief return true if the matrix is lower triangular
+     */
+    bool is_lower_triang() const;
+
+
+
 #pragma region decomposition_methods
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 
@@ -346,6 +358,19 @@ public:
      * @param R upper triangular matrix
      */
     void qr_dec(Matrix & Q, Matrix & R) const;
+
+    /**
+     * @brief Compute QR decomposition of the given matrix with partial permutation
+     *      A*P=Q*R with: 
+     *      Q orthogonal matrix 
+     *      R upper triangular matrix
+     *      P permutation matrix
+     * 
+     * @param Q orthogonal matrix
+     * @param R upper triangular matrix
+     * @param P permutation matrix
+     */
+    void qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const;
 
 
     //https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
@@ -428,6 +453,7 @@ public:
     static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
 
 #pragma endregion ls_solution
+
 };
 
 // cout operators

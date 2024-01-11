@@ -133,7 +133,7 @@ TEST(Matrix, set) {
                              8,9,10,11,
                              12,13,14,15};
     m2.setV(v);
-    for(int i=0; i<4;i++) for(int j=0;j<4;j++) EXPECT_EQ(m2(i,j), v[j+i*4]);
+    for(int i=0; i<4;++i) for(int j=0;j<4;++j) EXPECT_EQ(m2(i,j), v[j+i*4]);
     // cout << m2 << endl;
 
     m2 = m1;
@@ -146,7 +146,7 @@ TEST(Matrix, set) {
     EXPECT_THROW(m2.setV({1,1},{3,1}, v), invalid_argument);
     EXPECT_THROW(m2.setV({0,3},{1,3}, v), out_of_range);
     EXPECT_NO_THROW(m2.setV({1,3},{1,3}, v));
-    for(int i=0; i<4; i++) for(int j=0;j<4;j++){
+    for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
         if(i==0 || j==0) EXPECT_EQ(m2(i,j), m1(i,j));
         else EXPECT_EQ(m2(i,j), v[j-1 + (i-1)*3]);
     }
@@ -154,7 +154,7 @@ TEST(Matrix, set) {
 
     m2 = m1;
     EXPECT_NO_THROW(m2.setV({1,2},{1,2}, v));
-    for(int i=0; i<4; i++) for(int j=0;j<4;j++){
+    for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
         if(i==0 || j==0 || i==3 || j==3) EXPECT_EQ(m2(i,j), m1(i,j));
         else EXPECT_EQ(m2(i,j), v[j-1 + (i-1)*2]);
     }
@@ -162,7 +162,7 @@ TEST(Matrix, set) {
 
     m2 = m1;
     EXPECT_NO_THROW(m2.setV({0,2},{2,3}, v));
-    for(int i=0; i<4; i++) for(int j=0;j<4;j++){
+    for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
         if(i>2 || j<2) EXPECT_EQ(m2(i,j), m1(i,j));
         else EXPECT_EQ(m2(i,j), v[j-2 + (i)*2]);
     }
@@ -177,7 +177,7 @@ TEST(Matrix, set) {
     EXPECT_THROW(m2.setV({0,3},{1,1}, m3), out_of_range);
     EXPECT_THROW(m2.setV({0,0},{0,4}, m3), out_of_range);
     EXPECT_NO_THROW(m2.setV({0,2},{2,3}, m3));
-    for(int i=0; i<4; i++) for(int j=0;j<4;j++){
+    for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
         if(i>2 || j<2) EXPECT_EQ(m2(i,j), m1(i,j));
         else EXPECT_EQ(m2(i,j), m3(i, j-2));
     }
@@ -277,7 +277,7 @@ TEST(Matrix, transpose){
     EXPECT_NO_THROW(m2 = m1.t());
     EXPECT_EQ(m2.r(), (uint)4);
     EXPECT_EQ(m2.c(), (uint)3);
-    for(int i=0; i<3; i++) for(int j=0;j<4;j++){
+    for(int i=0; i<3; ++i) for(int j=0;j<4;++j){
         EXPECT_EQ(m1(i,j), m2(j,i));
     }
 
@@ -287,7 +287,7 @@ TEST(Matrix, transpose){
     EXPECT_NO_THROW(m2 = m1.t());
     EXPECT_EQ(m2.r(), (uint)5);
     EXPECT_EQ(m2.c(), (uint)1);
-    for(int i=0; i<1; i++) for(int j=0;j<5;j++){
+    for(int i=0; i<1; ++i) for(int j=0;j<5;++j){
         EXPECT_EQ(m1(i,j), m2(j,i));
     }
 }
@@ -338,7 +338,7 @@ TEST(Matrix, sum_operator){
     Matrix m1(3,4,v1);
 
     // int
-    for(int i=0; i<v2.size(); i++) v2[i]+=7;
+    for(int i=0; i<v2.size(); ++i) v2[i]+=7;
     EXPECT_EQ(m1+7, Matrix(3,4, v2));
     m1+=7;
     EXPECT_EQ(m1, Matrix(3,4, v2));
@@ -348,7 +348,7 @@ TEST(Matrix, sum_operator){
     // double
     m1 = Matrix(3,4,v1);
     v2 = v1;
-    for(int i=0; i<v2.size(); i++) v2[i]+=(-3.14);
+    for(int i=0; i<v2.size(); ++i) v2[i]+=(-3.14);
     EXPECT_EQ(m1+(-3.14) ,Matrix(3,4, v2));
     m1+=(-3.14);
     EXPECT_EQ(m1, Matrix(3,4, v2));
@@ -359,7 +359,7 @@ TEST(Matrix, sum_operator){
     m1 = Matrix(3,4,v1);
     v2 = v1;
     Matrix m2 = m1 + 2.28;
-    for(int i=0; i<v2.size(); i++) v2[i] = v2[i] + v2[i] + 2.28;
+    for(int i=0; i<v2.size(); ++i) v2[i] = v2[i] + v2[i] + 2.28;
     EXPECT_EQ((m1+m2), Matrix(3,4, v2));
     m1+=m2;
     EXPECT_EQ(m1, Matrix(3,4, v2));
@@ -375,7 +375,7 @@ TEST(Matrix, subtract_operator){
     Matrix m1(3,4,v1);
 
     // int
-    for(int i=0; i<v2.size(); i++) v2[i]-=7;
+    for(int i=0; i<v2.size(); ++i) v2[i]-=7;
     EXPECT_EQ(m1-7, Matrix(3,4, v2));
     m1-=7;
     EXPECT_EQ(m1, Matrix(3,4, v2));
@@ -385,7 +385,7 @@ TEST(Matrix, subtract_operator){
     // double
     m1 = Matrix(3,4,v1);
     v2 = v1;
-    for(int i=0; i<v2.size(); i++) v2[i]-=(-3.14);
+    for(int i=0; i<v2.size(); ++i) v2[i]-=(-3.14);
     EXPECT_EQ(m1-(-3.14), Matrix(3,4, v2));
     m1-=(-3.14);
     EXPECT_EQ(m1, Matrix(3,4, v2));
@@ -396,7 +396,7 @@ TEST(Matrix, subtract_operator){
     m1 = Matrix(3,4,v1);
     v2 = v1;
     Matrix m2 = m1 + 2;
-    for(int i=0; i<v2.size(); i++) v2[i] = v2[i] - v2[i] - 2;
+    for(int i=0; i<v2.size(); ++i) v2[i] = v2[i] - v2[i] - 2;
     EXPECT_EQ((m1-m2), Matrix(3,4, v2));
     // cout << m1-m2 << endl;
     // cout << Matrix(3,4, v2) << endl;
@@ -415,7 +415,7 @@ TEST(Matrix, multiply_operator){
     Matrix m1(3,4,v1);
 
     // int
-    for(int i=0; i<v2.size(); i++) v2[i]*=2;
+    for(int i=0; i<v2.size(); ++i) v2[i]*=2;
     EXPECT_EQ(m1*2, Matrix(3,4, v2));
     m1*=2;
     EXPECT_EQ(m1, Matrix(3,4, v2));
@@ -425,7 +425,7 @@ TEST(Matrix, multiply_operator){
     // double
     m1 = Matrix(3,4,v1);
     v2 = v1;
-    for(int i=0; i<v2.size(); i++) v2[i]*=2.5;
+    for(int i=0; i<v2.size(); ++i) v2[i]*=2.5;
     EXPECT_EQ(m1*2.5, Matrix(3,4, v2));
     m1*=2.5;
     EXPECT_EQ(m1, Matrix(3,4, v2));
@@ -468,7 +468,7 @@ TEST(Matrix, submat_del){
     EXPECT_NO_THROW(m2 = m1.submat_del(1,2));
     EXPECT_EQ(m2.r(), (uint)2);
     EXPECT_EQ(m2.c(), (uint)3);
-    for(int i=0; i<2; i++) for(int j=0;j<3;j++){
+    for(int i=0; i<2; ++i) for(int j=0;j<3;++j){
         uint k = i > 0 ? i+1 : i;
         uint l = j > 1 ? j+1 : j;
         EXPECT_EQ(m2(i,j), m1(k,l));
@@ -701,6 +701,58 @@ TEST(Matrix, is_lower_triang){
     EXPECT_FALSE(m1.is_lower_triang());
 }
 
+TEST(Matrix, is_upper_hessenberg){
+    Matrix m1(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         0,0,0,9}
+    );
+    EXPECT_FALSE(m1.is_upper_hessenberg());
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         0,1,9,7,
+         0,0,1,9}
+    );
+    EXPECT_TRUE(m1.is_upper_hessenberg());
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         0,1,9,7,
+         0,0.1,1,9}
+    );
+    EXPECT_FALSE(m1.is_upper_hessenberg());
+}
+
+TEST(Matrix, is_lower_hessenberg){
+    Matrix m1(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_FALSE(m1.is_lower_hessenberg());
+
+    m1 = Matrix(4,4,
+        {1,1,0,0,
+         1,3,1,0,
+         4,3,9,1,
+         5,2,0,9}
+    );
+    EXPECT_TRUE(m1.is_lower_hessenberg());
+
+    m1 = Matrix(4,4,
+        {1,1,0,0,
+         1,3,1,0.1,
+         4,3,9,1,
+         5,2,0,9}
+    );
+    EXPECT_FALSE(m1.is_lower_hessenberg());
+}
+
 
 
 TEST(Matrix, qr_dec){
@@ -795,6 +847,35 @@ TEST(Matrix, lup_dec){
     EXPECT_EQ(L*U, P*m1);
 
 }
+
+
+TEST(Matrix, hessenberg_dec){
+    Matrix m1, Q, H;
+
+    // matricx not square
+    m1 = Matrix (3,4,
+        {1,3,5,9,
+         0,2,1,7,
+         4,1,8,2,
+         5,2,1,9}
+    );
+    EXPECT_THROW(m1.hessenberg_dec(Q, H), invalid_argument);
+
+    // matricx decomposable
+    m1 = Matrix (4,4,
+        {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
+         6.4349e-01,   2.9453e-01,   4.3203e-01,   8.8371e-03,
+         1.4175e-01,   8.3325e-01,   6.4892e-01,   8.3927e-02,
+         8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
+    );
+    EXPECT_NO_THROW(m1.hessenberg_dec(Q, H));
+    EXPECT_EQ(Q * Q.t(), IdMat(4));
+    EXPECT_TRUE(H.is_upper_hessenberg());
+    EXPECT_EQ(Q * H * Q.t(), m1);
+    
+}
+
+
 
 TEST(Matrix, backward_sub){
     Matrix U,b;
@@ -893,7 +974,7 @@ TEST(Matrix, divide_operator){
     Matrix m1(3,4,v1);
 
     // int
-    for(int i=0; i<v2.size(); i++) v2[i]/=2;
+    for(int i=0; i<v2.size(); ++i) v2[i]/=2;
     EXPECT_EQ(m1/2, Matrix(3,4, v2));
     m1/=2;
     EXPECT_EQ(m1, Matrix(3,4, v2));
@@ -903,7 +984,7 @@ TEST(Matrix, divide_operator){
     // double
     m1 = Matrix(3,4,v1);
     v2 = v1;
-    for(int i=0; i<v2.size(); i++) v2[i]/=2.5;
+    for(int i=0; i<v2.size(); ++i) v2[i]/=2.5;
     EXPECT_EQ(m1/2.5, Matrix(3,4, v2));
     m1/=2.5;
     EXPECT_EQ(m1, Matrix(3,4, v2));

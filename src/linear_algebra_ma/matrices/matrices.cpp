@@ -66,8 +66,8 @@ void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<
     uint nCols = cs.second - cs.first + 1;
     if(v.size() < nRows*nCols) throw std::out_of_range("Given vector doesn't have enough elements");
 
-    for (uint i = 0; i < nRows; i++){
-        for (uint j = 0; j < nCols; j++){
+    for (uint i = 0; i < nRows; ++i){
+        for (uint j = 0; j < nCols; ++j){
             this->operator()(i + rs.first, j + cs.first) = v[j + i * nCols];
         }
     }
@@ -85,8 +85,8 @@ void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m){
     if(m.r() < nRows) throw std::out_of_range("Given matrix doesn't have enough rows");
     if(m.c() < nCols) throw std::out_of_range("Given matrix doesn't have enough cols");
 
-    for (uint i = 0; i < nRows; i++){
-        for (uint j = 0; j < nCols; j++){
+    for (uint i = 0; i < nRows; ++i){
+        for (uint j = 0; j < nCols; ++j){
             this->operator()(i + rs.first, j + cs.first) = m(i,j);
         }
     }
@@ -147,8 +147,8 @@ void Matrix::swap_cols(const uint & c1, const uint & c2){
 
 Matrix Matrix::t() const{
     Matrix ret = Matrix(this->_c, this->_r);
-    for (uint i = 0; i<this->_r; i++) {
-        for (uint j = 0; j<this->_c; j++) {
+    for (uint i = 0; i<this->_r; ++i) {
+        for (uint j = 0; j<this->_c; ++j) {
             ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
         }
     }
@@ -161,7 +161,7 @@ double Matrix::dot(const Matrix & v) const{
     if(this->size() != v.size()) throw std::invalid_argument("Vectors length don't match");
 
     double ret = 0;
-    for(uint i=0; i<v.size(); i++) ret += this->operator()(i) * v(i);
+    for(uint i=0; i<v.size(); ++i) ret += this->operator()(i) * v(i);
     return ret;
 }
 
@@ -194,13 +194,13 @@ Matrix Matrix::submat_del(const uint & p, const uint & q) const{
             // which are not in given row and column
             if (row != p && col != q){
                 ret(i,j) = this->operator()(row,col);
-                j++;
+                ++j;
  
                 // Row is filled, so increase row index and
                 // reset col index
                 if (j == ret._c){
                     j = 0;
-                    i++;
+                    ++i;
                 }
             }
         }
@@ -229,7 +229,7 @@ double Matrix::det() const{
         Matrix L, U, P;
         uint n_swaps = this->lup_dec(L,U,P);
         double determinant = std::pow(-1.0, n_swaps);
-        for(uint i=0; i<U.c(); i++) determinant *= U(i,i);
+        for(uint i=0; i<U.c(); ++i) determinant *= U(i,i);
         return determinant;
     }
 }
@@ -256,7 +256,7 @@ Matrix Matrix::cof_mat() const{
     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
     Matrix ret(this->_r, this->_c);
-    for(uint i=0; i<this->_r; i++) for(uint j=0; j<this->_c; j++){
+    for(uint i=0; i<this->_r; ++i) for(uint j=0; j<this->_c; ++j){
         ret(i,j) = this->cof(i,j);
     }
 
@@ -268,7 +268,7 @@ Matrix Matrix::adj() const{
 
     // same formula of cofactor matrix, but inverting indeces to get the transpose
     Matrix ret(this->_r, this->_c);
-    for(uint i=0; i<this->_r; i++) for(uint j=0; j<this->_c; j++){
+    for(uint i=0; i<this->_r; ++i) for(uint j=0; j<this->_c; ++j){
         ret(j,i) = this->cof(i,j);
     }
 
@@ -298,7 +298,7 @@ Matrix Matrix::pinv_left() const{
 double Matrix::norm2() const{
     if(this->_r == 1 || this->_c == 1){
         double ret = 0;
-        for(uint i=0; i< this->_r+this->_c-1; i++){
+        for(uint i=0; i< this->_r+this->_c-1; ++i){
             ret += pow(this->_v[i],2);
         }
         return sqrt(ret);
@@ -321,8 +321,8 @@ void Matrix::normalize_self(){
 
 bool Matrix::is_upper_triang() const{
     uint n = std::min(_r, _c);
-    for(uint i=1; i<n; i++){
-        for(uint j=0; j<i; j++){
+    for(uint i=1; i<n; ++i){
+        for(uint j=0; j<i; ++j){
             if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
         }
     }
@@ -332,8 +332,30 @@ bool Matrix::is_upper_triang() const{
     
 bool Matrix::is_lower_triang() const{
     uint n = std::min(_r, _c);
-    for(uint j=1; j<n; j++){
-        for(uint i=0; i<j; i++){
+    for(uint j=1; j<n; ++j){
+        for(uint i=0; i<j; ++i){
+            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
+        }
+    }
+
+    return true;
+}
+
+bool Matrix::is_upper_hessenberg() const{
+    uint n = std::min(_r, _c);
+    for(uint i=2; i<n; ++i){
+        for(uint j=0; j<i-1; ++j){
+            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
+        }
+    }
+
+    return true;
+}
+
+bool Matrix::is_lower_hessenberg() const{
+    uint n = std::min(_r, _c);
+    for(uint j=2; j<n; ++j){
+        for(uint i=0; i<j-1; ++i){
             if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
         }
     }
@@ -344,7 +366,7 @@ bool Matrix::is_lower_triang() const{
 
 Matrix IdMat(const uint & dim){
     Matrix ret = Matrix(dim,dim);
-    for(uint i=0; i<dim; i++){
+    for(uint i=0; i<dim; ++i){
         ret(i,i) = 1;
     }
     return ret;
@@ -357,7 +379,7 @@ Matrix Ones(const uint & r, const uint & c){
 Matrix diag(const uint & dim, double * v){
     Matrix ret = Matrix(dim,dim);
     
-    for(uint i=0; i<dim; i++){
+    for(uint i=0; i<dim; ++i){
         ret(i,i) = v[i];
     }
 
@@ -368,7 +390,7 @@ double * diag(const Matrix & m){
     uint dim = std::min(m.c(),m.r());
     double * v = new double[dim]();
 
-    for(uint i=0;i<dim; i++){
+    for(uint i=0;i<dim; ++i){
         v[i] = m(i,i);
     }
 
@@ -381,53 +403,43 @@ double * diag(const Matrix & m){
 
 void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
     uint n = std::min<double>(_r, _c);
-    Matrix H_list[n];
 
-    //set R to A
+    // init matrices
+    Q = IdMat(_r);
     R = this;
     
-    for(uint i=0; i<n; i++){
+    for(uint i=0; i<n-1; ++i){
         //compute vk
         Matrix v = R({i, _r-1}, i);
         v(0) += (v(0) < 0 ? -1 : 1) * v.norm2();
 
         // compute H matrix
         v.normalize_self();
-        Matrix H = IdMat(v.size()) - (v * v.t()) *2;
-
-        //store H matrix to compute Q
-        H_list[i] = IdMat(_r);
-        H_list[i].setV({i, _r-1},{i, _r-1}, H);
+        Matrix H = IdMat(_r);
+        H.setV({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
 
         //update R
-        R = H_list[i] * R;
+        R = H * R;
+        Q = Q * H;
     }
-
-    // compute Q
-    Q = IdMat(_r);
-    for(uint i=0; i<n; i++){
-        Q = Q * H_list[i];
-    }
-
 }
 
 
 void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
 
     uint n = std::min<double>(_r, _c);
-    Matrix H_list[n];
 
-    // set P to identity matrix to keep track of the permutations
-    P = IdMat(_c);
-    //set R to A
+    // init matrices
+    Q = IdMat(_r);
     R = this;
+    P = IdMat(_c);
     
-    for(uint i=0; i<n; i++){ // main loop
+    for(uint i=0; i<n-1; ++i){ // main loop
 
         // find column with largest norm
         uint j = 0;
         double max_norm = -1;
-        for(uint k=i; k<n; k++){
+        for(uint k=i; k<n; ++k){
             double norm = R({i, _r-1}, k).norm2();
             if(norm > max_norm){
                 max_norm = norm;
@@ -445,20 +457,12 @@ void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
 
         // compute H matrix
         v.normalize_self();
-        Matrix H = IdMat(v.size()) - (v * v.t()) *2;
-
-        //store H matrix to compute Q
-        H_list[i] = IdMat(_r);
-        H_list[i].setV({i, _r-1},{i, _r-1}, H);
+        Matrix H = IdMat(_r);
+        H.setV({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
 
         //update R
-        R = H_list[i] * R;
-    }
-
-    // compute Q
-    Q = IdMat(_r);
-    for(uint i=0; i<n; i++){
-        Q = Q * H_list[i];
+        R = H * R;
+        Q = Q * H;
     }
 }
 
@@ -466,16 +470,16 @@ void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
 uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
     if(_r != _c) throw std::invalid_argument("The matrix must be square");
 
-    U = *this;
     L = IdMat(_r);
+    U = *this;
     P = IdMat(_r);
     uint ret = 0;
 
-    for (uint i = 0; i < _c; i++) { // scroll columns
+    for (uint i = 0; i < _c; ++i) { // scroll columns
         // pivoting
         double u_max = 0;
         uint max_index = i;
-        for (uint j = i; j < _r; j++){ // scroll rows
+        for (uint j = i; j < _r; ++j){ // scroll rows
             // find max value
             if(u_max < std::fabs(U(j,i))){
                 max_index = j;
@@ -493,25 +497,49 @@ uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
         }
 
         // elimination
-        for (uint j = i+1; j < _r; j++){ // scroll rows
+        for (uint j = i+1; j < _r; ++j){ // scroll rows
             // compute l(j,i)
             U(j,i) = U(j,i) / U(i,i);
             // apply elimination over all elements of the row
-            for (uint k = i+1; k < _c; k++){ // scroll columns
+            for (uint k = i+1; k < _c; ++k){ // scroll columns
                 U(j,k) -= U(j,i) * U(i,k);
             }
         }    
     }
 
     // compose matrices
-    for(uint i=1; i<_r; i++) { //scroll rows
-        for(uint j=0; j<i; j++){ //scroll columns
+    for(uint i=1; i<_r; ++i) { //scroll rows
+        for(uint j=0; j<i; ++j){ //scroll columns
             L(i,j) = U(i,j);
             U(i,j) = 0;
         }
     }
 
     return ret;
+}
+
+void Matrix::hessenberg_dec(Matrix & Q, Matrix & H){
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
+
+    H = *this;
+    Q = IdMat(_r);
+    
+    using namespace std;
+
+    for (uint i=0; i<_r-1; ++i){
+        // compute vk
+        Matrix v = H({i+1, _r-1}, i);
+        v(0) += copysign(v.norm2(), v(0));
+        // v(0) += (v(0) == 0 ? 1 : copysign(1.0, v(0))) * v.norm2();
+
+        // compute U matrix
+        v.normalize_self();
+        Matrix U = IdMat(_r);
+        U.setV({i+1, _r-1},{i+1, _r-1}, IdMat(v.size()) - 2 * v * v.t());
+
+        H = U * H * U.t();
+        Q = Q * U.t();
+    }
 }
 
 #pragma endregion decomposition_methods
@@ -522,7 +550,7 @@ Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
     if(U.c() != U.r()) throw std::invalid_argument("Coefficient matrix U must be square");
     if(B.r() != U.c()) throw std::invalid_argument("Rows of B must be equal to the columns of U");
     // check all U diagonal elements are different from zero
-    for(uint i=0; i<U.c(); i++) if(U(i,i) == 0){
+    for(uint i=0; i<U.c(); ++i) if(U(i,i) == 0){
         throw std::runtime_error("System of equation is underdetermined");
     }
 
@@ -530,7 +558,7 @@ Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
 
     double tmp;
     // printf("start i loop\n");
-    for(uint i=0; i<B.c(); i++){ //col of res == col of B
+    for(uint i=0; i<B.c(); ++i){ //col of res == col of B
         // printf("start j loop with i:%d\n", i);
         for(int j=U.r()-1; j>=0; j--){ //row of res == row of U == row of B
             tmp = 0;
@@ -554,19 +582,19 @@ Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
     if(L.c() != L.r()) throw std::invalid_argument("Coefficient matrix L must be square");
     if(B.r() != L.c()) throw std::invalid_argument("Rows of B must be equal to the columns of L");
     // check all L diagonal elements are different from zero
-    for(uint i=0; i<L.c(); i++) if(L(i,i) == 0){
+    for(uint i=0; i<L.c(); ++i) if(L(i,i) == 0){
         throw std::runtime_error("System of equation is underdetermined");
     }
 
     Matrix res(L.r(), B.c());
     
     double tmp;
-    for(uint j=0; j<L.r(); j++){ //row of res == row of L == row of B
+    for(uint j=0; j<L.r(); ++j){ //row of res == row of L == row of B
         // printf("j: %d\n", j);
-        for(uint i=0; i<B.c(); i++){ //col of res == col of B
+        for(uint i=0; i<B.c(); ++i){ //col of res == col of B
             // printf("i: %d\n", i);
             tmp = 0;
-            for(uint k=0; k<j; k++){ //col of L = row of res
+            for(uint k=0; k<j; ++k){ //col of L = row of res
                 // printf("k: %d\n", k);
                 tmp += L(j,k) * res(k,i);
             }

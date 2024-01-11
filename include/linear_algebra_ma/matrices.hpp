@@ -44,10 +44,10 @@ public:
 
     /**
      * @brief get the double precision used in comparison
-     * @return number of digits considered during comparison
+     * @return margin of error considered during comparison
      */
-    inline static uint get_double_precision(){ 
-        return Matrix::double_precision; 
+    inline static double get_epsilon(){ 
+        return Matrix::epsilon; 
     }
     
 
@@ -110,14 +110,14 @@ public:
     double const * v() const;
 
     /**
-     * @brief uses the vecotr to fill in the elements of the matrix
+     * @brief uses the vector to fill in the elements of the matrix
      * @param v used vector
      * @throw out_of_range if v.size < this.size
      */
     void setV(std::vector<double> v);
 
     /**
-     * @brief uses the vecotr to fill in the elements of submatrix
+     * @brief uses the vector to fill in the elements of submatrix
      * of this matrix defined by indeces rs and cs, extremes included
      * @param rs rows indeces
      * @param cs columns vector
@@ -345,14 +345,23 @@ public:
      */
     bool is_lower_triang() const;
 
+    /**
+     * @brief return true if the matrix is an upper hessenberg matrix
+     */
+    bool is_upper_hessenberg() const;
+
+    /**
+     * @brief return true if the matrix is an lower hessenberg matrix
+     */
+    bool is_lower_hessenberg() const;
 
 
 #pragma region decomposition_methods
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 
      *        with Q orthogonal matrix and R upper triangular matrix
-     *      //http://matlab.izmiran.ru/help/techdoc/ref/mldivide.html
-     *      //https://rpubs.com/aaronsc32/qr-decomposition-householder
+     *      http://matlab.izmiran.ru/help/techdoc/ref/mldivide.html
+     *      https://rpubs.com/aaronsc32/qr-decomposition-householder
      * 
      * @param Q orthogonal matrix
      * @param R upper triangular matrix
@@ -373,11 +382,11 @@ public:
     void qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const;
 
 
-    //https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
     /**
      * @brief Compute LUP decomposition of the given matrix: PA = LU with
      *        L lower triangular matrix and U upper triangular matrix and
      *        P permutation matrix
+     *      https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
      * 
      * @param L lower triangular matrix
      * @param U upper triangular matrix
@@ -385,6 +394,17 @@ public:
      * @return number of swap performed during permutation
      */
     uint lup_dec(Matrix & L, Matrix & U, Matrix & P) const;
+
+    /**
+     * @brief preform hessenberg decomposition of the given matrix
+     *        PHP* = A
+     *      https://en.wikipedia.org/wiki/Hessenberg_matrix
+     * 
+     * @param Q unitary matrix
+     * @param H hessenberg matrix
+    */
+    void hessenberg_dec(Matrix & Q, Matrix & H);
+
 #pragma endregion decomposition_methods
 
 #pragma region ls_solution
@@ -432,7 +452,7 @@ public:
 
     /**
      * @brief solves the linear system A*x=B. 
-     * Calls matrix_l_divide.
+     *        Calls matrix_l_divide.
      * @param A coefficient matrix (must be square nxn)
      * @param B known terms matrix (B.rows == A.cols)
      * @return Matrix: x (dimensions A.rows x B.cols)
@@ -462,15 +482,22 @@ std::ostream& operator<<(std::ostream& os, const Matrix * m);
 
 #pragma region math_operators
 Matrix operator+(const Matrix& m, const double& k);
-Matrix operator+(const Matrix& m, const int & k);
+Matrix operator+(const Matrix& m, const int& k);
+Matrix operator+(const double& k, const Matrix& m);
+Matrix operator+(const int& k, const Matrix& m);
 Matrix operator+(const Matrix& m1, const Matrix& m2);
 
+Matrix operator-(const Matrix& m);
 Matrix operator-(const Matrix& m, const double& k);
 Matrix operator-(const Matrix& m, const int & k);
+Matrix operator-(const double& k, const Matrix& m);
+Matrix operator-(const int& k, const Matrix& m);
 Matrix operator-(const Matrix& m1, const Matrix& m2);
 
 Matrix operator*(const Matrix& m, const double& k);
 Matrix operator*(const Matrix& m, const int & k);
+Matrix operator*(const double& k, const Matrix& m);
+Matrix operator*(const int& k, const Matrix& m);
 Matrix operator*(const Matrix& m1, const Matrix& m2);
 
 Matrix operator/(const Matrix& m, const double& k);

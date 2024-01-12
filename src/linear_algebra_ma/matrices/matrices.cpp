@@ -117,6 +117,17 @@ Matrix Matrix::to_r_vec() const{
     return this->reshape(1, this->size());
 }
 
+Matrix Matrix::diag() const{
+    uint dim = std::min(_c, _r);
+    Matrix v = Matrix(dim,1);
+
+    for(uint i=0; i<dim; ++i){
+        v(i) = this->operator()(i,i);
+    }
+
+    return v;
+}
+
 void Matrix::swap_rows(const uint & r1, const uint & r2){
     if(r1 >= _r || r2 >= _r) throw std::out_of_range("Given parameters exceed the matrix rows indeces");
 
@@ -386,12 +397,24 @@ Matrix diag(const uint & dim, double * v){
     return ret;
 }
 
-double * diag(const Matrix & m){
-    uint dim = std::min(m.c(),m.r());
-    double * v = new double[dim]();
+Matrix diag(const uint & dim, const Matrix& v){
+    if(! v.is_vec()) throw std::invalid_argument("Input matrix must be a vector");
 
-    for(uint i=0;i<dim; ++i){
-        v[i] = m(i,i);
+    Matrix ret = Matrix(dim,dim);
+    
+    for(uint i=0; i<dim; ++i){
+        ret(i,i) = v(i);
+    }
+
+    return ret;
+}
+
+Matrix diag(const Matrix & m){
+    uint dim = std::min(m.c(),m.r());
+    Matrix v = Matrix(dim,1);
+
+    for(uint i=0; i<dim; ++i){
+        v(i) = m(i,i);
     }
 
     return v;
@@ -518,7 +541,8 @@ uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
     return ret;
 }
 
-void Matrix::hessenberg_dec(Matrix & Q, Matrix & H){
+
+void Matrix::hessenberg_dec(Matrix & Q, Matrix & H) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
     H = *this;
@@ -637,6 +661,32 @@ Matrix Matrix::matrix_r_divide(Matrix const & B, Matrix const & A){
     return matrix_l_divide(A.t(), B.t()).t();
 }
 #pragma endregion ls_solution
+
+
+Matrix Matrix::eigenvalues(uint max_iterations, double tolerance) const{
+    using namespace std;
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
+
+    Matrix H, Q, R;
+    this->hessenberg_dec(Q,H);
+
+    for(uint k=0; k<max_iterations; ++k){
+        H.qr_dec(Q,R);
+        H = R*Q;
+
+        // check for convergence
+        double sum = 0;
+        for(uint i=1; i<_r; ++i){   
+            for(uint j=0; j<i; ++j){
+                if(i !=j ) sum += H(i,j);
+            }
+        }
+        // std::cout << sum << std::endl;
+        if(abs(sum) < tolerance) break;
+    }
+
+    return H;
+}
 
 } // namespace MA
 

@@ -166,6 +166,12 @@ public:
     Matrix to_r_vec() const;
 
     /**
+     * @brief extract diagonal of the matrix
+     * @return vector (matrix with dim n,1) containing the diagonal elements
+    */
+    Matrix diag() const;
+
+    /**
      * @brief swap the given rows of the matrix
      * @param r1 first row to swap
      * @param r2 second row to swap
@@ -403,7 +409,7 @@ public:
      * @param Q unitary matrix
      * @param H hessenberg matrix
     */
-    void hessenberg_dec(Matrix & Q, Matrix & H);
+    void hessenberg_dec(Matrix & Q, Matrix & H) const;
 
 #pragma endregion decomposition_methods
 
@@ -473,6 +479,8 @@ public:
     static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
 
 #pragma endregion ls_solution
+
+    Matrix eigenvalues(uint max_iterations = 1000, double tolerance = Matrix::epsilon ) const;
 
 };
 
@@ -545,7 +553,8 @@ Matrix Ones(const uint & r, const uint & c);
 
 
 Matrix diag(const uint & dim, double * v);
-double * diag(const Matrix & m);
+Matrix diag(const uint & dim, const Matrix& v);
+Matrix diag(const Matrix & m);
 
 
 } // namespace MA

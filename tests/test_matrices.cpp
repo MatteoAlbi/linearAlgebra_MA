@@ -816,7 +816,7 @@ TEST(Matrix, qrp_dec){
 
 
 TEST(Matrix, lup_dec){
-    // matrices not square
+    // matrix not square
     Matrix m1,L,U,P;
     m1 = Matrix (3,4,
         {1,3,5,9,
@@ -826,7 +826,7 @@ TEST(Matrix, lup_dec){
     );
     EXPECT_THROW(m1.lup_dec(L,U,P), invalid_argument);
 
-    // matrices decomposable
+    // matrix decomposable
     m1 = Matrix (4,4,
         {1,3,5,2,
          0,2,1,6,
@@ -843,7 +843,6 @@ TEST(Matrix, lup_dec){
         -1, -2, 3.4, -1}
     );
     EXPECT_NO_THROW(m1.lup_dec(L,U,P));
-    // cout << L << endl << U << endl << P << endl;
     EXPECT_EQ(L*U, P*m1);
 
 }
@@ -852,7 +851,7 @@ TEST(Matrix, lup_dec){
 TEST(Matrix, hessenberg_dec){
     Matrix m1, Q, H;
 
-    // matricx not square
+    // matrix not square
     m1 = Matrix (3,4,
         {1,3,5,9,
          0,2,1,7,
@@ -861,7 +860,7 @@ TEST(Matrix, hessenberg_dec){
     );
     EXPECT_THROW(m1.hessenberg_dec(Q, H), invalid_argument);
 
-    // matricx decomposable
+    // matrix decomposable
     m1 = Matrix (4,4,
         {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
          6.4349e-01,   2.9453e-01,   4.3203e-01,   8.8371e-03,
@@ -1090,4 +1089,30 @@ TEST(Matrix, matrix_r_divide){
     // cout << L << endl;
     // cout << U << endl;
     // cout << Matrix::matrix_r_divide(b,A.t()) << endl;
+}
+
+
+TEST(Matrix, eigenvalues){
+    Matrix m1, ret;
+
+    // matrix not square
+    m1 = Matrix (3,4,
+        {1,3,5,9,
+         0,2,1,7,
+         4,1,8,2,
+         5,2,1,9}
+    );
+    EXPECT_THROW(m1.eigenvalues(), invalid_argument);
+
+    // matrix decomposable
+    m1 = Matrix (4,4,
+        {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
+         6.4349e-01,   2.9453e-01,   4.3203e-01,   8.8371e-03,
+         1.4175e-01,   8.3325e-01,   6.4892e-01,   8.3927e-02,
+         8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
+    );
+    EXPECT_NO_THROW(ret = m1.eigenvalues());
+    cout << m1 << endl;
+    cout << ret.diag() << endl;
+    
 }

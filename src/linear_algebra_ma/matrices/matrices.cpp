@@ -110,6 +110,14 @@ void Matrix::setV(uint r, uu_pair cs, Matrix m){
 }
 
 void Matrix::setV(uu_pair rs, uu_pair cs, Matrix m){
+    // using namespace std;
+    // cout << 
+    // "this: " << this->shape() << 
+    // ", rs: " << rs << 
+    // ", cs: " << cs << 
+    // ", selection: " << uu_pair{rs.second - rs.first + 1, cs.second - cs.first + 1} << 
+    // ", m: " << m.shape() <<  endl;
+
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -119,13 +127,10 @@ void Matrix::setV(uu_pair rs, uu_pair cs, Matrix m){
     if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
     if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
-    uint nRows = rs.second - rs.first + 1;
-    uint nCols = cs.second - cs.first + 1;
-    if(m.r() < nRows) throw std::out_of_range("Given matrix doesn't have enough rows");
-    if(m.c() < nCols) throw std::out_of_range("Given matrix doesn't have enough cols");
+    if(m.shape() != uu_pair{rs.second - rs.first + 1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");;
 
-    for (uint i = 0; i < nRows; ++i){
-        for (uint j = 0; j < nCols; ++j){
+    for (uint i = 0; i < m.r(); ++i){
+        for (uint j = 0; j < m.c(); ++j){
             this->operator()(i + rs.first, j + cs.first) = m(i,j);
         }
     }
@@ -173,11 +178,11 @@ void Matrix::swap_rows(const uint & r1, const uint & r2){
     if(r1 == r2) return;
 
     // extract r1
-    Matrix tmp = this->operator()(r1, {0, _c-1});
+    Matrix tmp = this->operator()(r1, ALL);
     // substitute r2 into r1
-    this->setV({r1,r1}, {0, _c-1}, this->operator()(r2, {0, _c-1}));
+    this->setV(r1, ALL, this->operator()(r2, ALL));
     // substitute r1 into r2
-    this->setV({r2,r2}, {0, _c-1}, tmp);
+    this->setV(r2, ALL, tmp);
 }
 
 void Matrix::swap_cols(const uint & c1, const uint & c2){
@@ -187,11 +192,11 @@ void Matrix::swap_cols(const uint & c1, const uint & c2){
     if(c1 == c2) return;
 
     // extract c1
-    Matrix tmp = this->operator()({0, _r-1}, c1);
+    Matrix tmp = this->operator()(ALL, c1);
     // substitute c2 into c1
-    this->setV({0, _r-1}, {c1,c1}, this->operator()({0, _r-1}, c2));
+    this->setV(ALL, c1, this->operator()(ALL, c2));
     // substitute c1 into c2
-    this->setV({0, _r-1}, {c2,c2}, tmp);
+    this->setV(ALL, c2, tmp);
 }
 
 Matrix Matrix::t() const{
@@ -715,6 +720,7 @@ Matrix Matrix::matrix_r_divide(Matrix const & B, Matrix const & A){
 void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
+    (void) V;
     // V = RandMat(_r,_r);
     // for(uint i=0; i<_c; ++i){
     //     V.setV({}, i, V({},i).normalize_self()); 

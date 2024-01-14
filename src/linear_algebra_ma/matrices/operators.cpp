@@ -467,6 +467,15 @@ std::ostream& operator<<(std::ostream& os, const Matrix * m){
     return os;
 }
 
+std::ostream& operator<<(std::ostream& os, const uu_pair & p){
+    os << "Pair(" << p.first << "; " << p.second << ")";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const uu_pair * p){
+    os << "Pair(" << p->first << "; " << p->second << ")";
+    return os;
+}
 
 
 } // namespace MA

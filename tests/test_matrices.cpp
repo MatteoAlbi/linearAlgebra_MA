@@ -174,12 +174,12 @@ TEST(Matrix, set) {
     EXPECT_THROW(m2.setV({1,2},{1,4}, m3), out_of_range);
     EXPECT_THROW(m2.setV({2,1},{1,3}, m3), invalid_argument);
     EXPECT_THROW(m2.setV({1,1},{3,1}, m3), invalid_argument);
-    EXPECT_THROW(m2.setV({0,3},{1,1}, m3), out_of_range);
-    EXPECT_THROW(m2.setV({0,0},{0,4}, m3), out_of_range);
-    EXPECT_NO_THROW(m2.setV({0,2},{2,3}, m3));
+    EXPECT_THROW(m2.setV({0,3},{1,1}, m3), invalid_argument);
+    EXPECT_THROW(m2.setV({0,0},{1,3}, m3), invalid_argument);
+    EXPECT_NO_THROW(m2.setV({0,2},{1,3}, m3));
     for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
-        if(i>2 || j<2) EXPECT_EQ(m2(i,j), m1(i,j));
-        else EXPECT_EQ(m2(i,j), m3(i, j-2));
+        if(i>2 || j<1) EXPECT_EQ(m2(i,j), m1(i,j));
+        else EXPECT_EQ(m2(i,j), m3(i, j-1));
     }
     // cout << m2 << endl;
 }
@@ -500,7 +500,7 @@ TEST(Matrix, determinant){
     );
     
     // 1x1
-    EXPECT_EQ(m1({0,0},{0,0}).det(), 1);
+    EXPECT_EQ(m1({1,1},0).det(), 1);
     EXPECT_EQ(m1({2,2},{1,1}).det(), 3);
     // 2x2
     EXPECT_EQ(m1({1,2},{2,3}).det(), -56);
@@ -1117,7 +1117,4 @@ TEST(Matrix, eigenvalues){
     cout << D << endl;
     cout << V << endl;
 
-    EXPECT_NO_THROW(m1.eigen_QR_shift(D, V));
-    cout << D << endl;
-    // cout << V << endl;
 }

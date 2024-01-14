@@ -18,6 +18,7 @@
 
 typedef unsigned int uint;
 typedef std::pair<uint,uint> uu_pair;
+#define ALL uu_pair{}
 
 namespace MA
 {
@@ -547,6 +548,8 @@ public:
 // cout operators
 std::ostream& operator<<(std::ostream& os, const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix * m);
+std::ostream& operator<<(std::ostream& os, const uu_pair & p);
+std::ostream& operator<<(std::ostream& os, const uu_pair * p);
 
 #pragma region math_operators
 Matrix operator+(const Matrix& m, const double& k);

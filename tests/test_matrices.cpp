@@ -1093,7 +1093,7 @@ TEST(Matrix, matrix_r_divide){
 
 
 TEST(Matrix, eigenvalues){
-    Matrix m1, ret;
+    Matrix m1, D, V;
 
     // matrix not square
     m1 = Matrix (3,4,
@@ -1102,17 +1102,22 @@ TEST(Matrix, eigenvalues){
          4,1,8,2,
          5,2,1,9}
     );
-    EXPECT_THROW(m1.eigenvalues(), invalid_argument);
+    EXPECT_THROW(m1.eigen_QR(D, V), invalid_argument);
 
-    // matrix decomposable
+    // matrix is square
     m1 = Matrix (4,4,
         {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
          6.4349e-01,   2.9453e-01,   4.3203e-01,   8.8371e-03,
          1.4175e-01,   8.3325e-01,   6.4892e-01,   8.3927e-02,
          8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
     );
-    EXPECT_NO_THROW(ret = m1.eigenvalues());
     cout << m1 << endl;
-    cout << ret.diag() << endl;
-    
+
+    EXPECT_NO_THROW(m1.eigen_QR(D, V));
+    cout << D << endl;
+    cout << V << endl;
+
+    EXPECT_NO_THROW(m1.eigen_QR_shift(D, V));
+    cout << D << endl;
+    // cout << V << endl;
 }

@@ -13,7 +13,11 @@
 #include <utility>
 #include <vector>
 
+#include <cstdlib>
+#include <ctime>
+
 typedef unsigned int uint;
+typedef std::pair<uint,uint> uu_pair;
 
 namespace MA
 {
@@ -25,6 +29,8 @@ protected:
     inline static uint double_precision = 10;
     // epsilon used in double comparison
     inline static double epsilon = std::pow(10,-10);
+    // flag for setting the seed used for random number generation
+    inline static bool seed_set = false;
 
     uint _r;
     uint _c;
@@ -48,6 +54,15 @@ public:
      */
     inline static double get_epsilon(){ 
         return Matrix::epsilon; 
+    }
+
+    /**
+     * @brief generate a random number using the internally set seed
+     * @return random number in range 0..1
+     */
+    inline static double rand(){
+        if(!Matrix::seed_set) std::srand(std::time(NULL));
+        return std::rand();
     }
     
 
@@ -79,9 +94,9 @@ public:
 
     double& operator()(const uint & i);
     const double& operator()(const uint & i) const;
-    Matrix operator()(std::pair<uint,uint> rs, const uint & c) const;
-    Matrix operator()(const uint & r, std::pair<uint,uint> cs) const;
-    Matrix operator()(std::pair<uint,uint> rs, std::pair<uint,uint> cs) const;
+    Matrix operator()(uu_pair rs, const uint & c) const;
+    Matrix operator()(const uint & r, uu_pair cs) const;
+    Matrix operator()(uu_pair rs, uu_pair cs) const;
     Matrix& operator=(const Matrix& m);
     Matrix& operator=(Matrix const * const m);
 
@@ -96,6 +111,12 @@ public:
      * @return number of columns
      */
     uint c() const;
+
+    /**
+     * @brief return matrix shape as (r,c) pair
+     * @return pair
+     */
+    uu_pair shape() const;
 
     /**
      * @brief get size of the matrix i.e. number of stored elements
@@ -124,18 +145,53 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < submatrix size
      */
-    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v);
+    void setV(uu_pair rs, uu_pair cs, std::vector<double> v);
+
+    /**
+     * @brief uses the given matrix to fill in the elements of submatrix
+     * of this matrix defined by indeces rs and cs
+     * @param r row index
+     * @param c column index
+     * @param m used matrix
+     * @throw out_of_range if r or c are out of range
+     */
+    void setV(uint r, uint c, double x);
+
+    /**
+     * @brief uses the given matrix to fill in the elements of submatrix
+     * of this matrix defined by indeces rs and c, extremes included
+     * @param rs rows indeces
+     * @param c column index
+     * @param m used matrix
+     * @throw out_of_range if rs or c are out of range
+     * @throw out_of_range if m has not enough rows or columns to fill in the 
+     * submatrix
+     */
+    void setV(uu_pair rs, uint c, Matrix m);
+
+    /**
+     * @brief uses the given matrix to fill in the elements of submatrix
+     * of this matrix defined by indeces r and cs, extremes included
+     * @param r row index
+     * @param cs columns indeces
+     * @param m used matrix
+     * @throw out_of_range if r or cs are out of range
+     * @throw out_of_range if m has not enough rows or columns to fill in the 
+     * submatrix
+     */
+    void setV(uint r, uu_pair cs, Matrix m);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
      * of this matrix defined by indeces rs and cs, extremes included
      * @param rs rows indeces
-     * @param cs columns vector
+     * @param cs columns indeces
      * @param m used matrix
+     * @throw out_of_range if rs or cs are out of range
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m);
+    void setV(uu_pair rs, uu_pair cs, Matrix m);
 
     /**
      * @brief check if matrix is a vector
@@ -403,7 +459,7 @@ public:
 
     /**
      * @brief preform hessenberg decomposition of the given matrix
-     *        PHP* = A
+     *        QHQ* = A
      *      https://en.wikipedia.org/wiki/Hessenberg_matrix
      * 
      * @param Q unitary matrix
@@ -480,7 +536,13 @@ public:
 
 #pragma endregion ls_solution
 
-    Matrix eigenvalues(uint max_iterations = 1000, double tolerance = Matrix::epsilon ) const;
+#pragma region eigen
+
+    void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = Matrix::epsilon) const;
+
+    void eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = Matrix::epsilon) const;
+
+#pragma endregion eigen
 
 };
 
@@ -545,12 +607,20 @@ Matrix IdMat(const uint & dim);
 /**
  * @brief create matrix of only ones of shape r*c
  * 
- * @param r 
- * @param c 
+ * @param r rows
+ * @param c columns
  * @return Matrix 
  */
 Matrix Ones(const uint & r, const uint & c);
 
+/**
+ * @brief create matrix with random values of shapre r*c
+ * 
+ * @param r rows
+ * @param c columns
+ * @return Matrix 
+*/
+Matrix RandMat(const uint & r, const uint & c);
 
 Matrix diag(const uint & dim, double * v);
 Matrix diag(const uint & dim, const Matrix& v);

@@ -41,10 +41,11 @@ Matrix::~Matrix() {
 }
 
 
-uint Matrix::r() const{return this->_r;}
-uint Matrix::c() const{return this->_c;}
-uint Matrix::size() const{return this->_r * this->_c;}
-double const * Matrix::v() const{return this->_v;}
+uint Matrix::r() const{return _r;}
+uint Matrix::c() const{return _c;}
+uu_pair Matrix::shape() const{return uu_pair{_r, _c};}
+uint Matrix::size() const{return _r * _c;}
+double const * Matrix::v() const{return _v;}
 
 
 void Matrix::setV(std::vector<double> v){
@@ -53,7 +54,7 @@ void Matrix::setV(std::vector<double> v){
     std::copy(v.begin(), v.begin() + this->size(), this->_v);
 }
 
-void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v){
+void Matrix::setV(uu_pair rs, uu_pair cs, std::vector<double> v){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -74,11 +75,50 @@ void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<
 
 }
 
-void Matrix::setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m){
+void Matrix::setV(uint r, uint c, double x){
+    this->operator()(r,c) = x;
+}
+
+void Matrix::setV(uu_pair rs, uint c, Matrix m){
+    if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
+    if(c >= this->_c) throw std::out_of_range("Col index out of range");
+    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
+
+    // allow to use {} for full row selection
+    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
+
+    if(m.shape() != uu_pair{rs.second - rs.first + 1, 1}) throw std::invalid_argument("Given matrix's shape does not match");
+
+    for(uint i=0; i<m._r; ++i){
+        this->operator()(i + rs.first, c) = m(i,0);
+    }
+
+}
+
+void Matrix::setV(uint r, uu_pair cs, Matrix m){
+    if(r >= this->_r) throw std::out_of_range("Row index out of range");
+    if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
+    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
+
+    // allow to use {} for full col selection
+    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
+
+    if(m.shape() != uu_pair{1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");
+
+    for(uint j=0; j<m._c; ++j){
+        this->operator()(r, j + cs.first) = m(0,j);
+    }
+}
+
+void Matrix::setV(uu_pair rs, uu_pair cs, Matrix m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
+
+    // allow to use {} for full row/col selection
+    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
+    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     uint nRows = rs.second - rs.first + 1;
     uint nCols = cs.second - cs.first + 1;
@@ -387,6 +427,15 @@ Matrix Ones(const uint & r, const uint & c){
     return Matrix(r,c)+1;
 }
 
+Matrix RandMat(const uint & r, const uint & c){
+    Matrix ret = Matrix(r,c);
+    for(uint i=0; i<r; ++i){
+        for(uint j=0; j<c; ++j){
+            ret(i,j) = Matrix::rand();
+        }
+    }
+}
+
 Matrix diag(const uint & dim, double * v){
     Matrix ret = Matrix(dim,dim);
     
@@ -434,7 +483,7 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
     for(uint i=0; i<n-1; ++i){
         //compute vk
         Matrix v = R({i, _r-1}, i);
-        v(0) += (v(0) < 0 ? -1 : 1) * v.norm2();
+        v(0) += copysign(v.norm2(), v(0));
 
         // compute H matrix
         v.normalize_self();
@@ -476,7 +525,7 @@ void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
 
         //compute vk
         Matrix v = R({i, _r-1}, i);
-        v(0) += (v(0) < 0 ? -1 : 1) * v.norm2();
+        v(0) += copysign(v.norm2(), v(0));
 
         // compute H matrix
         v.normalize_self();
@@ -663,29 +712,80 @@ Matrix Matrix::matrix_r_divide(Matrix const & B, Matrix const & A){
 #pragma endregion ls_solution
 
 
-Matrix Matrix::eigenvalues(uint max_iterations, double tolerance) const{
-    using namespace std;
+void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
-    Matrix H, Q, R;
-    this->hessenberg_dec(Q,H);
+    // V = RandMat(_r,_r);
+    // for(uint i=0; i<_c; ++i){
+    //     V.setV({}, i, V({},i).normalize_self()); 
+    // }
+
+    Matrix Q, R;
+    this->hessenberg_dec(Q,D);
 
     for(uint k=0; k<max_iterations; ++k){
-        H.qr_dec(Q,R);
-        H = R*Q;
+        D.qr_dec(Q,R);
+        D = R*Q;
 
         // check for convergence
         double sum = 0;
         for(uint i=1; i<_r; ++i){   
             for(uint j=0; j<i; ++j){
-                if(i !=j ) sum += H(i,j);
+                if(i !=j ) sum += D(i,j);
+            }
+        }
+        
+        if(abs(sum) < tolerance){
+            std::cout << "QR algorithm converged in " << k << " steps" << std::endl; 
+            break;
+        }
+    }
+
+    D = D.diag();
+
+
+    // V = Matrix(_r, _r);
+    // Matrix b = Matrix(_r,1);
+
+    // for(uint i=0; i<D.r(); ++i){
+    //     V.setV({0, _r-1}, {i,i}, solve_ls(*this - D(i) * IdMat(_r), b));
+    // }
+
+}
+
+void Matrix::eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
+
+    Matrix Q, R;
+    this->hessenberg_dec(Q,D);
+    V = IdMat(_r);
+
+    for(uint k=0; k<max_iterations; ++k){
+        double shift = D.wilkinson_shift();
+        Matrix D_shifted = D - shift * IdMat(_r);
+        D_shifted.qr_dec(Q,R);
+        D = R * Q + shift * IdMat(_r);
+        V = V * Q;
+
+        // check for convergence
+        double sum = 0;
+        for(uint i=1; i<_r; ++i){   
+            for(uint j=0; j<i; ++j){
+                if(i !=j ) sum += D(i,j);
             }
         }
         // std::cout << sum << std::endl;
-        if(abs(sum) < tolerance) break;
+        if(abs(sum) < tolerance){
+            std::cout << "QR algorithm with shifts converged in " << k << " steps" << std::endl; 
+            break;
+        }
     }
 
-    return H;
+    D = D.diag();
+}
+
+void inverse_iteration(double l, Matrix & v, uint max_iterations, double tolerance){
+    return;
 }
 
 } // namespace MA

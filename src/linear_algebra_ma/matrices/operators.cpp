@@ -46,10 +46,13 @@ const double& Matrix::operator()(const uint & i) const{
     }
 }
 
-Matrix Matrix::operator()(std::pair<uint,uint> rs, const uint & c) const{
+Matrix Matrix::operator()(uu_pair rs, const uint & c) const{
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
+
+    // allow to use {} for full row selection
+    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
 
     Matrix ret = Matrix(rs.second - rs.first + 1, 1);
 
@@ -60,12 +63,14 @@ Matrix Matrix::operator()(std::pair<uint,uint> rs, const uint & c) const{
     return ret;
 }
 
-Matrix Matrix::operator()(const uint & r, std::pair<uint,uint> cs) const{
+Matrix Matrix::operator()(const uint & r, uu_pair cs) const{
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
 
+    // allow to use {} for full col selection
     if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
+
     Matrix ret = Matrix(1, cs.second - cs.first + 1);
 
     for(uint j=0; j<ret._c; ++j){
@@ -75,11 +80,15 @@ Matrix Matrix::operator()(const uint & r, std::pair<uint,uint> cs) const{
     return ret;
 }
 
-Matrix Matrix::operator()(std::pair<uint,uint> rs, std::pair<uint,uint> cs) const{
+Matrix Matrix::operator()(uu_pair rs, uu_pair cs) const{
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
+
+    // allow to use {} for full row/col selection
+    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
+    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     Matrix ret = Matrix(rs.second - rs.first + 1, cs.second - cs.first + 1);
 

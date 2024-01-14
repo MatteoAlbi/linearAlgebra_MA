@@ -1,1 +1,2 @@
 extend tests for extended/fixed setV and operator()
+update setV to use std::copy

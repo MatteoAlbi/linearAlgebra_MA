@@ -92,7 +92,6 @@ void Matrix::setV(uu_pair rs, uint c, Matrix m){
     for(uint i=0; i<m._r; ++i){
         this->operator()(i + rs.first, c) = m(i,0);
     }
-
 }
 
 void Matrix::setV(uint r, uu_pair cs, Matrix m){
@@ -130,7 +129,6 @@ void Matrix::setV(uu_pair rs, uu_pair cs, Matrix m){
             this->operator()(i + rs.first, j + cs.first) = m(i,j);
         }
     }
-
 }
 
 
@@ -434,6 +432,8 @@ Matrix RandMat(const uint & r, const uint & c){
             ret(i,j) = Matrix::rand();
         }
     }
+
+    return ret;
 }
 
 Matrix diag(const uint & dim, double * v){
@@ -758,7 +758,7 @@ void inverse_iteration(double l, Matrix & v, uint max_iterations, double toleran
     (void) v;
     (void) max_iterations;
     (void) tolerance;
-    
+
     return;
 }
 

@@ -754,6 +754,11 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
 }
 
 void inverse_iteration(double l, Matrix & v, uint max_iterations, double tolerance){
+    (void) l;
+    (void) v;
+    (void) max_iterations;
+    (void) tolerance;
+    
     return;
 }
 

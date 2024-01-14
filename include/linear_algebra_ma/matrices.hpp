@@ -540,8 +540,6 @@ public:
 
     void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = Matrix::epsilon) const;
 
-    void eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = Matrix::epsilon) const;
-
 #pragma endregion eigen
 
 };

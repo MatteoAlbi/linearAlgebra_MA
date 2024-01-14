@@ -753,37 +753,6 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
 
 }
 
-void Matrix::eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
-    if(_c != _r) throw std::invalid_argument("Matrix must be square");
-
-    Matrix Q, R;
-    this->hessenberg_dec(Q,D);
-    V = IdMat(_r);
-
-    for(uint k=0; k<max_iterations; ++k){
-        double shift = D.wilkinson_shift();
-        Matrix D_shifted = D - shift * IdMat(_r);
-        D_shifted.qr_dec(Q,R);
-        D = R * Q + shift * IdMat(_r);
-        V = V * Q;
-
-        // check for convergence
-        double sum = 0;
-        for(uint i=1; i<_r; ++i){   
-            for(uint j=0; j<i; ++j){
-                if(i !=j ) sum += D(i,j);
-            }
-        }
-        // std::cout << sum << std::endl;
-        if(abs(sum) < tolerance){
-            std::cout << "QR algorithm with shifts converged in " << k << " steps" << std::endl; 
-            break;
-        }
-    }
-
-    D = D.diag();
-}
-
 void inverse_iteration(double l, Matrix & v, uint max_iterations, double tolerance){
     return;
 }

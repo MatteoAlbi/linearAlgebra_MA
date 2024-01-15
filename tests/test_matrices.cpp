@@ -649,6 +649,8 @@ TEST(Matrix, normalize_self){
     EXPECT_EQ(m2, Matrix(1,4, {0.5,0.5,0.5,0.5}));
 }
 
+
+
 TEST(Matrix, is_upper_triang){
     Matrix m1(4,4,
         {1,3,5,9,
@@ -784,7 +786,6 @@ TEST(Matrix, qr_dec){
     EXPECT_EQ(A, Q*R);
 }
 
-
 TEST(Matrix, qrp_dec){
     Matrix Q, R, P;
 
@@ -812,8 +813,16 @@ TEST(Matrix, qrp_dec){
     EXPECT_EQ(Q.t()*Q, IdMat(4));
     EXPECT_TRUE(R.is_upper_triang());
     EXPECT_EQ(A*P, Q*R);
-}
 
+    A = Matrix(6,4,{ 14,   4, -16, -20, -3,  -4,
+                     17,  17, -16,   5,  6, -13,
+                     -2,  12,  -7,  15, -1,  -3,
+                     19,   4,  -3,   5, 16,  -9});
+    EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
+    EXPECT_EQ(Q.t()*Q, IdMat(6));
+    EXPECT_TRUE(R.is_upper_triang());
+    EXPECT_EQ(A*P, Q*R);
+}
 
 TEST(Matrix, lup_dec){
     // matrix not square
@@ -846,7 +855,6 @@ TEST(Matrix, lup_dec){
     EXPECT_EQ(L*U, P*m1);
 
 }
-
 
 TEST(Matrix, hessenberg_dec){
     Matrix m1, Q, H;
@@ -936,8 +944,7 @@ TEST(Matrix, matrix_l_divide){
     );
     b = Matrix(4,1, {2,4,1,3});
 
-    // A not square
-    EXPECT_THROW(Matrix::matrix_l_divide(A({0,3},{1,3}), b), runtime_error);
+
     // shape doesn't match
     EXPECT_THROW(Matrix::matrix_l_divide(A, b({1,3},0)), invalid_argument);
     // underdetermined
@@ -958,13 +965,12 @@ TEST(Matrix, matrix_l_divide){
     EXPECT_THROW(Matrix::matrix_l_divide(C, b), runtime_error);
 
     // solution
-    EXPECT_EQ(Matrix::matrix_l_divide(A,b), Matrix(4,1, {1,1,0,-1}));
-
-    // Matrix L,U;
-    // A.lup_dec(L,U);
-    // cout << L << endl;
-    // cout << U << endl;
-    // cout << Matrix::matrix_l_divide(A,b) << endl;
+    EXPECT_NO_THROW(C = Matrix::matrix_l_divide(A,b));
+    EXPECT_EQ(C, Matrix(4,1, {1,1,0,-1}));
+    // overdetermined
+    Matrix::set_double_precision(8);
+    EXPECT_NO_THROW(C = Matrix::matrix_l_divide(A(ALL,{1,3}), b));
+    EXPECT_EQ(C, Matrix(3,1,{1.42860766, -0.26654831, -0.62490489}));
 }
 
 TEST(Matrix, divide_operator){
@@ -998,8 +1004,6 @@ TEST(Matrix, divide_operator){
          0,2,1,-1}
     );
     Matrix b(1,4, {2,4,1,3});
-    // A not square
-    EXPECT_THROW( b / A({0,3},{1,3}), runtime_error);
     // shape doesn't match
     EXPECT_THROW((b(0,{1,3}) / A), invalid_argument);
     // underdetermined
@@ -1013,8 +1017,6 @@ TEST(Matrix, divide_operator){
     // solution
     EXPECT_EQ(b / A.t(), Matrix(1,4, {1,1,0,-1}));
 
-    // A not square
-    EXPECT_THROW( b/=A({0,3},{1,3}), runtime_error);
     // shape doesn't match
     EXPECT_THROW((b(0,{1,3})/=A), invalid_argument);
     // underdetermined
@@ -1041,8 +1043,6 @@ TEST(Matrix, solve_ls){
     );
     b = Matrix(4,1, {2,4,1,3});
 
-    // A not square
-    EXPECT_THROW(Matrix::solve_ls(A({0,3},{1,3}), b), invalid_argument);
     // shape doesn't match
     EXPECT_THROW(Matrix::solve_ls(A, b({1,3},0)), invalid_argument);
     // underdetermined
@@ -1068,8 +1068,6 @@ TEST(Matrix, matrix_r_divide){
     );
     b = Matrix(1,4, {2,4,1,3});
 
-    // A not square
-    EXPECT_THROW(Matrix::matrix_r_divide(b, A({0,3},{1,3})), runtime_error);
     // shape doesn't match
     EXPECT_THROW(Matrix::matrix_r_divide(b(0,{1,3}), A), invalid_argument);
     // underdetermined
@@ -1111,10 +1109,8 @@ TEST(Matrix, eigenvalues){
          1.4175e-01,   8.3325e-01,   6.4892e-01,   8.3927e-02,
          8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
     );
-    cout << m1 << endl;
 
     EXPECT_NO_THROW(m1.eigen_QR(D, V));
     cout << D << endl;
-    cout << V << endl;
 
 }

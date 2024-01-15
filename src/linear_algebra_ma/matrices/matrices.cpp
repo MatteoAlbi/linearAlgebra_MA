@@ -511,7 +511,7 @@ void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
     R = this;
     P = IdMat(_c);
     
-    for(uint i=0; i<n-1; ++i){ // main loop
+    for(uint i=0; i<n; ++i){ // main loop
 
         // find column with largest norm
         uint j = 0;
@@ -686,13 +686,12 @@ Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
 
 
 Matrix Matrix::matrix_l_divide(Matrix const & A, Matrix const & B){
-    
+    if(A.r() != B.r()){
+        throw std::invalid_argument("Rows of B (currently " + std::to_string(B.r()) + ")" +
+        "must be equal the rows of A (currently " + std::to_string(A.r()) + ")");
+    }
+
     if(A.c() == A.r()){ //square A
-        // check rows of B
-        if(A.c() != B.r()){
-            throw std::invalid_argument("Rows of B=(" + std::to_string(B.r()) + ") \
-            must be equal the columns of A=" + std::to_string(A.c()));
-        }
         // printf("matrix A is square, using LU decomposition\n");
         Matrix L, U, P, res_tmp;
 
@@ -701,17 +700,26 @@ Matrix Matrix::matrix_l_divide(Matrix const & A, Matrix const & B){
         return backward_sub(U, res_tmp);
     }
     else{
-        throw std::runtime_error("Methods for not square A are yet to be implemented");
+        // printf("matrix A is not square, using QR decomposition\n");
+        if(A.r() < A.c()) throw std::invalid_argument("System is underdetermined");
+        Matrix Q,R,P, res;
+
+        A.qrp_dec(Q,R,P);
+        res = P * backward_sub(R({0, R.c()-1}, ALL), (Q.t() * B)({0, R.c()-1}, ALL));
+        return res;
     }
 
 }
 
 Matrix Matrix::solve_ls(Matrix const & A, Matrix const & B){
-    if(A.c() != A.r()) throw std::invalid_argument("Coefficient matrix A must be square");
     return Matrix::matrix_l_divide(A,B);
 }
 
 Matrix Matrix::matrix_r_divide(Matrix const & B, Matrix const & A){
+    if(A.c() != B.c()){
+        throw std::invalid_argument("Columns of B (currently " + std::to_string(B.c()) + ") " +
+        "must be equal the Columns of A (currently " + std::to_string(A.c()) + ")");
+    }
     return matrix_l_divide(A.t(), B.t()).t();
 }
 #pragma endregion ls_solution
@@ -726,28 +734,37 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
     //     V.setV({}, i, V({},i).normalize_self()); 
     // }
 
-    Matrix Q, R;
+    Matrix Q, R, P;
     this->hessenberg_dec(Q,D);
 
     for(uint k=0; k<max_iterations; ++k){
+        Matrix tmp = D.diag();
+        // D.qrp_dec(Q,R,P);
+        // D = R*Q;
         D.qr_dec(Q,R);
         D = R*Q;
 
-        // check for convergence
-        double sum = 0;
-        for(uint i=1; i<_r; ++i){   
-            for(uint j=0; j<i; ++j){
-                if(i !=j ) sum += D(i,j);
-            }
+        // // check for convergence
+        double max_variation = -1;
+        tmp = tmp - D.diag();
+        for(uint i=0; i<_r; ++i){
+            max_variation = std::max(max_variation, abs(tmp(i) / D(i)));
         }
-        
-        if(abs(sum) < tolerance){
-            std::cout << "QR algorithm converged in " << k << " steps" << std::endl; 
+        if(max_variation < tolerance) {
+            std::cout << "QR algorithm converged in " << k << " steps" << std::endl;
+            // << R << std::endl;
             break;
         }
+
     }
 
     D = D.diag();
+
+    for(uint i=0; i<_r; ++i){
+        Matrix M = *this - D(i) * IdMat(_r);
+        Matrix A = M(ALL, {1,_r-1});
+        Matrix b = M(ALL, 0);
+    }
 
 
     // V = Matrix(_r, _r);

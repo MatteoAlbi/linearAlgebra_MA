@@ -494,22 +494,29 @@ public:
 
     /**
      * @brief computes the left division A\B, which corresponds to solve the 
-     *        linear equation system Ax=B. 
+     *        linear equation system Ax=B or performing the operation (A^-1)*b.
+     *        The rows of A must be equal the rows of B. The result has dimensions (r_a*c_b)
      *        The functions solves the problem depending on the dimensions of the 
      *        given matrices: 
      *        
-     *        - A is a square matrix (r_a*c_r_common): The columns of A must be equal 
-     *          the rows of B. The result has dimensions (r_a*c_b). A is decomposed using
+     *        - A is a square matrix (r_a*c_r_common): A is decomposed using
      *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
      *          subsequentially solving the two systems:
      *              - L*(U*x) = PB, thus solving it using forward substitution the system 
      *                L*y=PB equal to y=L\PB
      *              - U*x=y, thus solving it using backward substitution the system 
      *                U*x=y equal to x=U\y
+     *        - A is rectangular and represent an overconstrained problem (rows > cols): A
+     *          is decomposed using QRP decomposition (AP = QR) and performing the operation
+     *          X = P*(R\(Q'*b)). Notably, using the householder projectiob for the QRP
+     *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
+     *          the diagonal are zero. Such rows are discared along with the corresponding 
+     *          rows of b. R\(Q'*b) is solved using backward substitution.
      * 
      * @param A             left hand division term
      * @param B             right hand division term
      * @return Matrix: result of the division
+     * @throw invalid_argument if rows don't match
      */
     static Matrix matrix_l_divide(Matrix const & A, Matrix const & B);
 
@@ -519,6 +526,7 @@ public:
      * @param A coefficient matrix (must be square nxn)
      * @param B known terms matrix (B.rows == A.cols)
      * @return Matrix: x (dimensions A.rows x B.cols)
+     * @throw invalid_argument if rows don't match
      */
     static Matrix solve_ls(Matrix const & A, Matrix const & B);
 
@@ -526,12 +534,14 @@ public:
      * @brief computes the right division B/A translating it in a left 
      *        division problem following the equality B/A = (A.t\B.t).t
      *        where .t stands for transpose. 
+     *        The columns of A must be equal the columns of B.
      *        The functions solves the problem depending on the dimensions of the 
      *        given matrices, as described in  matrix_l_divide.
      * 
      * @param B             left hand division term 
      * @param A             right hand division term
      * @return Matrix: result of the division
+     * @throw invalid_argument if columns don't match
      */
     static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
 
@@ -539,7 +549,7 @@ public:
 
 #pragma region eigen
 
-    void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = Matrix::epsilon) const;
+    void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-6) const;
 
 #pragma endregion eigen
 

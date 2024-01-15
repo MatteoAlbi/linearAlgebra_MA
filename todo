@@ -1,2 +1,5 @@
 extend tests for extended/fixed setV and operator()
-update setV to use std::copy
+update setV by using std::copy
+update tests for ls_solve and matrix_r_divide with rectangular matrices
+implement reileigh iteration method and compare with eigen_qr
+add eigenvector computation to eigen_qr

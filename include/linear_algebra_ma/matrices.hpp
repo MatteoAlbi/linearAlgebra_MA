@@ -136,7 +136,7 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < this.size
      */
-    void setV(std::vector<double> v);
+    void set(std::vector<double> v);
 
     /**
      * @brief uses the vector to fill in the elements of submatrix
@@ -146,7 +146,7 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < submatrix size
      */
-    void setV(uu_pair rs, uu_pair cs, std::vector<double> v);
+    void set(uu_pair rs, uu_pair cs, std::vector<double> v);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -156,7 +156,7 @@ public:
      * @param m used matrix
      * @throw out_of_range if r or c are out of range
      */
-    void setV(uint r, uint c, double x);
+    void set(uint r, uint c, double x);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -168,7 +168,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void setV(uu_pair rs, uint c, Matrix m);
+    void set(uu_pair rs, uint c, Matrix m);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -180,7 +180,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void setV(uint r, uu_pair cs, Matrix m);
+    void set(uint r, uu_pair cs, Matrix m);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -192,7 +192,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void setV(uu_pair rs, uu_pair cs, Matrix m);
+    void set(uu_pair rs, uu_pair cs, Matrix m);
 
     /**
      * @brief check if matrix is a vector

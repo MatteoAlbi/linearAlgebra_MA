@@ -19,7 +19,7 @@ Matrix::Matrix(const uint & r, const uint & c, std::vector<double> v) {
     this->_r = r;
     this->_c = c;
     this->_v = new double[this->size()];
-    this->setV(v);   
+    this->set(v);   
 }
 
 Matrix::Matrix(Matrix & m){
@@ -48,13 +48,13 @@ uint Matrix::size() const{return _r * _c;}
 double const * Matrix::v() const{return _v;}
 
 
-void Matrix::setV(std::vector<double> v){
+void Matrix::set(std::vector<double> v){
     if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
 
     std::copy(v.begin(), v.begin() + this->size(), this->_v);
 }
 
-void Matrix::setV(uu_pair rs, uu_pair cs, std::vector<double> v){
+void Matrix::set(uu_pair rs, uu_pair cs, std::vector<double> v){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -68,18 +68,16 @@ void Matrix::setV(uu_pair rs, uu_pair cs, std::vector<double> v){
     if(v.size() < nRows*nCols) throw std::out_of_range("Given vector doesn't have enough elements");
 
     for (uint i = 0; i < nRows; ++i){
-        for (uint j = 0; j < nCols; ++j){
-            this->operator()(i + rs.first, j + cs.first) = v[j + i * nCols];
-        }
+        std::copy(v.begin() + i * nCols, v.begin() + (i+1) * nCols, this->_v + (rs.first + i) * _c + cs.first);
     }
 
 }
 
-void Matrix::setV(uint r, uint c, double x){
+void Matrix::set(uint r, uint c, double x){
     this->operator()(r,c) = x;
 }
 
-void Matrix::setV(uu_pair rs, uint c, Matrix m){
+void Matrix::set(uu_pair rs, uint c, Matrix m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
@@ -94,7 +92,7 @@ void Matrix::setV(uu_pair rs, uint c, Matrix m){
     }
 }
 
-void Matrix::setV(uint r, uu_pair cs, Matrix m){
+void Matrix::set(uint r, uu_pair cs, Matrix m){
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
@@ -105,19 +103,11 @@ void Matrix::setV(uint r, uu_pair cs, Matrix m){
     if(m.shape() != uu_pair{1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");
 
     for(uint j=0; j<m._c; ++j){
-        this->operator()(r, j + cs.first) = m(0,j);
+        std::copy(m._v, m._v + m.size(), this->_v + _c*r + cs.first);
     }
 }
 
-void Matrix::setV(uu_pair rs, uu_pair cs, Matrix m){
-    // using namespace std;
-    // cout << 
-    // "this: " << this->shape() << 
-    // ", rs: " << rs << 
-    // ", cs: " << cs << 
-    // ", selection: " << uu_pair{rs.second - rs.first + 1, cs.second - cs.first + 1} << 
-    // ", m: " << m.shape() <<  endl;
-
+void Matrix::set(uu_pair rs, uu_pair cs, Matrix m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -130,9 +120,7 @@ void Matrix::setV(uu_pair rs, uu_pair cs, Matrix m){
     if(m.shape() != uu_pair{rs.second - rs.first + 1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");;
 
     for (uint i = 0; i < m.r(); ++i){
-        for (uint j = 0; j < m.c(); ++j){
-            this->operator()(i + rs.first, j + cs.first) = m(i,j);
-        }
+        std::copy(m._v + i * m.c(), m._v + (i+1) * m.c(), this->_v + (rs.first + i) * _c + cs.first);
     }
 }
 
@@ -180,9 +168,9 @@ void Matrix::swap_rows(const uint & r1, const uint & r2){
     // extract r1
     Matrix tmp = this->operator()(r1, ALL);
     // substitute r2 into r1
-    this->setV(r1, ALL, this->operator()(r2, ALL));
+    this->set(r1, ALL, this->operator()(r2, ALL));
     // substitute r1 into r2
-    this->setV(r2, ALL, tmp);
+    this->set(r2, ALL, tmp);
 }
 
 void Matrix::swap_cols(const uint & c1, const uint & c2){
@@ -194,9 +182,9 @@ void Matrix::swap_cols(const uint & c1, const uint & c2){
     // extract c1
     Matrix tmp = this->operator()(ALL, c1);
     // substitute c2 into c1
-    this->setV(ALL, c1, this->operator()(ALL, c2));
+    this->set(ALL, c1, this->operator()(ALL, c2));
     // substitute c1 into c2
-    this->setV(ALL, c2, tmp);
+    this->set(ALL, c2, tmp);
 }
 
 Matrix Matrix::t() const{
@@ -493,7 +481,7 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
         // compute H matrix
         v.normalize_self();
         Matrix H = IdMat(_r);
-        H.setV({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
+        H.set({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
 
         //update R
         R = H * R;
@@ -535,7 +523,7 @@ void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
         // compute H matrix
         v.normalize_self();
         Matrix H = IdMat(_r);
-        H.setV({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
+        H.set({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
 
         //update R
         R = H * R;
@@ -613,7 +601,7 @@ void Matrix::hessenberg_dec(Matrix & Q, Matrix & H) const{
         // compute U matrix
         v.normalize_self();
         Matrix U = IdMat(_r);
-        U.setV({i+1, _r-1},{i+1, _r-1}, IdMat(v.size()) - 2 * v * v.t());
+        U.set({i+1, _r-1},{i+1, _r-1}, IdMat(v.size()) - 2 * v * v.t());
 
         H = U * H * U.t();
         Q = Q * U.t();
@@ -731,7 +719,7 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
     (void) V;
     // V = RandMat(_r,_r);
     // for(uint i=0; i<_c; ++i){
-    //     V.setV({}, i, V({},i).normalize_self()); 
+    //     V.set({}, i, V({},i).normalize_self()); 
     // }
 
     Matrix Q, R, P;
@@ -771,7 +759,7 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
     // Matrix b = Matrix(_r,1);
 
     // for(uint i=0; i<D.r(); ++i){
-    //     V.setV({0, _r-1}, {i,i}, solve_ls(*this - D(i) * IdMat(_r), b));
+    //     V.set({0, _r-1}, {i,i}, solve_ls(*this - D(i) * IdMat(_r), b));
     // }
 
 }

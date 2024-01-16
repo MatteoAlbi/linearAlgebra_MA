@@ -127,61 +127,84 @@ TEST(Matrix, set) {
          22,23,24,25}
     );
 
+    // vector full set
     Matrix m2 = m1;
     std::vector<double> v = {0,1,2,3,
                              4,5,6,7,
                              8,9,10,11,
                              12,13,14,15};
-    m2.setV(v);
+    m2.set(v);
     for(int i=0; i<4;++i) for(int j=0;j<4;++j) EXPECT_EQ(m2(i,j), v[j+i*4]);
-    // cout << m2 << endl;
 
+    // vector partial set with double range
     m2 = m1;
     v = {0,1,2,
          3,4,5,
          6,7,8};
-    EXPECT_THROW(m2.setV({1,4},{1,3}, v), out_of_range);
-    EXPECT_THROW(m2.setV({1,2},{1,4}, v), out_of_range);
-    EXPECT_THROW(m2.setV({2,1},{1,3}, v), invalid_argument);
-    EXPECT_THROW(m2.setV({1,1},{3,1}, v), invalid_argument);
-    EXPECT_THROW(m2.setV({0,3},{1,3}, v), out_of_range);
-    EXPECT_NO_THROW(m2.setV({1,3},{1,3}, v));
+    EXPECT_THROW(m2.set({1,4},{1,3}, v), out_of_range);
+    EXPECT_THROW(m2.set({1,2},{1,4}, v), out_of_range);
+    EXPECT_THROW(m2.set({2,1},{1,3}, v), invalid_argument);
+    EXPECT_THROW(m2.set({1,1},{3,1}, v), invalid_argument);
+    EXPECT_THROW(m2.set({0,3},{1,3}, v), out_of_range);
+    EXPECT_NO_THROW(m2.set({1,3},{1,3}, v));
     for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
         if(i==0 || j==0) EXPECT_EQ(m2(i,j), m1(i,j));
         else EXPECT_EQ(m2(i,j), v[j-1 + (i-1)*3]);
     }
-    // cout << m2 << endl;
-
+    // with only partial values of v
     m2 = m1;
-    EXPECT_NO_THROW(m2.setV({1,2},{1,2}, v));
+    EXPECT_NO_THROW(m2.set({1,2},{1,2}, v));
     for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
         if(i==0 || j==0 || i==3 || j==3) EXPECT_EQ(m2(i,j), m1(i,j));
         else EXPECT_EQ(m2(i,j), v[j-1 + (i-1)*2]);
     }
-    // cout << m2 << endl;
-
     m2 = m1;
-    EXPECT_NO_THROW(m2.setV({0,2},{2,3}, v));
+    EXPECT_NO_THROW(m2.set({0,2},{2,3}, v));
     for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
         if(i>2 || j<2) EXPECT_EQ(m2(i,j), m1(i,j));
         else EXPECT_EQ(m2(i,j), v[j-2 + (i)*2]);
     }
-    // cout << m2 << endl;
 
+    // matrix partial set with double range
     Matrix m3(3,3,v);
     m2 = m1;
-    EXPECT_THROW(m2.setV({1,4},{1,3}, m3), out_of_range);
-    EXPECT_THROW(m2.setV({1,2},{1,4}, m3), out_of_range);
-    EXPECT_THROW(m2.setV({2,1},{1,3}, m3), invalid_argument);
-    EXPECT_THROW(m2.setV({1,1},{3,1}, m3), invalid_argument);
-    EXPECT_THROW(m2.setV({0,3},{1,1}, m3), invalid_argument);
-    EXPECT_THROW(m2.setV({0,0},{1,3}, m3), invalid_argument);
-    EXPECT_NO_THROW(m2.setV({0,2},{1,3}, m3));
+    EXPECT_THROW(m2.set({1,4},{1,3}, m3), out_of_range);
+    EXPECT_THROW(m2.set({1,2},{1,4}, m3), out_of_range);
+    EXPECT_THROW(m2.set({2,1},{1,3}, m3), invalid_argument);
+    EXPECT_THROW(m2.set({1,1},{3,1}, m3), invalid_argument);
+    EXPECT_THROW(m2.set({0,3},{1,1}, m3), invalid_argument);
+    EXPECT_THROW(m2.set(ALL,{1,3}, m3), invalid_argument);
+    EXPECT_NO_THROW(m2.set({0,2},{1,3}, m3));
     for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
         if(i>2 || j<1) EXPECT_EQ(m2(i,j), m1(i,j));
         else EXPECT_EQ(m2(i,j), m3(i, j-1));
     }
-    // cout << m2 << endl;
+
+    // matrix partial set with range on columns
+    m2 = m1;
+    m3 = Matrix(1,3,v);
+    EXPECT_THROW(m2.set(4,{1,3}, m3), out_of_range);
+    EXPECT_THROW(m2.set(2,{1,4}, m3), out_of_range);
+    EXPECT_THROW(m2.set(2,{3,2}, m3), invalid_argument);
+    EXPECT_THROW(m2.set(2,{0,3}, m3), invalid_argument);
+    EXPECT_NO_THROW(m2.set(2,{1,3}, m3));
+    for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
+        if(i!=2 || j<1) EXPECT_EQ(m2(i,j), m1(i,j));
+        else EXPECT_EQ(m2(i,j), m3(0, j-1));
+    }
+
+    // matrix partial set with range on rows
+    m2 = m1;
+    m3 = Matrix(3,1,v);
+    EXPECT_THROW(m2.set({1,3}, 4, m3), out_of_range);
+    EXPECT_THROW(m2.set({1,4}, 2, m3), out_of_range);
+    EXPECT_THROW(m2.set({3,2}, 2, m3), invalid_argument);
+    EXPECT_THROW(m2.set({0,3}, 2, m3), invalid_argument);
+    EXPECT_NO_THROW(m2.set({1,3}, 2, m3));
+    for(int i=0; i<4; ++i) for(int j=0;j<4;++j){
+        if(j!=2 || i<1) EXPECT_EQ(m2(i,j), m1(i,j));
+        else EXPECT_EQ(m2(i,j), m3(i-1, 0));
+    }
 }
 
 TEST(Matrix, is_vec){

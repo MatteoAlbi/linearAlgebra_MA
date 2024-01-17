@@ -43,7 +43,7 @@ public:
      * @brief set the double precision used in comparison
      * @param dp number of digits considered during comparison
      */
-    inline static void set_double_precision(uint dp){ 
+    inline static void set_double_precision(uint dp = 10){ 
         if(dp > 15) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
         Matrix::double_precision = dp; 
         Matrix::epsilon = std::pow(10,-dp);
@@ -633,9 +633,8 @@ Matrix Ones(const uint & r, const uint & c);
 */
 Matrix RandMat(const uint & r, const uint & c);
 
-Matrix diag(const uint & dim, double * v);
-Matrix diag(const uint & dim, const Matrix& v);
-Matrix diag(const Matrix & m);
+Matrix diag(std::vector<double> v);
+Matrix diag(const Matrix& v);
 
 
 } // namespace MA

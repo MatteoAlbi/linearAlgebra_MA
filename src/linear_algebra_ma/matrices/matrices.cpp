@@ -429,37 +429,26 @@ Matrix RandMat(const uint & r, const uint & c){
     return ret;
 }
 
-Matrix diag(const uint & dim, double * v){
-    Matrix ret = Matrix(dim,dim);
+Matrix diag(std::vector<double> v){
+    Matrix ret = Matrix(v.size(), v.size());
     
-    for(uint i=0; i<dim; ++i){
+    for(uint i=0; i<v.size(); ++i){
         ret(i,i) = v[i];
     }
 
     return ret;
 }
 
-Matrix diag(const uint & dim, const Matrix& v){
+Matrix diag(const Matrix& v){
     if(! v.is_vec()) throw std::invalid_argument("Input matrix must be a vector");
 
-    Matrix ret = Matrix(dim,dim);
+    Matrix ret = Matrix(v.size(), v.size());
     
-    for(uint i=0; i<dim; ++i){
+    for(uint i=0; i<v.size(); ++i){
         ret(i,i) = v(i);
     }
 
     return ret;
-}
-
-Matrix diag(const Matrix & m){
-    uint dim = std::min(m.c(),m.r());
-    Matrix v = Matrix(dim,1);
-
-    for(uint i=0; i<dim; ++i){
-        v(i) = m(i,i);
-    }
-
-    return v;
 }
 
 
@@ -716,12 +705,6 @@ Matrix Matrix::matrix_r_divide(Matrix const & B, Matrix const & A){
 void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
-    (void) V;
-    // V = RandMat(_r,_r);
-    // for(uint i=0; i<_c; ++i){
-    //     V.set({}, i, V({},i).normalize_self()); 
-    // }
-
     Matrix Q, R, P;
     this->hessenberg_dec(Q,D);
 
@@ -739,28 +722,20 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
             max_variation = std::max(max_variation, abs(tmp(i) / D(i)));
         }
         if(max_variation < tolerance) {
-            std::cout << "QR algorithm converged in " << k << " steps" << std::endl;
+            // std::cout << "QR algorithm converged in " << k << " steps" << std::endl;
             // << R << std::endl;
             break;
         }
 
     }
-
     D = D.diag();
 
+    V = Matrix(_r, _r);
     for(uint i=0; i<_r; ++i){
         Matrix M = *this - D(i) * IdMat(_r);
-        Matrix A = M(ALL, {1,_r-1});
-        Matrix b = M(ALL, 0);
+        Matrix eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
+        V.set(ALL, i, eigen_vec.normalize());
     }
-
-
-    // V = Matrix(_r, _r);
-    // Matrix b = Matrix(_r,1);
-
-    // for(uint i=0; i<D.r(); ++i){
-    //     V.set({0, _r-1}, {i,i}, solve_ls(*this - D(i) * IdMat(_r), b));
-    // }
 
 }
 

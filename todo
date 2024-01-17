@@ -1,6 +1,5 @@
 update tests for ls_solve and matrix_r_divide with rectangular matrices
 implement reileigh iteration method and compare with eigen_qr
-add eigenvector computation to eigen_qr
 implement qr with shifts:
     https://www.andreinc.net/2021/01/25/computing-eigenvalues-and-eigenvectors-using-qr-decomposition 
     https://www.seas.ucla.edu/~vandenbe/133B/lectures/qr.pdf (read book)

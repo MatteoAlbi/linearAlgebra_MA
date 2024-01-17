@@ -994,6 +994,7 @@ TEST(Matrix, matrix_l_divide){
     Matrix::set_double_precision(8);
     EXPECT_NO_THROW(C = Matrix::matrix_l_divide(A(ALL,{1,3}), b));
     EXPECT_EQ(C, Matrix(3,1,{1.42860766, -0.26654831, -0.62490489}));
+    Matrix::set_double_precision();
 }
 
 TEST(Matrix, divide_operator){
@@ -1134,6 +1135,18 @@ TEST(Matrix, eigenvalues){
     );
 
     EXPECT_NO_THROW(m1.eigen_QR(D, V));
-    cout << D << endl;
+    Matrix::set_double_precision(8);
+    EXPECT_EQ( D,
+        Matrix(4, 1, {1.90595741, -0.44608142,  0.35662657, -0.01767256}));
+
+    EXPECT_EQ( V,
+        Matrix(4, 4, {-0.61559328, -0.4662597 , -0.5442746 , -0.13613666,
+                    -0.33941002,  0.68239286, -0.20427391, -0.46868028,
+                    -0.33624531, -0.48129845,  0.77632961,  0.52722921,
+                    -0.62672549,  0.29205081,  0.24361787,  0.69558246}));
+    
+    EXPECT_EQ( V * diag(D) * V.t(), m1);
+
+    Matrix::set_double_precision();
 
 }

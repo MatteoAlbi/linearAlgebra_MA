@@ -6,6 +6,7 @@ using namespace MA;
 using std::cout, std::endl, std::string;
 using std::invalid_argument, std::runtime_error, std::out_of_range;
 
+
 TEST(Matrix, constructor_get) {
     EXPECT_NO_THROW(Matrix());
     Matrix m1, m2;
@@ -928,7 +929,9 @@ TEST(Matrix, backward_sub){
     
     // solve
     // cout << Matrix::backward_sub(U, b) << endl;
-    EXPECT_EQ(Matrix::backward_sub(U, b), Matrix(4,1, {2,2,-3,1}));
+    EXPECT_EQ(Matrix::backward_sub(U, b), 
+        Matrix(4,1, {2,2,-3,1})
+    );
 
 }
 
@@ -953,7 +956,9 @@ TEST(Matrix, forward_sub){
     
     // solve
     // cout << Matrix::forward_sub(L, b) << endl;
-    EXPECT_EQ(Matrix::forward_sub(L, b), Matrix(4,1, {2,0,-4.5,5.5}));
+    EXPECT_EQ(Matrix::forward_sub(L, b), 
+        Matrix(4,1, {2,0,-4.5,5.5})
+    );
 
 }
 
@@ -967,9 +972,9 @@ TEST(Matrix, matrix_l_divide){
     );
     b = Matrix(4,1, {2,4,1,3});
 
-
     // shape doesn't match
     EXPECT_THROW(Matrix::matrix_l_divide(A, b({1,3},0)), invalid_argument);
+    
     // underdetermined
     C = Matrix (4,4,
         {1,3,4,2,
@@ -978,7 +983,6 @@ TEST(Matrix, matrix_l_divide){
          0,0,0,0}
     );
     EXPECT_THROW(Matrix::matrix_l_divide(C, b), runtime_error);
-
     C = Matrix (4,4,
         {1,3, 4, 0,
          0,2, 1, 0,
@@ -989,11 +993,16 @@ TEST(Matrix, matrix_l_divide){
 
     // solution
     EXPECT_NO_THROW(C = Matrix::matrix_l_divide(A,b));
-    EXPECT_EQ(C, Matrix(4,1, {1,1,0,-1}));
+    EXPECT_EQ(A*C, b);
+
     // overdetermined
     Matrix::set_double_precision(8);
     EXPECT_NO_THROW(C = Matrix::matrix_l_divide(A(ALL,{1,3}), b));
-    EXPECT_EQ(C, Matrix(3,1,{1.42860766, -0.26654831, -0.62490489}));
+    EXPECT_EQ(C, 
+        Matrix(3,1,{1.42860766, 
+                    -0.26654831, 
+                    -0.62490489})
+    );
     Matrix::set_double_precision();
 }
 
@@ -1038,8 +1047,10 @@ TEST(Matrix, divide_operator){
          0,0,0,0}
     );
     EXPECT_THROW(b / C, runtime_error);
+
     // solution
-    EXPECT_EQ(b / A.t(), Matrix(1,4, {1,1,0,-1}));
+    EXPECT_NO_THROW(C = b/A);
+    EXPECT_EQ(C*A, b);
 
     // shape doesn't match
     EXPECT_THROW((b(0,{1,3})/=A), invalid_argument);
@@ -1051,9 +1062,11 @@ TEST(Matrix, divide_operator){
          0,0,0,0}
     );
     EXPECT_THROW(b/=C, runtime_error);
+
     // solution
-    EXPECT_NO_THROW(b /= A.t());
-    EXPECT_EQ(b, Matrix(1,4, {1,1,0,-1}));
+    C = b;
+    EXPECT_NO_THROW(C /= A);
+    EXPECT_EQ(C*A, b);
 
 }
 
@@ -1079,7 +1092,28 @@ TEST(Matrix, solve_ls){
     EXPECT_THROW(Matrix::solve_ls(C, b), runtime_error);
 
     // solution
-    EXPECT_EQ(Matrix::solve_ls(A,b), Matrix(4,1, {1,1,0,-1}));
+    EXPECT_NO_THROW(C = Matrix::solve_ls(A,b));
+    EXPECT_EQ(A * C, b);
+
+    // overdetermined
+    A = Matrix (6,4,
+        {-1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1,
+         7,-3,0,3,
+         -2,5,1,4}
+    );
+    b = Matrix(6,1, {2,4,1,3,-3,5});
+    EXPECT_NO_THROW(C = Matrix::solve_ls(A,b));
+    Matrix::set_double_precision(8);
+    EXPECT_EQ(C, 
+        Matrix(4,1,{0.34582912, 
+                    1.42291125, 
+                    -0.110443, 
+                    -0.456683})
+    );
+    Matrix::set_double_precision();
 }
 
 TEST(Matrix, matrix_r_divide){
@@ -1102,16 +1136,31 @@ TEST(Matrix, matrix_r_divide){
          0,0,0,0}
     );
     EXPECT_THROW(Matrix::matrix_r_divide(b, C), runtime_error);
-
+    
     // solution
-    EXPECT_EQ(Matrix::matrix_r_divide(b,A.t()), Matrix(1,4, {1,1,0,-1}));
+    EXPECT_NO_THROW(C = Matrix::matrix_r_divide(b, A));
+    EXPECT_EQ(C*A, b);
 
-    // Matrix L,U;
-    // A.lup_dec(L,U);
-    // cout << L << endl;
-    // cout << U << endl;
-    // cout << Matrix::matrix_r_divide(b,A.t()) << endl;
+    // overdetermined
+    A = Matrix (4,6,
+        {-1,3,4,2,0,2,
+         1,-2,2,1,-3,2,
+         0,2,1,-1,7,-3,
+         0,3,-2,5,1,4}
+    );
+    b = Matrix(1,6, {2,4,1,3,-3,5});
+    EXPECT_NO_THROW(C = Matrix::matrix_r_divide(b,A));
+    Matrix::set_double_precision(8);
+    EXPECT_EQ(C, 
+        Matrix(1,4,{0.34582912, 
+                    1.42291125, 
+                    -0.110443, 
+                    -0.456683})
+    );
+    Matrix::set_double_precision();
+
 }
+
 
 
 TEST(Matrix, eigenvalues){

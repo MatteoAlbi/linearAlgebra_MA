@@ -13,8 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include <cstdlib>
-#include <ctime>
+#include <random>
 
 typedef unsigned int uint;
 typedef std::pair<uint,uint> uu_pair;
@@ -30,8 +29,9 @@ protected:
     inline static uint double_precision = 10;
     // epsilon used in double comparison
     inline static double epsilon = std::pow(10,-10);
-    // flag for setting the seed used for random number generation
-    inline static bool seed_set = false;
+    // random number generator objects
+    inline static std::uniform_real_distribution<double> unif{0.0, 1.0};
+    inline static std::default_random_engine re;
 
     uint _r;
     uint _c;
@@ -62,8 +62,7 @@ public:
      * @return random number in range 0..1
      */
     inline static double rand(){
-        if(!Matrix::seed_set) std::srand(std::time(NULL));
-        return std::rand();
+        return unif(re);
     }
     
 
@@ -257,19 +256,15 @@ public:
 
 #pragma region math_operators
     void operator+=(const double & k);
-    void operator+=(const int & k);
     void operator+=(const Matrix & m);
 
     void operator-=(const double & k);
-    void operator-=(const int & k);
     void operator-=(const Matrix & m);
 
     void operator*=(const double & k);
-    void operator*=(const int & k);
     void operator*=(const Matrix & m);
     
     void operator/=(const double & k);
-    void operator/=(const int & k);
     void operator/=(const Matrix & m);
 #pragma endregion math_operators
 
@@ -550,6 +545,8 @@ public:
 #pragma region eigen
 
     void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-6) const;
+    
+    void eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-6) const;
 
 #pragma endregion eigen
 
@@ -563,26 +560,19 @@ std::ostream& operator<<(std::ostream& os, const uu_pair * p);
 
 #pragma region math_operators
 Matrix operator+(const Matrix& m, const double& k);
-Matrix operator+(const Matrix& m, const int& k);
 Matrix operator+(const double& k, const Matrix& m);
-Matrix operator+(const int& k, const Matrix& m);
 Matrix operator+(const Matrix& m1, const Matrix& m2);
 
 Matrix operator-(const Matrix& m);
 Matrix operator-(const Matrix& m, const double& k);
-Matrix operator-(const Matrix& m, const int & k);
 Matrix operator-(const double& k, const Matrix& m);
-Matrix operator-(const int& k, const Matrix& m);
 Matrix operator-(const Matrix& m1, const Matrix& m2);
 
 Matrix operator*(const Matrix& m, const double& k);
-Matrix operator*(const Matrix& m, const int & k);
 Matrix operator*(const double& k, const Matrix& m);
-Matrix operator*(const int& k, const Matrix& m);
 Matrix operator*(const Matrix& m1, const Matrix& m2);
 
 Matrix operator/(const Matrix& m, const double& k);
-Matrix operator/(const Matrix& m, const int & k);
 Matrix operator/(const Matrix& m1, const Matrix& m2);
 #pragma endregion math_operators
 

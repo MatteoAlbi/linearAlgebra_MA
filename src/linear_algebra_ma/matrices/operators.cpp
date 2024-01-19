@@ -162,14 +162,6 @@ void Matrix::operator+=(const double & k){
     }
 }
 
-void Matrix::operator+=(const int & k){
-    for(uint i=0; i<this->_r; ++i){
-        for(uint j=0; j<this->_c; ++j){
-            this->operator()(i,j) += k;
-        }
-    }
-}
-
 void Matrix::operator+=(const Matrix & m){
     if(this->_r != m._r || this->_c != m._c) throw std::invalid_argument("Matrices' shapes don't match");
     
@@ -187,21 +179,7 @@ Matrix operator+(const Matrix& m, const double& k){
     return ret;
 }
 
-Matrix operator+(const Matrix& m, const int& k){
-    Matrix ret = m;
-    ret+=k;
-
-    return ret;
-}
-
 Matrix operator+(const double& k, const Matrix& m){
-    Matrix ret = m;
-    ret+=k;
-
-    return ret;
-}
-
-Matrix operator+(const int& k, const Matrix& m){
     Matrix ret = m;
     ret+=k;
 
@@ -220,14 +198,6 @@ Matrix operator+(const Matrix& m1, const Matrix& m2){
 
 #pragma region subtract
 void Matrix::operator-=(const double & k){
-    for(uint i=0; i<this->_r; ++i){
-        for(uint j=0; j<this->_c; ++j){
-            this->operator()(i,j) -= k;
-        }
-    }
-}
-
-void Matrix::operator-=(const int & k){
     for(uint i=0; i<this->_r; ++i){
         for(uint j=0; j<this->_c; ++j){
             this->operator()(i,j) -= k;
@@ -264,18 +234,7 @@ Matrix operator-(const Matrix& m, const double& k){
     return ret;
 }
 
-Matrix operator-(const Matrix& m, const int& k){
-    Matrix ret = m;
-    ret-=k;
-
-    return ret;
-}
-
 Matrix operator-(const double& k, const Matrix& m){
-    return -m + k;
-}
-
-Matrix operator-(const int& k, const Matrix& m){
     return -m + k;
 }
 
@@ -298,14 +257,6 @@ void Matrix::operator*=(const double & k){
     }
 }
 
-void Matrix::operator*=(const int & k){
-    for(uint i=0; i<this->_r; ++i){
-        for(uint j=0; j<this->_c; ++j){
-            this->operator()(i,j) *= k;
-        }
-    }
-}
-
 void Matrix::operator*=(const Matrix & m){
     this->operator=((*this) * m);
 }
@@ -317,21 +268,7 @@ Matrix operator*(const Matrix& m, const double& k){
     return ret;
 }
 
-Matrix operator*(const Matrix& m, const int& k){
-    Matrix ret = m;
-    ret*=k;
-
-    return ret;
-}
-
 Matrix operator*(const double& k, const Matrix& m){
-    Matrix ret = m;
-    ret*=k;
-
-    return ret;
-}
-
-Matrix operator*(const int& k, const Matrix& m){
     Matrix ret = m;
     ret*=k;
 
@@ -365,19 +302,9 @@ void Matrix::operator/=(const double & k){
     }
 }
 
-void Matrix::operator/=(const int & k){
-    for(uint i=0; i<this->_r; ++i){
-        for(uint j=0; j<this->_c; ++j){
-            this->operator()(i,j) /= k;
-        }
-    }
-}
-
-
 void Matrix::operator/=(const Matrix & m){
    this->operator=((*this) / m);
 }
-
 
 Matrix operator/(const Matrix& m, const double& k){
     Matrix ret = m;
@@ -385,14 +312,6 @@ Matrix operator/(const Matrix& m, const double& k){
 
     return ret;
 }
-
-Matrix operator/(const Matrix& m, const int& k){
-    Matrix ret = m;
-    ret/=k;
-
-    return ret;
-}
-
 
 Matrix operator/(const Matrix& m1, const Matrix& m2){
     return Matrix::matrix_r_divide(m1,m2);

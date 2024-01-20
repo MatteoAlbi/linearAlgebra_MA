@@ -1166,16 +1166,6 @@ TEST(Matrix, matrix_r_divide){
 TEST(Matrix, eigenvalues){
     Matrix m1, D, V;
 
-    // matrix not square
-    m1 = Matrix (3,4,
-        {1,3,5,9,
-         0,2,1,7,
-         4,1,8,2,
-         5,2,1,9}
-    );
-    EXPECT_THROW(m1.eigen_QR(D, V), invalid_argument);
-
-    // matrix is square
     m1 = Matrix (4,4,
         {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
          6.4349e-01,   2.9453e-01,   4.3203e-01,   8.8371e-03,
@@ -1183,18 +1173,39 @@ TEST(Matrix, eigenvalues){
          8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
     );
 
+    // matrix not square
+    EXPECT_THROW(m1({1, m1.r()-1}, ALL).eigen_QR(D, V), invalid_argument);
+
+    // eigen problem solution
     EXPECT_NO_THROW(m1.eigen_QR(D, V));
+
     Matrix::set_double_precision(8);
     EXPECT_EQ( D,
         Matrix(4, 1, {1.90595741, -0.44608142,  0.35662657, -0.01767256}));
-
     EXPECT_EQ( V,
         Matrix(4, 4, {-0.61559328, -0.4662597 , -0.5442746 , -0.13613666,
                     -0.33941002,  0.68239286, -0.20427391, -0.46868028,
                     -0.33624531, -0.48129845,  0.77632961,  0.52722921,
                     -0.62672549,  0.29205081,  0.24361787,  0.69558246}));
-    
     EXPECT_EQ( V * diag(D) * V.t(), m1);
+
+    /*
+
+    // testing for complex eigenvalues
+    m1 = RandMat(4,4);
+    cout << m1 << endl;
+
+    EXPECT_NO_THROW(m1.eigen_QR(D, V, 100000));
+    cout << "QR without shift:" << endl;
+    cout << D << endl;
+    cout << V << endl;
+
+    EXPECT_NO_THROW(m1.eigen_QR_shift(D, V, 100000));
+    cout << "QR with shift:" << endl;
+    cout << D << endl;
+    cout << V << endl;
+
+    */
 
     Matrix::set_double_precision();
 

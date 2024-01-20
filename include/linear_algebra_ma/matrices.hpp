@@ -552,13 +552,12 @@ public:
 
 };
 
-// cout operators
+#pragma region operators
 std::ostream& operator<<(std::ostream& os, const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix * m);
 std::ostream& operator<<(std::ostream& os, const uu_pair & p);
 std::ostream& operator<<(std::ostream& os, const uu_pair * p);
 
-#pragma region math_operators
 Matrix operator+(const Matrix& m, const double& k);
 Matrix operator+(const double& k, const Matrix& m);
 Matrix operator+(const Matrix& m1, const Matrix& m2);
@@ -574,7 +573,7 @@ Matrix operator*(const Matrix& m1, const Matrix& m2);
 
 Matrix operator/(const Matrix& m, const double& k);
 Matrix operator/(const Matrix& m1, const Matrix& m2);
-#pragma endregion math_operators
+#pragma endregion operators
 
 /**
  * @brief concatenates matrices per columns

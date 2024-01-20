@@ -11,6 +11,21 @@ set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 
 
+#-- complex
+add_library(complex 
+    "src/complex/complex.cpp"
+)
+# include directories
+target_include_directories(complex PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+# turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
+target_compile_options(complex PRIVATE 
+    "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
+)
+
+
 #-- matrices
 # add library
 add_library(matrices 
@@ -93,6 +108,7 @@ target_link_libraries(GTest::GTest INTERFACE gtest_main)
 enable_testing()
 
 add_executable(${PROJECT_NAME}_unit_tests
+    "tests/test_complex.cpp"
     "tests/test_matrices.cpp"
     "tests/test_geometries.cpp"
 )
@@ -100,6 +116,7 @@ target_link_libraries(${PROJECT_NAME}_unit_tests
     PRIVATE
     GTest::GTest
     gtest_main
+    complex
     matrices
     geometries
 )

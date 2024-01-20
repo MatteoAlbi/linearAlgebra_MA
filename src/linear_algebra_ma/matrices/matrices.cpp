@@ -341,13 +341,11 @@ double Matrix::norm2() const{
     if(this->_r == 1 || this->_c == 1){
         double ret = 0;
         for(uint i=0; i< this->_r+this->_c-1; ++i){
-            ret += pow(this->_v[i],2);
+            ret += _v[i] * _v[i];
         }
         return sqrt(ret);
     }
     else{
-        // cout << "Norm only appliable to row/column vectors" << endl;
-        // return NULL;
         throw std::invalid_argument("Norm only appliable to row/column vectors");
     }
 }

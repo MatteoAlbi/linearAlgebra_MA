@@ -56,7 +56,7 @@ void Complex::imag(const double & i) {_imag = i;}
 
 #pragma region operations
 
-double Complex::magnitude() const {return std::sqrt(std::pow(_real,2) + std::pow(_imag,2));}
+double Complex::magnitude() const {return std::sqrt(_real * _real + _imag * _imag);}
 Complex Complex::conj() const {return Complex(_real, -_imag);}
 
 #pragma endregion operations

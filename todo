@@ -2,3 +2,4 @@ implement reileigh iteration method and compare with eigen_qr
 implement qr with shifts:
     https://www.andreinc.net/2021/01/25/computing-eigenvalues-and-eigenvectors-using-qr-decomposition 
     https://www.seas.ucla.edu/~vandenbe/133B/lectures/qr.pdf (read book)
+    https://math.stackexchange.com/questions/3072758/is-it-possible-to-find-complex-eigenvalues-with-qr-decomposition

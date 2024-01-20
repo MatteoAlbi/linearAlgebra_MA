@@ -706,28 +706,34 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
     Matrix Q, R, P;
+    uint k;
+    double sum;
     this->hessenberg_dec(Q,D);
 
-    for(uint k=0; k<max_iterations; ++k){
+    for(k=0; k<max_iterations; ++k){
         Matrix tmp = D.diag();
         // D.qrp_dec(Q,R,P);
         // D = R*Q;
         D.qr_dec(Q,R);
         D = R*Q;
 
-        // // check for convergence
-        double max_variation = -1;
-        tmp = tmp - D.diag();
-        for(uint i=0; i<_r; ++i){
-            max_variation = std::max(max_variation, abs(tmp(i) / D(i)));
+        // check for convergence
+        // double max_variation = -1;
+        // tmp = tmp - D.diag();
+        // for(uint i=0; i<_r; ++i){
+        //     max_variation = std::max(max_variation, abs(tmp(i) / D(i)));
+        // }
+        sum = 0;
+        for(uint i=1; i<_r; ++i){
+            for(uint j=0; j<i; ++j){
+                sum += abs(D(i,j));
+            }
         }
-        if(max_variation < tolerance) {
-            // std::cout << "QR algorithm converged in " << k << " steps" << std::endl;
-            // << R << std::endl;
-            break;
-        }
-
+        if(sum < tolerance) break;
     }
+
+    std::cout << "QR algorithm steps: " << k << ", residuals: " << sum << std::endl;
+    std::cout << D << std::endl;
     D = D.diag();
 
     V = Matrix(_r, _r);
@@ -739,13 +745,55 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
 
 }
 
-void inverse_iteration(double l, Matrix & v, uint max_iterations, double tolerance){
-    (void) l;
-    (void) v;
-    (void) max_iterations;
-    (void) tolerance;
 
-    return;
+void Matrix::eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
+
+    Matrix Q, R, P;
+    this->hessenberg_dec(Q,D);
+
+    // init shift
+    double mu = D(_r-1);
+    uint k;
+    double sum;
+
+    for(k=0; k<max_iterations; ++k){
+        Matrix tmp = D.diag();
+        
+        // apply shift
+        (D - mu * IdMat(_r)).qr_dec(Q,R);
+        // shift backward
+        D = R*Q + mu * IdMat(_r);
+        // update mu
+        Matrix v = Q(ALL, _c-1);
+        mu = (v.t() * D * v).operator()(0) / (v.t() * v).operator()(0);
+
+        // check for convergence
+        // double max_variation = -1;
+        // tmp = tmp - D.diag();
+        // for(uint i=0; i<_r; ++i){
+        //     max_variation = std::max(max_variation, abs(tmp(i) / D(i)));
+        // }
+        sum = 0;
+        for(uint i=1; i<_r; ++i){
+            for(uint j=0; j<i; ++j){
+                sum += abs(D(i,j));
+            }
+        }
+        if(sum < tolerance) break;
+    }
+
+    std::cout << "QR with shift algorithm steps: " << k << ", residuals: " << sum << std::endl;
+    std::cout << D << std::endl;
+    D = D.diag();
+
+    V = Matrix(_r, _r);
+    for(uint i=0; i<_r; ++i){
+        Matrix M = *this - D(i) * IdMat(_r);
+        Matrix eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
+        V.set(ALL, i, eigen_vec.normalize());
+    }
+
 }
 
 } // namespace MA

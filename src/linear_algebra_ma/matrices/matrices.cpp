@@ -270,7 +270,7 @@ double Matrix::det() const{
     else{
         Matrix L, U, P;
         uint n_swaps = this->lup_dec(L,U,P);
-        double determinant = std::pow(-1.0, n_swaps);
+        double determinant = n_swaps % 2 == 0 ? 1.0 : -1.0;
         for(uint i=0; i<U.c(); ++i) determinant *= U(i,i);
         return determinant;
     }
@@ -288,10 +288,7 @@ double Matrix::minor(const uint & p, const uint & q) const{
 }
 
 double Matrix::cof(const uint & p, const uint & q) const{
-    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
-
-    int sign = (p+q % 2) == 0 ? 1 : -1;
-    return this->submat_del(p,q).det() * sign;
+    return (((p+q) % 2) == 0 ? 1 : -1) * this->minor(p, q);
 }
 
 Matrix Matrix::cof_mat() const{

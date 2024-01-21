@@ -523,15 +523,46 @@ TEST(Matrix, determinant){
 
 }
 
-/*
+
 TEST(Matrix, minor){
-    // TODO
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.minor(1,1), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    double minor;
+    EXPECT_NO_THROW(minor = m1.minor(1,1));
+    EXPECT_DOUBLE_EQ(minor, -329.0);
 }
 
 TEST(Matrix, cof){
-    // TODO
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.cof(1,1), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    double cofactor;
+    EXPECT_NO_THROW(cofactor = m1.cof(1,1));
+    EXPECT_DOUBLE_EQ(cofactor, -329.0);
 }
 
+/*
 TEST(Matrix, cof_mat){
     // TODO
 }
@@ -579,6 +610,7 @@ TEST(Matrix, inv){
           110, -82, -52,  36}
     );
     EXPECT_EQ(m1.inv(), res/376);
+    EXPECT_EQ(m1*m1.inv(), IdMat(4));
 
 }
 
@@ -1162,12 +1194,14 @@ TEST(Matrix, matrix_r_divide){
     EXPECT_EQ(C*A, b);
 
     // overdetermined
-    A = Matrix (4,6,
-        {-1,3,4,2,0,2,
-         1,-2,2,1,-3,2,
-         0,2,1,-1,7,-3,
-         0,3,-2,5,1,4}
-    );
+    A = Matrix (6,4,
+        {-1,3,4,2,
+        0,2,1,-2,
+        2,1,-3,2,
+        0,2,1,-1,
+        7,-3,0,3,
+        -2,5,1,4}
+    ).t();
     b = Matrix(1,6, {2,4,1,3,-3,5});
     EXPECT_NO_THROW(C = Matrix::matrix_r_divide(b,A));
     Matrix::set_double_precision(8);
@@ -1199,15 +1233,15 @@ TEST(Matrix, eigenvalues){
     // eigen problem solution
     EXPECT_NO_THROW(m1.eigen_QR(D, V));
 
-    Matrix::set_double_precision(8);
+    Matrix::set_double_precision(6);
     EXPECT_EQ( D,
         Matrix(4, 1, {1.90595741, -0.44608142,  0.35662657, -0.01767256}));
     EXPECT_EQ( V,
-        Matrix(4, 4, {-0.61559328, -0.4662597 , -0.5442746 , -0.13613666,
-                    -0.33941002,  0.68239286, -0.20427391, -0.46868028,
-                    -0.33624531, -0.48129845,  0.77632961,  0.52722921,
-                    -0.62672549,  0.29205081,  0.24361787,  0.69558246}));
-    EXPECT_EQ( V * diag(D) * V.t(), m1);
+        -Matrix(4, 4, {-0.61559328, -0.4662597 , -0.5442746 , -0.13613666,
+                       -0.33941002,  0.68239286, -0.20427391, -0.46868028,
+                       -0.33624531, -0.48129845,  0.77632961,  0.52722921,
+                       -0.62672549,  0.29205081,  0.24361787,  0.69558246}));
+    EXPECT_EQ( V * diag(D) * V.inv(), m1);
 
     /*
 

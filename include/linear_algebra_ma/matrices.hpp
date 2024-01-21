@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <math.h>
+#include <cmath>
 #include <stdexcept>
 #include <exception>
 #include <iostream>
@@ -28,7 +28,7 @@ protected:
     // number of decimals used in double comparison
     inline static uint double_precision = 10;
     // epsilon used in double comparison
-    inline static double epsilon = std::pow(10,-10);
+    inline static double epsilon = 1e-10;
     // random number generator objects
     inline static std::uniform_real_distribution<double> unif{0.0, 1.0};
     inline static std::default_random_engine re;
@@ -43,10 +43,10 @@ public:
      * @brief set the double precision used in comparison
      * @param dp number of digits considered during comparison
      */
-    inline static void set_double_precision(uint dp = 10){ 
+    inline static void set_double_precision(double dp = 10){ 
         if(dp > 15) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
         Matrix::double_precision = dp; 
-        Matrix::epsilon = std::pow(10,-dp);
+        Matrix::epsilon = pow(10.0,-dp);
     }
 
     /**

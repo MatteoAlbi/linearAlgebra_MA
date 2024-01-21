@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <math.h>
+#include <cmath>
 #include <stdexcept>
 #include <exception>
 #include <iostream>
@@ -13,7 +13,11 @@
 #include <utility>
 #include <vector>
 
+#include <random>
+
 typedef unsigned int uint;
+typedef std::pair<uint,uint> uu_pair;
+#define ALL uu_pair{}
 
 namespace MA
 {
@@ -24,7 +28,10 @@ protected:
     // number of decimals used in double comparison
     inline static uint double_precision = 10;
     // epsilon used in double comparison
-    inline static double epsilon = std::pow(10,-10);
+    inline static double epsilon = 1e-10;
+    // random number generator objects
+    inline static std::uniform_real_distribution<double> unif{0.0, 1.0};
+    inline static std::default_random_engine re;
 
     uint _r;
     uint _c;
@@ -36,18 +43,26 @@ public:
      * @brief set the double precision used in comparison
      * @param dp number of digits considered during comparison
      */
-    inline static void set_double_precision(uint dp){ 
+    inline static void set_double_precision(double dp = 10){ 
         if(dp > 15) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
         Matrix::double_precision = dp; 
-        Matrix::epsilon = std::pow(10,-dp);
+        Matrix::epsilon = pow(10.0,-dp);
     }
 
     /**
      * @brief get the double precision used in comparison
-     * @return number of digits considered during comparison
+     * @return margin of error considered during comparison
      */
-    inline static uint get_double_precision(){ 
-        return Matrix::double_precision; 
+    inline static double get_epsilon(){ 
+        return Matrix::epsilon; 
+    }
+
+    /**
+     * @brief generate a random number using the internally set seed
+     * @return random number in range 0..1
+     */
+    inline static double rand(){
+        return unif(re);
     }
     
 
@@ -79,9 +94,9 @@ public:
 
     double& operator()(const uint & i);
     const double& operator()(const uint & i) const;
-    Matrix operator()(std::pair<uint,uint> rs, const uint & c) const;
-    Matrix operator()(const uint & r, std::pair<uint,uint> cs) const;
-    Matrix operator()(std::pair<uint,uint> rs, std::pair<uint,uint> cs) const;
+    Matrix operator()(uu_pair rs, const uint & c) const;
+    Matrix operator()(const uint & r, uu_pair cs) const;
+    Matrix operator()(uu_pair rs, uu_pair cs) const;
     Matrix& operator=(const Matrix& m);
     Matrix& operator=(Matrix const * const m);
 
@@ -98,6 +113,12 @@ public:
     uint c() const;
 
     /**
+     * @brief return matrix shape as (r,c) pair
+     * @return pair
+     */
+    uu_pair shape() const;
+
+    /**
      * @brief get size of the matrix i.e. number of stored elements
      * @return size
     */
@@ -110,32 +131,67 @@ public:
     double const * v() const;
 
     /**
-     * @brief uses the vecotr to fill in the elements of the matrix
+     * @brief uses the vector to fill in the elements of the matrix
      * @param v used vector
      * @throw out_of_range if v.size < this.size
      */
-    void setV(std::vector<double> v);
+    void set(std::vector<double> v);
 
     /**
-     * @brief uses the vecotr to fill in the elements of submatrix
+     * @brief uses the vector to fill in the elements of submatrix
      * of this matrix defined by indeces rs and cs, extremes included
      * @param rs rows indeces
      * @param cs columns vector
      * @param v used vector
      * @throw out_of_range if v.size < submatrix size
      */
-    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, std::vector<double> v);
+    void set(uu_pair rs, uu_pair cs, std::vector<double> v);
+
+    /**
+     * @brief uses the given matrix to fill in the elements of submatrix
+     * of this matrix defined by indeces rs and cs
+     * @param r row index
+     * @param c column index
+     * @param m used matrix
+     * @throw out_of_range if r or c are out of range
+     */
+    void set(uint r, uint c, double x);
+
+    /**
+     * @brief uses the given matrix to fill in the elements of submatrix
+     * of this matrix defined by indeces rs and c, extremes included
+     * @param rs rows indeces
+     * @param c column index
+     * @param m used matrix
+     * @throw out_of_range if rs or c are out of range
+     * @throw out_of_range if m has not enough rows or columns to fill in the 
+     * submatrix
+     */
+    void set(uu_pair rs, uint c, Matrix m);
+
+    /**
+     * @brief uses the given matrix to fill in the elements of submatrix
+     * of this matrix defined by indeces r and cs, extremes included
+     * @param r row index
+     * @param cs columns indeces
+     * @param m used matrix
+     * @throw out_of_range if r or cs are out of range
+     * @throw out_of_range if m has not enough rows or columns to fill in the 
+     * submatrix
+     */
+    void set(uint r, uu_pair cs, Matrix m);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
      * of this matrix defined by indeces rs and cs, extremes included
      * @param rs rows indeces
-     * @param cs columns vector
+     * @param cs columns indeces
      * @param m used matrix
+     * @throw out_of_range if rs or cs are out of range
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m);
+    void set(uu_pair rs, uu_pair cs, Matrix m);
 
     /**
      * @brief check if matrix is a vector
@@ -166,6 +222,12 @@ public:
     Matrix to_r_vec() const;
 
     /**
+     * @brief extract diagonal of the matrix
+     * @return vector (matrix with dim n,1) containing the diagonal elements
+    */
+    Matrix diag() const;
+
+    /**
      * @brief swap the given rows of the matrix
      * @param r1 first row to swap
      * @param r2 second row to swap
@@ -194,19 +256,15 @@ public:
 
 #pragma region math_operators
     void operator+=(const double & k);
-    void operator+=(const int & k);
     void operator+=(const Matrix & m);
 
     void operator-=(const double & k);
-    void operator-=(const int & k);
     void operator-=(const Matrix & m);
 
     void operator*=(const double & k);
-    void operator*=(const int & k);
     void operator*=(const Matrix & m);
     
     void operator/=(const double & k);
-    void operator/=(const int & k);
     void operator/=(const Matrix & m);
 #pragma endregion math_operators
 
@@ -308,12 +366,18 @@ public:
     Matrix inv() const;
 
     /**
-     * @brief compute left pseudo-inverse of the matrix 
-     * using ((A'*A)^-1)*A'with A' transpose of A
+     * @brief compute left pseudo-inverse of the matrix
      * 
      * @return Matrix: left pseudo-inverse
      */
     Matrix pinv_left() const;
+
+    /**
+     * @brief compute right pseudo-inverse of the matrix
+     * 
+     * @return Matrix: right pseudo-inverse
+     */
+    Matrix pinv_right() const;
 
     /**
      * @brief return norm2: sqrt(sum(v(i)^2)) of the given vector
@@ -345,14 +409,23 @@ public:
      */
     bool is_lower_triang() const;
 
+    /**
+     * @brief return true if the matrix is an upper hessenberg matrix
+     */
+    bool is_upper_hessenberg() const;
+
+    /**
+     * @brief return true if the matrix is an lower hessenberg matrix
+     */
+    bool is_lower_hessenberg() const;
 
 
 #pragma region decomposition_methods
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 
      *        with Q orthogonal matrix and R upper triangular matrix
-     *      //http://matlab.izmiran.ru/help/techdoc/ref/mldivide.html
-     *      //https://rpubs.com/aaronsc32/qr-decomposition-householder
+     *      http://matlab.izmiran.ru/help/techdoc/ref/mldivide.html
+     *      https://rpubs.com/aaronsc32/qr-decomposition-householder
      * 
      * @param Q orthogonal matrix
      * @param R upper triangular matrix
@@ -373,11 +446,11 @@ public:
     void qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const;
 
 
-    //https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
     /**
      * @brief Compute LUP decomposition of the given matrix: PA = LU with
      *        L lower triangular matrix and U upper triangular matrix and
      *        P permutation matrix
+     *      https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
      * 
      * @param L lower triangular matrix
      * @param U upper triangular matrix
@@ -385,6 +458,17 @@ public:
      * @return number of swap performed during permutation
      */
     uint lup_dec(Matrix & L, Matrix & U, Matrix & P) const;
+
+    /**
+     * @brief preform hessenberg decomposition of the given matrix
+     *        QHQ* = A
+     *      https://en.wikipedia.org/wiki/Hessenberg_matrix
+     * 
+     * @param Q unitary matrix
+     * @param H hessenberg matrix
+    */
+    void hessenberg_dec(Matrix & Q, Matrix & H) const;
+
 #pragma endregion decomposition_methods
 
 #pragma region ls_solution
@@ -411,31 +495,39 @@ public:
 
     /**
      * @brief computes the left division A\B, which corresponds to solve the 
-     *        linear equation system Ax=B. 
+     *        linear equation system Ax=B or performing the operation (A^-1)*b.
+     *        The rows of A must be equal the rows of B. The result has dimensions (r_a*c_b)
      *        The functions solves the problem depending on the dimensions of the 
      *        given matrices: 
      *        
-     *        - A is a square matrix (r_a*c_r_common): The columns of A must be equal 
-     *          the rows of B. The result has dimensions (r_a*c_b). A is decomposed using
+     *        - A is a square matrix (r_a*c_r_common): A is decomposed using
      *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
      *          subsequentially solving the two systems:
      *              - L*(U*x) = PB, thus solving it using forward substitution the system 
      *                L*y=PB equal to y=L\PB
      *              - U*x=y, thus solving it using backward substitution the system 
      *                U*x=y equal to x=U\y
+     *        - A is rectangular and represent an overconstrained problem (rows > cols): A
+     *          is decomposed using QRP decomposition (AP = QR) and performing the operation
+     *          X = P*(R\(Q'*b)). Notably, using the householder projectiob for the QRP
+     *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
+     *          the diagonal are zero. Such rows are discared along with the corresponding 
+     *          rows of b. R\(Q'*b) is solved using backward substitution.
      * 
      * @param A             left hand division term
      * @param B             right hand division term
      * @return Matrix: result of the division
+     * @throw invalid_argument if rows don't match
      */
     static Matrix matrix_l_divide(Matrix const & A, Matrix const & B);
 
     /**
      * @brief solves the linear system A*x=B. 
-     * Calls matrix_l_divide.
+     *        Calls matrix_l_divide.
      * @param A coefficient matrix (must be square nxn)
      * @param B known terms matrix (B.rows == A.cols)
      * @return Matrix: x (dimensions A.rows x B.cols)
+     * @throw invalid_argument if rows don't match
      */
     static Matrix solve_ls(Matrix const & A, Matrix const & B);
 
@@ -443,40 +535,52 @@ public:
      * @brief computes the right division B/A translating it in a left 
      *        division problem following the equality B/A = (A.t\B.t).t
      *        where .t stands for transpose. 
+     *        The columns of A must be equal the columns of B.
      *        The functions solves the problem depending on the dimensions of the 
      *        given matrices, as described in  matrix_l_divide.
      * 
      * @param B             left hand division term 
      * @param A             right hand division term
      * @return Matrix: result of the division
+     * @throw invalid_argument if columns don't match
      */
     static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
 
 #pragma endregion ls_solution
 
+#pragma region eigen
+
+    void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-6) const;
+    
+    void eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-6) const;
+
+#pragma endregion eigen
+
 };
 
-// cout operators
+#pragma region operators
 std::ostream& operator<<(std::ostream& os, const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix * m);
+std::ostream& operator<<(std::ostream& os, const uu_pair & p);
+std::ostream& operator<<(std::ostream& os, const uu_pair * p);
 
-#pragma region math_operators
 Matrix operator+(const Matrix& m, const double& k);
-Matrix operator+(const Matrix& m, const int & k);
+Matrix operator+(const double& k, const Matrix& m);
 Matrix operator+(const Matrix& m1, const Matrix& m2);
 
+Matrix operator-(const Matrix& m);
 Matrix operator-(const Matrix& m, const double& k);
-Matrix operator-(const Matrix& m, const int & k);
+Matrix operator-(const double& k, const Matrix& m);
 Matrix operator-(const Matrix& m1, const Matrix& m2);
 
 Matrix operator*(const Matrix& m, const double& k);
-Matrix operator*(const Matrix& m, const int & k);
+Matrix operator*(const double& k, const Matrix& m);
 Matrix operator*(const Matrix& m1, const Matrix& m2);
 
 Matrix operator/(const Matrix& m, const double& k);
-Matrix operator/(const Matrix& m, const int & k);
+Matrix operator/(const double& k, const Matrix& m);
 Matrix operator/(const Matrix& m1, const Matrix& m2);
-#pragma endregion math_operators
+#pragma endregion operators
 
 /**
  * @brief concatenates matrices per columns
@@ -510,15 +614,23 @@ Matrix IdMat(const uint & dim);
 /**
  * @brief create matrix of only ones of shape r*c
  * 
- * @param r 
- * @param c 
+ * @param r rows
+ * @param c columns
  * @return Matrix 
  */
 Matrix Ones(const uint & r, const uint & c);
 
+/**
+ * @brief create matrix with random values of shapre r*c
+ * 
+ * @param r rows
+ * @param c columns
+ * @return Matrix 
+*/
+Matrix RandMat(const uint & r, const uint & c);
 
-Matrix diag(const uint & dim, double * v);
-double * diag(const Matrix & m);
+Matrix diag(std::vector<double> v);
+Matrix diag(const Matrix& v);
 
 
 } // namespace MA

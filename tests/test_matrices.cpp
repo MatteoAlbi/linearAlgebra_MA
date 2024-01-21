@@ -453,11 +453,32 @@ TEST(Matrix, multiply_operator){
     EXPECT_THROW(m1*=m1, invalid_argument);
 }
 
-/*
 TEST(Matrix, concatenate_operators){
-    // TODO
+    Matrix m1(4,6,{ 14,   4, -16, -20, -3,  -4,
+                    17,  17, -16,   5,  6, -13,
+                    -2,  12,  -7,  15, -1,  -3,
+                    19,   4,  -3,   5, 16,  -9}); 
+    
+    // concatenate per rows
+    EXPECT_EQ(m1,
+        Matrix(1,6, {14,   4, -16, -20, -3,  -4}) |
+        Matrix(1,6, {17,  17, -16,   5,  6, -13}) |
+        Matrix(1,6, {-2,  12,  -7,  15, -1,  -3}) |
+        Matrix(1,6, {19,   4,  -3,   5, 16,  -9})
+    );
+
+    // concatenate per columns
+    EXPECT_EQ(m1,
+        Matrix(4,1, {14, 17, -2, 19}) &
+        Matrix(4,1, {4, 17, 12, 4}) &
+        Matrix(4,1, {-16, -16, -7, -3}) &
+        Matrix(4,1, {-20, 5, 15, 5}) &
+        Matrix(4,1, {-3, 6, -1, 16}) &
+        Matrix(4,1, { -4, -13, -3, -9})
+    );
 }
-*/
+
+
 
 TEST(Matrix, submat_del){
     Matrix m2;
@@ -504,14 +525,14 @@ TEST(Matrix, determinant){
     );
     
     // 1x1
-    EXPECT_EQ(m1({1,1},0).det(), 1);
-    EXPECT_EQ(m1({2,2},{1,1}).det(), 3);
+    EXPECT_DOUBLE_EQ(m1({1,1},0).det(), 1);
+    EXPECT_DOUBLE_EQ(m1({2,2},{1,1}).det(), 3);
     // 2x2
-    EXPECT_EQ(m1({1,2},{2,3}).det(), -56);
+    EXPECT_DOUBLE_EQ(m1({1,2},{2,3}).det(), -56);
     // 3x3
-    EXPECT_EQ(m1({1,3},{0,2}).det(), 110);
+    EXPECT_DOUBLE_EQ(m1({1,3},{0,2}).det(), 110);
     // 4x4
-    EXPECT_EQ(m1.det(), -376);
+    EXPECT_DOUBLE_EQ(m1.det(), -376);
 
     m1 = Matrix(4,4,
         {1,3,5,0,
@@ -519,10 +540,9 @@ TEST(Matrix, determinant){
          4,3,9,0,
          5,2,0,0}
     );
-    EXPECT_EQ(m1.det(), 0);
+    EXPECT_DOUBLE_EQ(m1.det(), 0);
 
 }
-
 
 TEST(Matrix, minor){
     Matrix m1(3,4,
@@ -541,9 +561,11 @@ TEST(Matrix, minor){
     double minor;
     EXPECT_NO_THROW(minor = m1.minor(1,1));
     EXPECT_DOUBLE_EQ(minor, -329.0);
+    EXPECT_NO_THROW(minor = m1.minor(2,1));
+    EXPECT_DOUBLE_EQ(minor, 94.0);
 }
 
-TEST(Matrix, cof){
+TEST(Matrix, cofactor){
     Matrix m1(3,4,
         {10,11,12,13,
          14,15,16,17,
@@ -560,17 +582,58 @@ TEST(Matrix, cof){
     double cofactor;
     EXPECT_NO_THROW(cofactor = m1.cof(1,1));
     EXPECT_DOUBLE_EQ(cofactor, -329.0);
+    EXPECT_NO_THROW(cofactor = m1.cof(2,1));
+    EXPECT_DOUBLE_EQ(cofactor, -94.0);
 }
 
-/*
-TEST(Matrix, cof_mat){
-    // TODO
+TEST(Matrix, cofactor_matrix){
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.cof_mat(), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+
+    Matrix m2;
+    EXPECT_NO_THROW(m2 = m1.cof_mat());
+    EXPECT_EQ(m2, Matrix(4,4,{
+        104, 235, -39, -110,
+        -16, -329, 53,   82,
+        -56, -94, -26,   52,
+        -48, 94,   18,  -36}));
+    
 }
 
 TEST(Matrix, adj){
-    // TODO
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.adj(), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+
+    Matrix m2;
+    EXPECT_NO_THROW(m2 = m1.adj());
+    EXPECT_EQ(m2, Matrix(4,4,{
+        104, 235, -39, -110,
+        -16, -329, 53,   82,
+        -56, -94, -26,   52,
+        -48, 94,   18,  -36}).t());
 }
-*/
 
 TEST(Matrix, inv){
     // not square
@@ -634,6 +697,7 @@ TEST(Matrix, pinv){
     EXPECT_NO_THROW(m2 = m1.pinv_right());
     EXPECT_EQ(m1*m2, IdMat(3));
 }
+
 
 
 TEST(Matrix, norm2){

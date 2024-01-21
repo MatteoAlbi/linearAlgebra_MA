@@ -20,6 +20,7 @@ TEST(Matrix, constructor_get) {
     EXPECT_EQ(m1.c(), (uint)2);
     EXPECT_EQ(m1.size(), (uint)4);
     EXPECT_NO_THROW(m1.v()[3]);
+    for(uint i=0; i<2; ++i) for(uint j=0; j<2; ++j) EXPECT_EQ(m1(i,j), 0);
 
     std::vector<double> v = {1,2,3,4,5,6};
     EXPECT_THROW(m1 = Matrix(4, 2, v), out_of_range);
@@ -27,31 +28,16 @@ TEST(Matrix, constructor_get) {
     EXPECT_EQ(m1.r(), (uint)2);
     EXPECT_EQ(m1.c(), (uint)3);
     EXPECT_EQ(m1.size(), (uint)6);
-    EXPECT_EQ(m1(0,0), 1);
-    EXPECT_EQ(m1(0,1), 2);
-    EXPECT_EQ(m1(0,2), 3);
-    EXPECT_EQ(m1(1,0), 4);
-    EXPECT_EQ(m1(1,1), 5);
-    EXPECT_EQ(m1(1,2), 6);
+    for(uint i=0, k=1; i<2; ++i, ++k) for(uint j=0; j<2; ++j, ++k) EXPECT_EQ(m1(i,j), k);
 
     EXPECT_NO_THROW(m2 = Matrix(m1));
     EXPECT_EQ(m1.r(), (uint)2);
     EXPECT_EQ(m1.c(), (uint)3);
     EXPECT_EQ(m1.size(), (uint)6);
-    EXPECT_EQ(m2(0,0), 1);
-    EXPECT_EQ(m2(0,1), 2);
-    EXPECT_EQ(m2(0,2), 3);
-    EXPECT_EQ(m2(1,0), 4);
-    EXPECT_EQ(m2(1,1), 5);
-    EXPECT_EQ(m2(1,2), 6);
+    for(uint i=0, k=1; i<2; ++i, ++k) for(uint j=0; j<2; ++j, ++k) EXPECT_EQ(m1(i,j), k);
 
     const double * tmp = m2.v();
-    EXPECT_EQ(tmp[0], 1);
-    EXPECT_EQ(tmp[1], 2);
-    EXPECT_EQ(tmp[2], 3);
-    EXPECT_EQ(tmp[3], 4);
-    EXPECT_EQ(tmp[4], 5);
-    EXPECT_EQ(tmp[5], 6);
+    for(uint i=0; i<6; ++i) EXPECT_EQ(tmp[i], i+1);
 }
 
 TEST(Matrix, access_operator){
@@ -476,6 +462,74 @@ TEST(Matrix, concatenate_operators){
         Matrix(4,1, {-3, 6, -1, 16}) &
         Matrix(4,1, { -4, -13, -3, -9})
     );
+}
+
+
+
+TEST(Matrix, IdMat){
+    Matrix m1;
+    
+    EXPECT_NO_THROW(m1 = IdMat(4));
+    EXPECT_EQ(m1.r(), (uint)4);
+    EXPECT_EQ(m1.c(), (uint)4);
+
+    for(uint i=0; i<4; ++i){
+        for(uint j=0; j<4; ++j){
+            if(i == j) EXPECT_EQ(m1(i,j), 1);
+            else EXPECT_EQ(m1(i,j), 0);
+        }
+    }
+}
+
+TEST(Matrix, Ones){
+    Matrix m1;
+    
+    EXPECT_NO_THROW(m1 = Ones(4,3));
+    EXPECT_EQ(m1.r(), (uint)4);
+    EXPECT_EQ(m1.c(), (uint)3);
+
+    for(uint i=0; i<4; ++i) for(uint j=0; j<3; ++j) EXPECT_EQ(m1(i,j), 1);
+}
+
+TEST(Matrix, RandMat){
+    Matrix m1;
+    
+    EXPECT_NO_THROW(m1 = RandMat(5,6));
+    EXPECT_EQ(m1.r(), (uint)5);
+    EXPECT_EQ(m1.c(), (uint)6);
+
+    const double * v = m1.v();
+    double tmp = v[0];
+    for(uint i=1; i<30; ++i){
+        EXPECT_TRUE(tmp != v[i]);
+        tmp = v[i];
+    }
+}
+
+TEST(Matrix, diag){
+    Matrix m1;
+    
+    EXPECT_NO_THROW(m1 = diag({1,2,3,4}));
+    EXPECT_EQ(m1.r(), (uint)4);
+    EXPECT_EQ(m1.c(), (uint)4);
+    for(uint i=0; i<4; ++i){
+        for(uint j=0; j<4; ++j){
+            if(i == j) EXPECT_EQ(m1(i,j), i + 1);
+            else EXPECT_EQ(m1(i,j), 0);
+        }
+    }
+
+    Matrix m2(1,4,{1,3,5,9});
+
+    EXPECT_NO_THROW(m1 = diag(m2));
+    EXPECT_EQ(m1.r(), (uint)4);
+    EXPECT_EQ(m1.c(), (uint)4);
+    for(uint i=0; i<4; ++i){
+        for(uint j=0; j<4; ++j){
+            if(i == j) EXPECT_EQ(m1(i,j), m2(i));
+            else EXPECT_EQ(m1(i,j), 0);
+        }
+    }
 }
 
 

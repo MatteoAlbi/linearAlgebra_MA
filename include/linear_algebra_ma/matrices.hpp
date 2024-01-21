@@ -578,6 +578,7 @@ Matrix operator*(const double& k, const Matrix& m);
 Matrix operator*(const Matrix& m1, const Matrix& m2);
 
 Matrix operator/(const Matrix& m, const double& k);
+Matrix operator/(const double& k, const Matrix& m);
 Matrix operator/(const Matrix& m1, const Matrix& m2);
 #pragma endregion operators
 

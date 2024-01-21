@@ -102,6 +102,7 @@ Matrix Matrix::operator()(uu_pair rs, uu_pair cs) const{
 }
 #pragma endregion access
 
+
 #pragma region assign
 Matrix& Matrix::operator=(const Matrix& m){
     if (this == &m) return *this;
@@ -127,6 +128,7 @@ Matrix& Matrix::operator=(Matrix const * const m){
 }
 #pragma endregion assign
 
+
 #pragma region comparators
 bool Matrix::operator==(const Matrix & m) const{
     // check shape
@@ -134,7 +136,7 @@ bool Matrix::operator==(const Matrix & m) const{
     if(this->c() != m.c()) return false;
     // check values
     for(uint i=0; i<m.r(); ++i) for(uint j=0; j<m.c(); ++j){
-        if( std::fabs((*this)(i,j) - m(i,j)) > Matrix::epsilon) return false;
+        if( std::abs((*this)(i,j) - m(i,j)) > Matrix::epsilon) return false;
     }
 
     return true;
@@ -152,6 +154,7 @@ bool Matrix::operator!=(const Matrix * const m) const{
     return ! this->operator==(*m);
 }
 #pragma endregion comparators
+
 
 #pragma region sum
 void Matrix::operator+=(const double & k){
@@ -195,6 +198,7 @@ Matrix operator+(const Matrix& m1, const Matrix& m2){
     return ret;
 }
 #pragma endregion sum
+
 
 #pragma region subtract
 void Matrix::operator-=(const double & k){
@@ -248,6 +252,7 @@ Matrix operator-(const Matrix& m1, const Matrix& m2){
 }
 #pragma endregion subtract
 
+
 #pragma region multiply
 void Matrix::operator*=(const double & k){
     for(uint i=0; i<this->_r; ++i){
@@ -293,6 +298,7 @@ Matrix operator*(const Matrix& m1, const Matrix& m2){
 }
 #pragma endregion multiply
 
+
 #pragma region divide
 void Matrix::operator/=(const double & k){
     for(uint i=0; i<this->_r; ++i){
@@ -313,11 +319,18 @@ Matrix operator/(const Matrix& m, const double& k){
     return ret;
 }
 
+Matrix operator/(const double& k, const Matrix& m){
+    if(m.r() == m.c()) return m.inv() * k;
+    else if(m.r() > m.c()) return m.pinv_left() * k;
+    else return m.pinv_right() * k;
+}
+
 Matrix operator/(const Matrix& m1, const Matrix& m2){
     return Matrix::matrix_r_divide(m1,m2);
 }
 
 #pragma endregion divide
+
 
 #pragma region concatenate
 void Matrix::operator&=(const Matrix & m){

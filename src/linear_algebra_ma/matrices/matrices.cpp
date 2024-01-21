@@ -324,10 +324,11 @@ Matrix Matrix::inv() const{
 }
 
 Matrix Matrix::pinv_left() const{
+    if(_c > _r) throw std::invalid_argument("Matrix must be full column rank");
     try{
         Matrix tmp = this->t() * *this;
         double det = tmp.det();
-        if(det < Matrix::epsilon) {
+        if(std::abs(det) < Matrix::epsilon) {
             std::cout << "Matrix is bad conditioned, det = " << det << "; this may result in bad numerical result" << std::endl;
         }
         return tmp.inv() * this->t();
@@ -343,10 +344,11 @@ Matrix Matrix::pinv_left() const{
 }
 
 Matrix Matrix::pinv_right() const{
+    if(_r > _c) throw std::invalid_argument("Matrix must be full row rank");
     try{
         Matrix tmp = (*this * this->t());
         double det = tmp.det();
-        if(det < Matrix::epsilon) {
+        if(std::abs(det) < Matrix::epsilon) {
             std::cout << "Matrix is bad conditioned, det = " << det << "; this may result in bad numerical result" << std::endl;
         }
         return this->t() * tmp.inv();
@@ -557,9 +559,9 @@ uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
         uint max_index = i;
         for (uint j = i; j < _r; ++j){ // scroll rows
             // find max value
-            if(u_max < std::fabs(U(j,i))){
+            if(u_max < std::abs(U(j,i))){
                 max_index = j;
-                u_max = std::fabs(U(j,i));
+                u_max = std::abs(U(j,i));
             }
         }
         // if max value is zero we can skip this iteration

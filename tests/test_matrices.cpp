@@ -208,26 +208,6 @@ TEST(Matrix, set) {
     }
 }
 
-TEST(Matrix, is_vec){
-    EXPECT_FALSE(
-        Matrix(2,3,
-            {10,11,13,
-            14,15,17}
-        ).is_vec()
-    );
-    EXPECT_TRUE(
-        Matrix(1,3,
-            {10,11,13}
-        ).is_vec()
-    );
-    EXPECT_TRUE(
-        Matrix(3,1,
-            {10,11,13}
-        ).is_vec()
-    );
-
-}
-
 TEST(Matrix, reshape){
     Matrix m1(4,4,
         {10,11,12,13,
@@ -278,7 +258,7 @@ TEST(Matrix, swap){
     ));
 }
 
-TEST(Matrix, to_rc_vec){
+TEST(Matrix, to_vec){
     Matrix m1(2,3,{10,11,13,14,15,17});
     Matrix m2(1,6,{10,11,13,14,15,17});
     Matrix m3(6,1,{10,11,13,14,15,17});
@@ -543,30 +523,6 @@ TEST(Matrix, determinant){
 
 }
 
-TEST(Matrix, is_sing){
-    Matrix m1(3,4,
-        {10,11,12,13,
-         14,15,16,17,
-         18,19,20,21}
-    );
-    EXPECT_THROW(m1.det(), invalid_argument);
-
-    m1 = Matrix(4,4,
-        {1,3,5,9,
-         1,3,1,7,
-         4,3,9,7,
-         5,2,0,9}
-    );
-    EXPECT_FALSE(m1.is_sing());
-
-    m1 = Matrix(3,3,
-        {1,1,0,
-         1,2,1,
-         1,3,2}
-    );
-    EXPECT_TRUE(m1.is_sing());
-}
-
 /*
 TEST(Matrix, minor){
     // TODO
@@ -625,7 +581,6 @@ TEST(Matrix, inv){
     EXPECT_EQ(m1.inv(), res/376);
 
 }
-
 
 TEST(Matrix, pinv){
     Matrix m1(4,3,
@@ -691,6 +646,50 @@ TEST(Matrix, normalize_self){
 }
 
 
+
+TEST(Matrix, is_sing){
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.det(), invalid_argument);
+
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_FALSE(m1.is_sing());
+
+    m1 = Matrix(3,3,
+        {1,1,0,
+         1,2,1,
+         1,3,2}
+    );
+    EXPECT_TRUE(m1.is_sing());
+}
+
+TEST(Matrix, is_vec){
+    EXPECT_FALSE(
+        Matrix(2,3,
+            {10,11,13,
+            14,15,17}
+        ).is_vec()
+    );
+    EXPECT_TRUE(
+        Matrix(1,3,
+            {10,11,13}
+        ).is_vec()
+    );
+    EXPECT_TRUE(
+        Matrix(3,1,
+            {10,11,13}
+        ).is_vec()
+    );
+
+}
 
 TEST(Matrix, is_upper_triang){
     Matrix m1(4,4,
@@ -1064,11 +1063,9 @@ TEST(Matrix, divide_operator){
          0,0,0,0}
     );
     EXPECT_THROW(b / C, runtime_error);
-
     // solution
     EXPECT_NO_THROW(C = b/A);
     EXPECT_EQ(C*A, b);
-
     // shape doesn't match
     EXPECT_THROW((b(0,{1,3})/=A), invalid_argument);
     // underdetermined
@@ -1079,12 +1076,18 @@ TEST(Matrix, divide_operator){
          0,0,0,0}
     );
     EXPECT_THROW(b/=C, runtime_error);
-
     // solution
     C = b;
     EXPECT_NO_THROW(C /= A);
     EXPECT_EQ(C*A, b);
 
+    // division double by matrix
+    EXPECT_NO_THROW(C = 2.5/A);
+    EXPECT_EQ(C*A, 2.5*IdMat(4));
+    EXPECT_NO_THROW(C = 2.5/A(ALL, {1,3}));
+    EXPECT_EQ(C*A(ALL, {1,3}), 2.5*IdMat(3));
+    EXPECT_NO_THROW(C = 2.5/A({1,3}, ALL));
+    EXPECT_EQ(A({1,3}, ALL)*C, 2.5*IdMat(3));
 }
 
 TEST(Matrix, solve_ls){

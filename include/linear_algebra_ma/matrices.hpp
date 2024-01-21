@@ -366,12 +366,18 @@ public:
     Matrix inv() const;
 
     /**
-     * @brief compute left pseudo-inverse of the matrix 
-     * using ((A'*A)^-1)*A'with A' transpose of A
+     * @brief compute left pseudo-inverse of the matrix
      * 
      * @return Matrix: left pseudo-inverse
      */
     Matrix pinv_left() const;
+
+    /**
+     * @brief compute right pseudo-inverse of the matrix
+     * 
+     * @return Matrix: right pseudo-inverse
+     */
+    Matrix pinv_right() const;
 
     /**
      * @brief return norm2: sqrt(sum(v(i)^2)) of the given vector

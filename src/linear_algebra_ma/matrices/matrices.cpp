@@ -325,7 +325,31 @@ Matrix Matrix::inv() const{
 
 Matrix Matrix::pinv_left() const{
     try{
-        return (this->t() * (*this)).inv() * this->t();
+        Matrix tmp = this->t() * *this;
+        double det = tmp.det();
+        if(det < Matrix::epsilon) {
+            std::cout << "Matrix is bad conditioned, det = " << det << "; this may result in bad numerical result" << std::endl;
+        }
+        return tmp.inv() * this->t();
+    }
+    catch(const std::runtime_error& rte){
+        std::cerr << rte.what() << '\n';
+        throw std::runtime_error("Matrix (m.t * m) not invertible");
+    }
+    catch(const std::exception& e){
+        std::cerr << e.what() << '\n';
+        throw std::runtime_error("Unknown error occured");
+    }
+}
+
+Matrix Matrix::pinv_right() const{
+    try{
+        Matrix tmp = (*this * this->t());
+        double det = tmp.det();
+        if(det < Matrix::epsilon) {
+            std::cout << "Matrix is bad conditioned, det = " << det << "; this may result in bad numerical result" << std::endl;
+        }
+        return this->t() * tmp.inv();
     }
     catch(const std::runtime_error& rte){
         std::cerr << rte.what() << '\n';

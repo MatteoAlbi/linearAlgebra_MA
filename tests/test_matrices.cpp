@@ -626,11 +626,28 @@ TEST(Matrix, inv){
 
 }
 
-/*
-TEST(Matrix, pinv_left){
-    // TODO
+
+TEST(Matrix, pinv){
+    Matrix m1(4,3,
+        {1,3,4,
+         2,0,2,
+         1,-2,2,
+         1,-3,2}
+    );
+    Matrix m2;
+
+    EXPECT_NO_THROW(m2 = m1.pinv_left());
+    EXPECT_EQ(m2*m1, IdMat(3));
+
+    m1 = Matrix(3,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2});
+
+    EXPECT_NO_THROW(m2 = m1.pinv_right());
+    EXPECT_EQ(m1*m2, IdMat(3));
 }
-*/
+
 
 TEST(Matrix, norm2){
     Matrix m1(4,4,

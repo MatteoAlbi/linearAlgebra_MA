@@ -7,7 +7,7 @@ using std::cout, std::endl, std::string;
 using std::invalid_argument, std::runtime_error, std::out_of_range;
 
 
-TEST(Matrix, constructor_get) {
+TEST(Matrix, constructor_getter) {
     EXPECT_NO_THROW(Matrix());
     Matrix m1, m2;
     EXPECT_EQ(m1.r(), (uint)0);
@@ -106,7 +106,7 @@ TEST(Matrix, access_operator){
     EXPECT_EQ(m1({1,2},{0,3}), Matrix(2,4,{14,15,16,17,18,19,20,21}));
 }
 
-TEST(Matrix, set) {
+TEST(Matrix, setter) {
     Matrix m1(4,4,
         {10,11,12,13,
          14,15,16,17,

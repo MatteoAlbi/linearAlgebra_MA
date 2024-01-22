@@ -4,6 +4,7 @@ namespace MA
 {
 
 #pragma region access
+
 double& Matrix::operator()(const uint & r, const uint & c){
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
@@ -100,72 +101,53 @@ Matrix Matrix::operator()(uu_pair rs, uu_pair cs) const{
 
     return ret;
 }
+
 #pragma endregion access
 
 
 #pragma region assign
-Matrix& Matrix::operator=(const Matrix& m){
-    if (this == &m) return *this;
 
-    // set dimensions
-    uint prev_size = this->size();
-    this->_r = m._r;
-    this->_c = m._c;
-
-    // redimension
-    if(prev_size != this->size()){
-        if(this->_v != nullptr) delete[] this->_v;
-        this->_v = new double[this->size()];
-    }
-    // set values
-    std::copy(m._v, m._v + m.size(), this->_v);
-
+Matrix& Matrix::operator=(Matrix m){
+    swap(*this, m);
     return *this;
 }
 
-Matrix& Matrix::operator=(Matrix const * const m){
-    return this->operator=(*m);
-}
 #pragma endregion assign
 
 
 #pragma region comparators
-bool Matrix::operator==(const Matrix & m) const{
+
+bool operator==(const Matrix & m1, const Matrix & m2) {
     // check shape
-    if(this->r() != m.r()) return false;
-    if(this->c() != m.c()) return false;
+    if(m1.r() != m2.r()) return false;
+    if(m1.c() != m2.c()) return false;
     // check values
-    for(uint i=0; i<m.r(); ++i) for(uint j=0; j<m.c(); ++j){
-        if( std::abs((*this)(i,j) - m(i,j)) > Matrix::epsilon) return false;
+    for(uint i=0; i<m1.r(); ++i) for(uint j=0; j<m1.c(); ++j){
+        if( abs(m1(i,j) - m2(i,j)) > Matrix::epsilon) return false;
     }
 
     return true;
 }
 
-bool Matrix::operator==(const Matrix * const m) const{
-    return this->operator==(*m);
+bool operator!=(const Matrix & m1, const Matrix & m2){
+    return ! (m1==m2);
 }
 
-bool Matrix::operator!=(const Matrix & m) const{
-    return ! this->operator==(m);
-}
-
-bool Matrix::operator!=(const Matrix * const m) const{
-    return ! this->operator==(*m);
-}
 #pragma endregion comparators
 
 
 #pragma region sum
-void Matrix::operator+=(const double & k){
+
+Matrix& Matrix::operator+=(const double & k){
     for(uint i=0; i<this->_r; ++i){
         for(uint j=0; j<this->_c; ++j){
             this->operator()(i,j) += k;
         }
     }
+    return *this;
 }
 
-void Matrix::operator+=(const Matrix & m){
+Matrix& Matrix::operator+=(const Matrix & m){
     if(this->_r != m._r || this->_c != m._c) throw std::invalid_argument("Matrices' shapes don't match");
     
     for(uint i=0; i<this->_r; ++i){
@@ -173,6 +155,7 @@ void Matrix::operator+=(const Matrix & m){
             this->operator()(i,j) += m(i,j);
         }
     }
+    return *this;
 }
 
 Matrix operator+(const Matrix& m, const double& k){
@@ -197,19 +180,22 @@ Matrix operator+(const Matrix& m1, const Matrix& m2){
 
     return ret;
 }
+
 #pragma endregion sum
 
 
 #pragma region subtract
-void Matrix::operator-=(const double & k){
+
+Matrix& Matrix::operator-=(const double & k){
     for(uint i=0; i<this->_r; ++i){
         for(uint j=0; j<this->_c; ++j){
             this->operator()(i,j) -= k;
         }
     }
+    return *this;
 }
 
-void Matrix::operator-=(const Matrix & m){
+Matrix& Matrix::operator-=(const Matrix & m){
     if(this->_r != m._r || this->_c != m._c) throw std::invalid_argument("Matrices' shapes don't match");
     
     for(uint i=0; i<this->_r; ++i){
@@ -217,6 +203,7 @@ void Matrix::operator-=(const Matrix & m){
             this->operator()(i,j) -= m(i,j);
         }
     }
+    return *this;
 }
 
 Matrix operator-(const Matrix& m){
@@ -250,20 +237,24 @@ Matrix operator-(const Matrix& m1, const Matrix& m2){
 
     return ret;
 }
+
 #pragma endregion subtract
 
 
 #pragma region multiply
-void Matrix::operator*=(const double & k){
+
+Matrix& Matrix::operator*=(const double & k){
     for(uint i=0; i<this->_r; ++i){
         for(uint j=0; j<this->_c; ++j){
             this->operator()(i,j) *= k;
         }
     }
+    return *this;
 }
 
-void Matrix::operator*=(const Matrix & m){
+Matrix& Matrix::operator*=(const Matrix & m){
     this->operator=((*this) * m);
+    return *this;
 }
 
 Matrix operator*(const Matrix& m, const double& k){
@@ -296,20 +287,24 @@ Matrix operator*(const Matrix& m1, const Matrix& m2){
 
     return ret;
 }
+
 #pragma endregion multiply
 
 
 #pragma region divide
-void Matrix::operator/=(const double & k){
+
+Matrix& Matrix::operator/=(const double & k){
     for(uint i=0; i<this->_r; ++i){
         for(uint j=0; j<this->_c; ++j){
             this->operator()(i,j) /= k;
         }
     }
+    return *this;
 }
 
-void Matrix::operator/=(const Matrix & m){
+Matrix& Matrix::operator/=(const Matrix & m){
    this->operator=((*this) / m);
+   return *this;
 }
 
 Matrix operator/(const Matrix& m, const double& k){
@@ -333,12 +328,10 @@ Matrix operator/(const Matrix& m1, const Matrix& m2){
 
 
 #pragma region concatenate
-void Matrix::operator&=(const Matrix & m){
-    this->operator=((*this) & m);
-}
 
-void Matrix::operator|=(const Matrix & m){
-    this->operator=((*this) | m);
+Matrix& Matrix::operator&=(const Matrix & m){
+    this->operator=((*this) & m);
+    return *this;
 }
 
 Matrix operator&(const Matrix& m1, const Matrix& m2){
@@ -356,6 +349,11 @@ Matrix operator&(const Matrix& m1, const Matrix& m2){
     return ret;
 }
 
+Matrix& Matrix::operator|=(const Matrix & m){
+    this->operator=((*this) | m);
+    return *this;
+}
+
 Matrix operator|(const Matrix& m1, const Matrix& m2){
     if(m1.c() != m2.c()) throw std::invalid_argument("Matrices must have same number of columns");
 
@@ -370,8 +368,11 @@ Matrix operator|(const Matrix& m1, const Matrix& m2){
 
     return ret;
 }
+
 #pragma endregion concatenate
 
+
+#pragma region output
 
 std::ostream& operator<<(std::ostream& os, const Matrix& m){
     os << "Matrix(" << m.r() << "x" << m.c() << ")" << std::endl;
@@ -386,30 +387,11 @@ std::ostream& operator<<(std::ostream& os, const Matrix& m){
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const Matrix * m){
-    os << "Matrix(" << m->r() << "x" << m->c() << ")" << std::endl;
-    for(uint i=0; i<m->r(); ++i){
-        if(i>0) os << std::endl;
-        for(uint j=0; j<m->c(); ++j){
-            if(j>0) os << " ";
-            os << m->operator()(i,j);
-        }
-    }
-    
-    return os;
-}
-
 std::ostream& operator<<(std::ostream& os, const uu_pair & p){
     os << "Pair(" << p.first << "; " << p.second << ")";
     return os;
 }
 
-std::ostream& operator<<(std::ostream& os, const uu_pair * p){
-    os << "Pair(" << p->first << "; " << p->second << ")";
-    return os;
-}
-
+#pragma endregion output
 
 } // namespace MA
-
-

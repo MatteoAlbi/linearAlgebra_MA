@@ -33,12 +33,13 @@ protected:
     inline static std::uniform_real_distribution<double> unif{0.0, 1.0};
     inline static std::default_random_engine re;
 
-    uint _r;
-    uint _c;
-    double * _v;
+    uint _r; // rows
+    uint _c; // columns
+    double * _v; // vector storing the elements per rows
 
 public:
 
+#pragma region static_methods
     /**
      * @brief set the double precision used in comparison
      * @param dp number of digits considered during comparison
@@ -53,25 +54,56 @@ public:
      * @brief get the double precision used in comparison
      * @return margin of error considered during comparison
      */
-    inline static double get_epsilon(){ 
-        return Matrix::epsilon; 
-    }
-
-    /**
-     * @brief generate a random number using the internally set seed
-     * @return random number in range 0..1
-     */
-    inline static double rand(){
-        return unif(re);
+    inline static uint get_double_precision(){ 
+        return Matrix::double_precision; 
     }
     
 
 #pragma region constructor_destructor
+    /**
+     * @brief empty constructor, rows and columns are set to 0 
+     *      and v is set to nullptr 
+    */
     Matrix();
+
+    /**
+     * @brief construct a r x c matrix with all elements 
+     *      initialized to zero.
+     * @param r number of rows
+     * @param c number of columns
+    */
     Matrix(const uint & r, const uint & c);
+
+    /**
+     * @brief construct a r x c matrix using v to initialize
+     *      the elements (per rows).
+     * @param r number of rows
+     * @param c number of columns
+     * @param v vector used to init the matrix
+    */
     Matrix(const uint & r, const uint & c, std::vector<double> v);
+
+    /**
+     * @brief copy constructor
+     * @param m matrix to copy
+    */
     Matrix(Matrix & m);
+
+    /**
+     * @brief const copy constructor
+     * @param m matrix to copy
+    */
     Matrix(const Matrix & m);
+
+    /**
+     * @brief move constructor
+    */
+    Matrix(Matrix && m) noexcept;
+
+    /**
+     * @brief destructor, makes sure to free the memory
+     *      allocated for v
+    */
     ~Matrix();
 #pragma endregion constructor_destructor
 
@@ -92,11 +124,26 @@ public:
      */
     const double& operator()(const uint & r, const uint & c) const;
 
+    /**
+     * @brief if the object is a vector, access the i-th element,
+     * if the object is a matrix, access the i-th element on the diagonal.
+     * The returned value is a modifiable reference.
+     * @param i index of access
+     * @return element of the object
+    */
     double& operator()(const uint & i);
+
+    /**
+     * @brief if the object is a vector, access the i-th element,
+     * if the object is a matrix, access the i-th element on the diagonal.
+     * The returned value is a constant refrence.
+     * @param i index of access
+     * @return element of the object
+    */
     const double& operator()(const uint & i) const;
-    Matrix operator()(uu_pair rs, const uint & c) const;
-    Matrix operator()(const uint & r, uu_pair cs) const;
-    Matrix operator()(uu_pair rs, uu_pair cs) const;
+    Matrix operator()(std::pair<uint,uint> rs, const uint & c) const;
+    Matrix operator()(const uint & r, std::pair<uint,uint> cs) const;
+    Matrix operator()(std::pair<uint,uint> rs, std::pair<uint,uint> cs) const;
     Matrix& operator=(const Matrix& m);
     Matrix& operator=(Matrix const * const m);
 
@@ -191,7 +238,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void set(uu_pair rs, uu_pair cs, Matrix m);
+    void setV(std::pair<uint,uint> rs, std::pair<uint,uint> cs, Matrix m);
 
     /**
      * @brief check if matrix is a vector
@@ -210,22 +257,16 @@ public:
     Matrix reshape(const uint & r, const uint & c) const;
 
     /**
-     * @brief rehsape matrix into column vec
-     * @return Matrix: column vec
-     */
-    Matrix to_c_vec() const;
+     * @brief extract diagonal of the matrix
+     * @return vector (matrix with dim n,1) containing the diagonal elements
+    */
+    Matrix diag() const;
 
     /**
      * @brief rehsape matrix into row vec
      * @return Matrix: row vec
      */
     Matrix to_r_vec() const;
-
-    /**
-     * @brief extract diagonal of the matrix
-     * @return vector (matrix with dim n,1) containing the diagonal elements
-    */
-    Matrix diag() const;
 
     /**
      * @brief swap the given rows of the matrix
@@ -242,8 +283,6 @@ public:
      * @throw invalid argument if c1 or c2 exceeds the matric column indeces
      */
     void swap_cols(const uint & c1, const uint & c2);
-
-
 #pragma endregion get_set
 
 #pragma region comparators
@@ -256,15 +295,19 @@ public:
 
 #pragma region math_operators
     void operator+=(const double & k);
+    void operator+=(const int & k);
     void operator+=(const Matrix & m);
 
     void operator-=(const double & k);
+    void operator-=(const int & k);
     void operator-=(const Matrix & m);
 
     void operator*=(const double & k);
+    void operator*=(const int & k);
     void operator*=(const Matrix & m);
     
     void operator/=(const double & k);
+    void operator/=(const int & k);
     void operator/=(const Matrix & m);
 #pragma endregion math_operators
 
@@ -272,19 +315,46 @@ public:
      * @brief concatenate matrices per columns
      * @param m matrix to concatenate
      */
-    void operator&=(const Matrix & m);
+    Matrix& operator&=(const Matrix & m);
+
+    /**
+     * @brief concatenates matrices per columns
+     * 
+     * @param m1 first matrix
+     * @param m2 second matrix
+     * @return Matrix 
+     */
+    friend Matrix operator&(const Matrix& m1, const Matrix& m2);
 
     /**
      * @brief concatenate matrices per rows
      * @param m matrix to concatenate
      */
-    void operator|=(const Matrix & m);
-    
+    Matrix& operator|=(const Matrix & m);
+
     /**
-     * @brief compute transpose
-     * @return Matrix: transpose
+     * @brief concatenates matrices per rows
+     * 
+     * @param m1 first matrix
+     * @param m2 second matrix
+     * @return Matrix
      */
-    Matrix t() const;
+    friend Matrix operator|(const Matrix& m1, const Matrix& m2);
+
+#pragma endregion operators
+
+#pragma region vector
+    /**
+     * @brief reshape matrix into column vec
+     * @return Matrix: column vec
+     */
+    Matrix to_c_vec() const;
+
+    /**
+     * @brief reshape matrix into row vec
+     * @return Matrix: row vec
+     */
+    Matrix to_r_vec() const;
 
     /**
      * @brief computes dot product this.v
@@ -302,6 +372,70 @@ public:
     Matrix cross(const Matrix & v) const;
 
     /**
+     * @brief return norm2: sqrt(sum(v(i)^2)) of the given vector
+     * 
+     * @return double: norm2 of the vector
+     */
+    double norm2() const;
+
+        /**
+     * @brief return the normalized vector
+     * 
+     * @return Matrix: normalized vector (matrix with one dim=1)
+     */
+    Matrix normalize() const;
+
+    /**
+     * @brief normalized the vector, modifying current object
+     * 
+     */
+    void normalize_self();
+#pragma endregion vector
+
+#pragma region checks
+    /**
+     * @brief check if matrix is a vector
+     * i.e. one of the dimension is 1
+     * @return true if is at least one dim is == 1
+     */
+    bool is_vec() const;
+
+    /**
+     * @brief test if the given matrix is singular
+     * matrix must be square
+     * @return bool: true if it's singular
+     */
+    bool is_sing() const;
+
+    /**
+     * @brief return true if the matrix is upper triangular
+     */
+    bool is_upper_triang() const;
+    
+    /**
+     * @brief return true if the matrix is lower triangular
+     */
+    bool is_lower_triang() const;
+
+    /**
+     * @brief return true if the matrix is an upper hessenberg matrix
+     */
+    bool is_upper_hessenberg() const;
+
+    /**
+     * @brief return true if the matrix is an lower hessenberg matrix
+     */
+    bool is_lower_hessenberg() const;
+#pragma endregion checks
+
+#pragma region matrix_operations
+    /**
+     * @brief compute transpose
+     * @return Matrix: transpose
+     */
+    Matrix t() const;
+
+    /**
      * @brief compute submatrix matrix obtained by deleting
      * the p-th row and q-t column
      * 
@@ -317,13 +451,6 @@ public:
      * @return double: determinant
      */
     double det() const;
-
-    /**
-     * @brief test if the given matrix is singular
-     * matrix must be square
-     * @return bool: true if it's singular
-     */
-    bool is_sing() const;
 
     /**
      * @brief computes minor of the matrix wrt row p and column q
@@ -380,14 +507,7 @@ public:
     Matrix pinv_right() const;
 
     /**
-     * @brief return norm2: sqrt(sum(v(i)^2)) of the given vector
-     * 
-     * @return double: norm2 of the vector
-     */
-    double norm2() const;
-
-    /**
-     * @brief return the normalized vector
+     * @brief compute right pseudo-inverse of the matrix
      * 
      * @return Matrix: normalized vector (matrix with one dim=1)
      */
@@ -409,15 +529,6 @@ public:
      */
     bool is_lower_triang() const;
 
-    /**
-     * @brief return true if the matrix is an upper hessenberg matrix
-     */
-    bool is_upper_hessenberg() const;
-
-    /**
-     * @brief return true if the matrix is an lower hessenberg matrix
-     */
-    bool is_lower_hessenberg() const;
 
 
 #pragma region decomposition_methods
@@ -558,29 +669,27 @@ public:
 
 };
 
-#pragma region operators
+// cout operators
 std::ostream& operator<<(std::ostream& os, const Matrix& m);
 std::ostream& operator<<(std::ostream& os, const Matrix * m);
-std::ostream& operator<<(std::ostream& os, const uu_pair & p);
-std::ostream& operator<<(std::ostream& os, const uu_pair * p);
 
+#pragma region math_operators
 Matrix operator+(const Matrix& m, const double& k);
-Matrix operator+(const double& k, const Matrix& m);
+Matrix operator+(const Matrix& m, const int & k);
 Matrix operator+(const Matrix& m1, const Matrix& m2);
 
-Matrix operator-(const Matrix& m);
 Matrix operator-(const Matrix& m, const double& k);
-Matrix operator-(const double& k, const Matrix& m);
+Matrix operator-(const Matrix& m, const int & k);
 Matrix operator-(const Matrix& m1, const Matrix& m2);
 
 Matrix operator*(const Matrix& m, const double& k);
-Matrix operator*(const double& k, const Matrix& m);
+Matrix operator*(const Matrix& m, const int & k);
 Matrix operator*(const Matrix& m1, const Matrix& m2);
 
 Matrix operator/(const Matrix& m, const double& k);
-Matrix operator/(const double& k, const Matrix& m);
+Matrix operator/(const Matrix& m, const int & k);
 Matrix operator/(const Matrix& m1, const Matrix& m2);
-#pragma endregion operators
+#pragma endregion math_operators
 
 /**
  * @brief concatenates matrices per columns
@@ -620,17 +729,9 @@ Matrix IdMat(const uint & dim);
  */
 Matrix Ones(const uint & r, const uint & c);
 
-/**
- * @brief create matrix with random values of shapre r*c
- * 
- * @param r rows
- * @param c columns
- * @return Matrix 
-*/
-Matrix RandMat(const uint & r, const uint & c);
 
-Matrix diag(std::vector<double> v);
-Matrix diag(const Matrix& v);
+Matrix diag(const uint & dim, double * v);
+double * diag(const Matrix & m);
 
 
 } // namespace MA

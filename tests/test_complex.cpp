@@ -6,7 +6,7 @@ using namespace MA;
 using std::cout, std::endl, std::string;
 using std::invalid_argument, std::runtime_error, std::out_of_range;
 
-TEST(ComplexTest, Construction) {
+TEST(ComplexTest, constructor_getter) {
     // Test default constructor
     MA::Complex default_complex;
     EXPECT_EQ(default_complex.real(), 0.0);
@@ -24,7 +24,7 @@ TEST(ComplexTest, Construction) {
     EXPECT_EQ(pair_complex.imag(), -1.0);
 }
 
-TEST(ComplexTest, Assignment) {
+TEST(ComplexTest, assignment) {
     MA::Complex complex1(2.0, 3.0);
     MA::Complex complex2;
 
@@ -45,7 +45,7 @@ TEST(ComplexTest, Assignment) {
     delete complex_ptr;
 }
 
-TEST(ComplexTest, GetterSetter) {
+TEST(ComplexTest, getter_setter) {
     MA::Complex complex(2.0, 3.0);
 
     // Test real getter and setter
@@ -63,7 +63,7 @@ TEST(ComplexTest, GetterSetter) {
     EXPECT_EQ(complex.imag(), 3.0);
 }
 
-TEST(ComplexTest, Magnitude) {
+TEST(ComplexTest, magnitude) {
     MA::Complex complex(3.0, 4.0);
     EXPECT_EQ(complex.magnitude(), 5.0);
 
@@ -76,12 +76,12 @@ TEST(ComplexTest, Magnitude) {
     EXPECT_EQ(imag_part_complex.magnitude(), 2.5);
 }
 
-TEST(ComplexTest, Conjugate) {
+TEST(ComplexTest, conjugate) {
     MA::Complex complex(2.0, -3.0);
     EXPECT_EQ(complex.conj(), Complex(2.0, 3.0));
 }
 
-TEST(ComplexTest, Equality) {
+TEST(ComplexTest, equal_operator) {
     MA::Complex complex1(2.0, 3.0);
     MA::Complex complex2(2.0, 3.0);
     MA::Complex complex3(4.0, 5.0);
@@ -91,7 +91,7 @@ TEST(ComplexTest, Equality) {
     EXPECT_TRUE(Complex() == 0.0);
 }
 
-TEST(ComplexTest, Inequality) {
+TEST(ComplexTest, unequal_operator) {
     MA::Complex complex1(2.0, 3.0);
     MA::Complex complex2(2.0, 3.0);
     MA::Complex complex3(4.0, 5.0);
@@ -101,7 +101,7 @@ TEST(ComplexTest, Inequality) {
     EXPECT_FALSE(Complex() != 0.0);
 }
 
-TEST(ComplexTest, Addition) {
+TEST(ComplexTest, sum_operator) {
     MA::Complex complex1(2.0, 3.0);
     MA::Complex complex2(4.0, 5.0);
 
@@ -120,7 +120,7 @@ TEST(ComplexTest, Addition) {
     EXPECT_EQ(complex1, Complex(4.5, 3.0));
 }
 
-TEST(ComplexTest, Subtraction) {
+TEST(ComplexTest, subtract_operator) {
     MA::Complex complex1(5.0, 8.0);
     MA::Complex complex2(2.0, 3.0);
 
@@ -142,7 +142,7 @@ TEST(ComplexTest, Subtraction) {
     EXPECT_EQ(complex2, Complex(-1.0, 3.0));
 }
 
-TEST(ComplexTest, Multiplication) {
+TEST(ComplexTest, multiply_operator) {
     MA::Complex complex1(2.0, 3.0);
     MA::Complex complex2(4.0, 5.0);
 
@@ -161,7 +161,7 @@ TEST(ComplexTest, Multiplication) {
     EXPECT_EQ(complex1, Complex(5.0, 7.5));
 }
 
-TEST(ComplexTest, Division) {
+TEST(ComplexTest, divide_operator) {
     MA::Complex complex1(10.0, 5.0);
     MA::Complex complex2(2.0, 3.0);
 
@@ -190,7 +190,7 @@ TEST(ComplexTest, Division) {
     EXPECT_THROW(complex1 /= 0.0, runtime_error);
 }
 
-TEST(ComplexTest, OutputOperator) {
+TEST(ComplexTest, output_operator) {
     // Test output stream operator for Complex
     MA::Complex complex1(2.0, 3.0);
     ::testing::internal::CaptureStdout();

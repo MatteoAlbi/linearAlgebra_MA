@@ -123,7 +123,7 @@ bool operator==(const Matrix & m1, const Matrix & m2) {
     if(m1.c() != m2.c()) return false;
     // check values
     for(uint i=0; i<m1.r(); ++i) for(uint j=0; j<m1.c(); ++j){
-        if( std::abs(m1(i,j) - m2(i,j)) > Matrix::epsilon) return false;
+        if( abs(m1(i,j) - m2(i,j)) > Matrix::epsilon) return false;
     }
 
     return true;

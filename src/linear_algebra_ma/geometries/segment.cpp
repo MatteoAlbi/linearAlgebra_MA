@@ -57,7 +57,7 @@ double Segment::distance(const Point & p) const{
     double seg_length = this->length();
     if(seg_length == 0) return _p2.distance(p);
 
-    return std::abs((_p2.x() - _p1.x()) * (_p1.y() - p.y()) - 
+    return abs((_p2.x() - _p1.x()) * (_p1.y() - p.y()) - 
                 (_p2.y() - _p1.y()) * (_p1.x() - p.x())) 
                 / seg_length;
 }

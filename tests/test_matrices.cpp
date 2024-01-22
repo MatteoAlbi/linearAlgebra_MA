@@ -8,36 +8,67 @@ using std::invalid_argument, std::runtime_error, std::out_of_range;
 
 
 TEST(Matrix, constructor_getter) {
+    // empty constructor
     EXPECT_NO_THROW(Matrix());
-    Matrix m1, m2;
-    EXPECT_EQ(m1.r(), (uint)0);
-    EXPECT_EQ(m1.c(), (uint)0);
-    EXPECT_EQ(m1.size(), (uint)0);
-    EXPECT_EQ(m1.v(), nullptr);
+    Matrix empty{};
+    EXPECT_EQ(empty.r(), (uint)0);
+    EXPECT_EQ(empty.c(), (uint)0);
+    EXPECT_EQ(empty.v(), nullptr);
 
-    EXPECT_NO_THROW(m1 = Matrix(2,2));
-    EXPECT_EQ(m1.r(), (uint)2);
-    EXPECT_EQ(m1.c(), (uint)2);
-    EXPECT_EQ(m1.size(), (uint)4);
-    EXPECT_NO_THROW(m1.v()[3]);
-    for(uint i=0; i<2; ++i) for(uint j=0; j<2; ++j) EXPECT_EQ(m1(i,j), 0);
+    // zeros initialization
+    EXPECT_NO_THROW(Matrix zeros(2,2));
+    Matrix zeros(2,2);
+    EXPECT_EQ(zeros.r(), (uint)2);
+    EXPECT_EQ(zeros.c(), (uint)2);
+    EXPECT_NO_THROW(zeros.v()[3]);
+    for(uint i=0; i<2; ++i) for(uint j=0; j<2; ++j) EXPECT_EQ(zeros(i,j), 0);
 
-    std::vector<double> v = {1,2,3,4,5,6};
-    EXPECT_THROW(m1 = Matrix(4, 2, v), out_of_range);
-    EXPECT_NO_THROW(m1 = Matrix(2, 3, v));
-    EXPECT_EQ(m1.r(), (uint)2);
-    EXPECT_EQ(m1.c(), (uint)3);
-    EXPECT_EQ(m1.size(), (uint)6);
-    for(uint i=0, k=1; i<2; ++i, ++k) for(uint j=0; j<2; ++j, ++k) EXPECT_EQ(m1(i,j), k);
+    // vector initialization
+    std::vector<double> v{1,2,3,4,5,6};
+    EXPECT_THROW(Matrix from_vec(4, 2, v), out_of_range);
+    EXPECT_NO_THROW(Matrix from_vec(2, 3, v));
+    Matrix from_vec(2, 3, v);
+    EXPECT_EQ(from_vec.r(), (uint)2);
+    EXPECT_EQ(from_vec.c(), (uint)3);
+    EXPECT_NO_THROW(from_vec.v()[3]);
+    for(uint i=0, k=1; i<2; ++i, ++k) for(uint j=0; j<2; ++j, ++k) EXPECT_EQ(from_vec(i,j), k);
 
-    EXPECT_NO_THROW(m2 = Matrix(m1));
-    EXPECT_EQ(m1.r(), (uint)2);
-    EXPECT_EQ(m1.c(), (uint)3);
-    EXPECT_EQ(m1.size(), (uint)6);
-    for(uint i=0, k=1; i<2; ++i, ++k) for(uint j=0; j<2; ++j, ++k) EXPECT_EQ(m1(i,j), k);
+    // copy constructor
+    EXPECT_NO_THROW(Matrix mat_copy(from_vec));
+    Matrix mat_copy(from_vec);
+    EXPECT_EQ(mat_copy.r(), (uint)2);
+    EXPECT_EQ(mat_copy.c(), (uint)3);
+    EXPECT_NO_THROW(mat_copy.v()[3]);
+    for(uint i=0, k=1; i<2; ++i, ++k) for(uint j=0; j<2; ++j, ++k) EXPECT_EQ(mat_copy(i,j), k);
 
-    const double * tmp = m2.v();
-    for(uint i=0; i<6; ++i) EXPECT_EQ(tmp[i], i+1);
+    // move constructor
+    Matrix mat_moved(std::move(from_vec));
+    EXPECT_EQ(from_vec.r(), (uint)0);
+    EXPECT_EQ(from_vec.c(), (uint)0);
+    EXPECT_EQ(from_vec.v(), nullptr);
+    EXPECT_EQ(mat_moved.r(), (uint)2);
+    EXPECT_EQ(mat_moved.c(), (uint)3);
+    EXPECT_NO_THROW(mat_moved.v()[3]);
+    for(uint i=0, k=1; i<2; ++i, ++k) for(uint j=0; j<2; ++j, ++k) EXPECT_EQ(mat_moved(i,j), k);
+}
+
+TEST(Matrix, assignment_operator) {
+    Matrix m1(3,2, {1,2,3,4,5,6});
+    const Matrix m2(3,2, {7,8,9,10,11,12});
+    Matrix m3, m4(4,4);
+
+    // copy from ref
+    EXPECT_NO_THROW(m3 = m1);
+    EXPECT_EQ(m3, m1);
+    // copy from const ref
+    EXPECT_NO_THROW(m3 = m2);
+    EXPECT_EQ(m3, m2);
+    // move
+    EXPECT_NO_THROW(m3 = std::move(m4));
+    EXPECT_EQ(m3, Matrix(4,4));
+    // matrix is empty cause is moved by the constructor
+    // (swapped with default constructed matrix)
+    EXPECT_EQ(m4, Matrix());
 }
 
 TEST(Matrix, access_operator){
@@ -213,6 +244,20 @@ TEST(Matrix, reshape){
 }
 
 TEST(Matrix, swap){
+    Matrix m1 = RandMat(3,4);
+    Matrix m2 = RandMat(5,6);
+
+    // make a copy
+    Matrix copy1(m1);
+    Matrix copy2(m2);
+
+    //swap
+    EXPECT_NO_THROW(swap(m1,m2));
+    EXPECT_EQ(copy1, m2);
+    EXPECT_EQ(copy2, m1);
+}
+
+TEST(Matrix, swap_rows){
     Matrix m1(4,4,
         {10,11,12,13,
          14,15,16,17,
@@ -223,8 +268,6 @@ TEST(Matrix, swap){
     // throws out of range
     EXPECT_THROW(m1.swap_rows(1,4), out_of_range);
     EXPECT_THROW(m1.swap_rows(4,1), out_of_range);
-    EXPECT_THROW(m1.swap_cols(1,4), out_of_range);
-    EXPECT_THROW(m1.swap_cols(4,1), out_of_range);
 
     // swap
     m1.swap_rows(1,3);
@@ -234,13 +277,26 @@ TEST(Matrix, swap){
          18,19,20,21,
          14,15,16,17}
     ));
+}
+
+TEST(Matrix, swap_columns){
+    Matrix m1(4,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21,
+         22,23,24,25}
+    );
+
+    // throws out of range
+    EXPECT_THROW(m1.swap_cols(1,4), out_of_range);
+    EXPECT_THROW(m1.swap_cols(4,1), out_of_range);
 
     m1.swap_cols(0,2);
     EXPECT_EQ(m1, Matrix(4,4,
         {12,11,10,13,
-         24,23,22,25,
+         16,15,14,17,
          20,19,18,21,
-         16,15,14,17}
+         24,23,22,25}
     ));
 }
 

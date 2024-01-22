@@ -265,7 +265,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void set(uu_pair rs, uu_pair cs, Matrix m);
+    bool is_vec() const;
 
     /**
      * @brief returns a matrix with the same underlaying
@@ -692,11 +692,18 @@ public:
     */
     void eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-10) const;
 
-#pragma endregion eigen
+/**
+ * @brief concatenates matrices per rows
+ * 
+ * @param m1 first matrix
+ * @param m2 second matrix
+ * @return Matrix
+ */
+Matrix operator|(const Matrix& m1, const Matrix& m2);
 
-};
 
-#pragma region special_constructors
+// creation of particular matrices
+
 /**
  * @brief create identity matrix of shape dim*dim 
  * 
@@ -714,14 +721,6 @@ Matrix IdMat(const uint & dim);
  */
 Matrix Ones(const uint & r, const uint & c);
 
-/**
- * @brief create matrix with random values of shapre r*c
- * 
- * @param r rows
- * @param c columns
- * @return Matrix 
-*/
-Matrix RandMat(const uint & r, const uint & c);
 
 /**
  * @brief given a vector of N elements, creates a NxN matrix
@@ -730,13 +729,6 @@ Matrix RandMat(const uint & r, const uint & c);
 */
 Matrix diag(std::vector<double> v);
 
-/**
- * @brief given a row or column vector of N elements, creates a NxN matrix
- *      with diagonal elements equal the vector elements.
- * @param v input vector 
-*/
-Matrix diag(const Matrix& v);
-#pragma endregion special_constructors
 
 } // namespace MA
 

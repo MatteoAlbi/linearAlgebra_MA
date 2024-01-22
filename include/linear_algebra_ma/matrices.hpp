@@ -265,7 +265,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    bool is_vec() const;
+    void set(uu_pair rs, uu_pair cs, Matrix m);
 
     /**
      * @brief returns a matrix with the same underlaying
@@ -692,14 +692,7 @@ public:
     */
     void eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-10) const;
 
-/**
- * @brief concatenates matrices per rows
- * 
- * @param m1 first matrix
- * @param m2 second matrix
- * @return Matrix
- */
-Matrix operator|(const Matrix& m1, const Matrix& m2);
+};
 
 
 // creation of particular matrices

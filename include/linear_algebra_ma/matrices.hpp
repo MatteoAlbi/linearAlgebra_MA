@@ -283,6 +283,13 @@ public:
     Matrix diag() const;
 
     /**
+     * @brief swap as friend function to allow ADL
+     * @param m1 first matrix
+     * @param m2 second matrix
+    */
+    friend void swap(Matrix & m1, Matrix & m2);
+
+    /**
      * @brief swap the given rows of the matrix
      * @param r1 first row to swap
      * @param r2 second row to swap
@@ -300,8 +307,7 @@ public:
 #pragma endregion get_set
 
 #pragma region operators
-    Matrix& operator=(const Matrix& m);
-    Matrix& operator=(Matrix && m) noexcept;
+    Matrix& operator=(Matrix m);
 
     friend bool operator==(const Matrix & m1, const Matrix & m2);
     friend bool operator!=(const Matrix & m1, const Matrix & m2);
@@ -690,7 +696,6 @@ public:
 
 };
 
-
 #pragma region special_constructors
 /**
  * @brief create identity matrix of shape dim*dim 
@@ -732,7 +737,6 @@ Matrix diag(std::vector<double> v);
 */
 Matrix diag(const Matrix& v);
 #pragma endregion special_constructors
-
 
 } // namespace MA
 

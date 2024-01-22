@@ -38,11 +38,10 @@ Matrix::Matrix(const Matrix & m){
     std::copy(m._v, m._v + m.size(), this->_v);
 }
 
-Matrix::Matrix(Matrix && m) noexcept{
-    this->_r = m._r;
-    this->_c = m._c;
-    this->_v = m._v;
-    m._v = nullptr;
+Matrix::Matrix(Matrix && m) noexcept
+: Matrix()
+{
+    swap(*this, m);
 }
 
 Matrix::~Matrix() {
@@ -154,6 +153,14 @@ Matrix Matrix::diag() const{
     }
 
     return v;
+}
+
+void swap(Matrix & m1, Matrix & m2){
+    using std::swap;
+    // swap attributes
+    std::swap(m1._r, m2._r);
+    std::swap(m1._c, m2._c);
+    std::swap(m1._v, m2._v);
 }
 
 void Matrix::swap_rows(const uint & r1, const uint & r2){

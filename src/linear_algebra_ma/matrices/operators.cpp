@@ -107,33 +107,8 @@ Matrix Matrix::operator()(uu_pair rs, uu_pair cs) const{
 
 #pragma region assign
 
-Matrix& Matrix::operator=(const Matrix& m){
-    if (this == &m) return *this;
-
-    // set dimensions
-    uint prev_size = this->size();
-    this->_r = m._r;
-    this->_c = m._c;
-
-    // redimension
-    if(prev_size != this->size()){
-        if(this->_v != nullptr) delete[] this->_v;
-        this->_v = new double[this->size()];
-    }
-    // set values
-    std::copy(m._v, m._v + m.size(), this->_v);
-
-    return *this;
-}
-
-Matrix& Matrix::operator=(Matrix && m) noexcept{
-    if (this == &m) return *this;
-
-    // swap attributes
-    std::swap(this->_r, m._r);
-    std::swap(this->_c, m._c);
-    std::swap(this->_v, m._v);
-
+Matrix& Matrix::operator=(Matrix m){
+    swap(*this, m);
     return *this;
 }
 

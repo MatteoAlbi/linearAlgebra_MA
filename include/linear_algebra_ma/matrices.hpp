@@ -290,12 +290,6 @@ public:
     friend void swap(Matrix & m1, Matrix & m2);
 
     /**
-     * @brief extract diagonal of the matrix
-     * @return vector (matrix with dim n,1) containing the diagonal elements
-    */
-    Matrix diag() const;
-
-    /**
      * @brief swap the given rows of the matrix
      * @param r1 first row to swap
      * @param r2 second row to swap

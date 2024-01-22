@@ -83,21 +83,6 @@ void Matrix::set(uu_pair rs, uu_pair cs, std::vector<double> v){
     }
 }
 
-void Matrix::set(uint r, uu_pair cs, Matrix m){
-    if(r >= this->_r) throw std::out_of_range("Row index out of range");
-    if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
-    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    // allow to use {} for full col selection
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
-
-    if(m.shape() != uu_pair{1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");
-
-    for(uint j=0; j<m._c; ++j){
-        std::copy(m._v, m._v + m.size(), this->_v + _c*r + cs.first);
-    }
-}
-
 void Matrix::set(uint r, uint c, double x){
     this->operator()(r,c) = x;
 }
@@ -175,17 +160,6 @@ void swap(Matrix & m1, Matrix & m2){
     std::swap(m1._r, m2._r);
     std::swap(m1._c, m2._c);
     std::swap(m1._v, m2._v);
-}
-
-Matrix Matrix::diag() const{
-    uint dim = std::min(_c, _r);
-    Matrix v = Matrix(dim,1);
-
-    for(uint i=0; i<dim; ++i){
-        v(i) = this->operator()(i,i);
-    }
-
-    return v;
 }
 
 void Matrix::swap_rows(const uint & r1, const uint & r2){

@@ -691,12 +691,11 @@ public:
      *      lower than tolerance are considered to be zero)
     */
     void eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-10) const;
-
+#pragma endregion eigen
 };
 
 
-// creation of particular matrices
-
+#pragma region special_constructors
 /**
  * @brief create identity matrix of shape dim*dim 
  * 
@@ -714,6 +713,14 @@ Matrix IdMat(const uint & dim);
  */
 Matrix Ones(const uint & r, const uint & c);
 
+/**
+ * @brief create matrix with random values of shapre r*c
+ * 
+ * @param r rows
+ * @param c columns
+ * @return Matrix 
+*/
+Matrix RandMat(const uint & r, const uint & c);
 
 /**
  * @brief given a vector of N elements, creates a NxN matrix
@@ -721,6 +728,14 @@ Matrix Ones(const uint & r, const uint & c);
  * @param v input vector 
 */
 Matrix diag(std::vector<double> v);
+
+/**
+ * @brief given a row or column vector of N elements, creates a NxN matrix
+ *      with diagonal elements equal the vector elements.
+ * @param v input vector 
+*/
+Matrix diag(const Matrix& v);
+#pragma endregion special_constructors
 
 
 } // namespace MA

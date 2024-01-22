@@ -297,9 +297,7 @@ TEST(Matrix, equal_operator){
     EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(4, 3, v1));
     EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(3, 3, v1));
     EXPECT_TRUE(Matrix(2, 4, v1) == Matrix(2, 4, v1));
-    EXPECT_TRUE(Matrix(2, 4, v1) == new Matrix(2, 4, v1));
     EXPECT_FALSE(Matrix(3, 4, v1) == Matrix(3, 4, v2));
-    EXPECT_FALSE(Matrix(3, 4, v1) == new Matrix(3, 4, v2));
 }
 
 TEST(Matrix, unequal_operator){
@@ -317,9 +315,7 @@ TEST(Matrix, unequal_operator){
     EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(4, 3, v1));
     EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(3, 3, v1));
     EXPECT_FALSE(Matrix(2, 4, v1) != Matrix(2, 4, v1));
-    EXPECT_FALSE(Matrix(2, 4, v1) != new Matrix(2, 4, v1));
     EXPECT_TRUE(Matrix(3, 4, v1) != Matrix(3, 4, v2));
-    EXPECT_TRUE(Matrix(3, 4, v1) != new Matrix(3, 4, v2));
 }
 
 TEST(Matrix, sum_operator){

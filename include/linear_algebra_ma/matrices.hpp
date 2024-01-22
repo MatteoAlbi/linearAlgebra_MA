@@ -300,53 +300,70 @@ public:
 #pragma endregion get_set
 
 #pragma region operators
-    /**
-     * @brief assignment operator from reference
-     * @param m matrix to assign from
-    */
     Matrix& operator=(const Matrix& m);
-
-    /**
-     * @brief assignment operator from pointer
-     * @param m pointer to matrix to assign from
-    */
-    Matrix& operator=(Matrix const * const m);
-
-    /**
-     * @brief move assignment operator
-     * @param m matrix to move
-    */
     Matrix& operator=(Matrix && m) noexcept;
 
-    bool operator==(const Matrix & m) const;
-    bool operator==(const Matrix * const m) const;
+    friend bool operator==(const Matrix & m1, const Matrix & m2);
+    friend bool operator!=(const Matrix & m1, const Matrix & m2);
 
-    bool operator!=(const Matrix & m) const;
-    bool operator!=(const Matrix * const m) const;
+    Matrix& operator+=(const double & k);
+    Matrix& operator+=(const Matrix & m);
+    friend Matrix operator+(const Matrix& m, const double& k);
+    friend Matrix operator+(const double& k, const Matrix& m);
+    friend Matrix operator+(const Matrix& m1, const Matrix& m2);
 
-    void operator+=(const double & k);
-    void operator+=(const Matrix & m);
+    Matrix& operator-=(const double & k);
+    Matrix& operator-=(const Matrix & m);
+    friend Matrix operator-(const Matrix& m);
+    friend Matrix operator-(const Matrix& m, const double& k);
+    friend Matrix operator-(const double& k, const Matrix& m);
+    friend Matrix operator-(const Matrix& m1, const Matrix& m2);
 
-    void operator-=(const double & k);
-    void operator-=(const Matrix & m);
-
-    void operator*=(const double & k);
-    void operator*=(const Matrix & m);
+    Matrix& operator*=(const double & k);
+    Matrix& operator*=(const Matrix & m);
+    friend Matrix operator*(const Matrix& m, const double& k);
+    friend Matrix operator*(const double& k, const Matrix& m);
+    friend Matrix operator*(const Matrix& m1, const Matrix& m2);
     
-    void operator/=(const double & k);
-    void operator/=(const Matrix & m);
+    Matrix& operator/=(const double & k);
+    Matrix& operator/=(const Matrix & m);
+    friend Matrix operator/(const Matrix& m, const double& k);
+    friend Matrix operator/(const double& k, const Matrix& m);
+    friend Matrix operator/(const Matrix& m1, const Matrix& m2);
+
+    friend std::ostream& operator<<(std::ostream& os, const Matrix& m);
+    friend std::ostream& operator<<(std::ostream& os, const uu_pair & p);
 
     /**
      * @brief concatenate matrices per columns
      * @param m matrix to concatenate
      */
-    void operator&=(const Matrix & m);
+    Matrix& operator&=(const Matrix & m);
+
+    /**
+     * @brief concatenates matrices per columns
+     * 
+     * @param m1 first matrix
+     * @param m2 second matrix
+     * @return Matrix 
+     */
+    friend Matrix operator&(const Matrix& m1, const Matrix& m2);
 
     /**
      * @brief concatenate matrices per rows
      * @param m matrix to concatenate
      */
-    void operator|=(const Matrix & m);
+    Matrix& operator|=(const Matrix & m);
+
+    /**
+     * @brief concatenates matrices per rows
+     * 
+     * @param m1 first matrix
+     * @param m2 second matrix
+     * @return Matrix
+     */
+    friend Matrix operator|(const Matrix& m1, const Matrix& m2);
+
 #pragma endregion operators
 
 #pragma region vector
@@ -673,47 +690,6 @@ public:
 
 };
 
-#pragma region operators
-std::ostream& operator<<(std::ostream& os, const Matrix& m);
-std::ostream& operator<<(std::ostream& os, const Matrix * m);
-std::ostream& operator<<(std::ostream& os, const uu_pair & p);
-std::ostream& operator<<(std::ostream& os, const uu_pair * p);
-
-Matrix operator+(const Matrix& m, const double& k);
-Matrix operator+(const double& k, const Matrix& m);
-Matrix operator+(const Matrix& m1, const Matrix& m2);
-
-Matrix operator-(const Matrix& m);
-Matrix operator-(const Matrix& m, const double& k);
-Matrix operator-(const double& k, const Matrix& m);
-Matrix operator-(const Matrix& m1, const Matrix& m2);
-
-Matrix operator*(const Matrix& m, const double& k);
-Matrix operator*(const double& k, const Matrix& m);
-Matrix operator*(const Matrix& m1, const Matrix& m2);
-
-Matrix operator/(const Matrix& m, const double& k);
-Matrix operator/(const double& k, const Matrix& m);
-Matrix operator/(const Matrix& m1, const Matrix& m2);
-
-/**
- * @brief concatenates matrices per columns
- * 
- * @param m1 first matrix
- * @param m2 second matrix
- * @return Matrix 
- */
-Matrix operator&(const Matrix& m1, const Matrix& m2);
-
-/**
- * @brief concatenates matrices per rows
- * 
- * @param m1 first matrix
- * @param m2 second matrix
- * @return Matrix
- */
-Matrix operator|(const Matrix& m1, const Matrix& m2);
-#pragma endregion operators
 
 #pragma region special_constructors
 /**
@@ -756,6 +732,7 @@ Matrix diag(std::vector<double> v);
 */
 Matrix diag(const Matrix& v);
 #pragma endregion special_constructors
+
 
 } // namespace MA
 

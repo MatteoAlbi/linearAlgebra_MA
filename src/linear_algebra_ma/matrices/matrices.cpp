@@ -461,7 +461,7 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
 
     // init matrices
     Q = IdMat(_r);
-    R = this;
+    R = *this;
     
     for(uint i=0; i<n-1; ++i){
         //compute vk
@@ -485,7 +485,7 @@ void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
 
     // init matrices
     Q = IdMat(_r);
-    R = this;
+    R = *this;
     P = IdMat(_c);
     
     for(uint i=0; i<n; ++i){ // main loop

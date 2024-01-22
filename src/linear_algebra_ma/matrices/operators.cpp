@@ -104,6 +104,7 @@ Matrix Matrix::operator()(uu_pair rs, uu_pair cs) const{
 
 
 #pragma region assign
+
 Matrix& Matrix::operator=(const Matrix& m){
     if (this == &m) return *this;
 
@@ -126,6 +127,16 @@ Matrix& Matrix::operator=(const Matrix& m){
 Matrix& Matrix::operator=(Matrix const * const m){
     return this->operator=(*m);
 }
+
+Matrix& Matrix::operator=(Matrix && m) noexcept{
+    if (this == &m) return *this;
+
+    // swap attributes
+    std::swap(this->_r, m._r);
+    std::swap(this->_c, m._c);
+    std::swap(this->_v, m._v);
+}
+
 #pragma endregion assign
 
 
@@ -373,6 +384,7 @@ Matrix operator|(const Matrix& m1, const Matrix& m2){
 #pragma endregion concatenate
 
 
+#pragma region output
 std::ostream& operator<<(std::ostream& os, const Matrix& m){
     os << "Matrix(" << m.r() << "x" << m.c() << ")" << std::endl;
     for(uint i=0; i<m.r(); ++i){
@@ -408,8 +420,6 @@ std::ostream& operator<<(std::ostream& os, const uu_pair * p){
     os << "Pair(" << p->first << "; " << p->second << ")";
     return os;
 }
-
+#pragma endregion output
 
 } // namespace MA
-
-

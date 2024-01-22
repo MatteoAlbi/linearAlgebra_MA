@@ -3,6 +3,8 @@
 namespace MA
 {
 
+#pragma region constructor_destructor
+
 Matrix::Matrix(){
     this->_r = 0;
     this->_c = 0;
@@ -36,17 +38,27 @@ Matrix::Matrix(const Matrix & m){
     std::copy(m._v, m._v + m.size(), this->_v);
 }
 
+Matrix::Matrix(Matrix && m) noexcept{
+    this->_r = m._r;
+    this->_c = m._c;
+    this->_v = m._v;
+    m._v = nullptr;
+}
+
 Matrix::~Matrix() {
     if(this->_v != nullptr) delete[] this->_v;
 }
 
+#pragma endregion constructor_destructor
+
+
+#pragma region get_set
 
 uint Matrix::r() const{return _r;}
 uint Matrix::c() const{return _c;}
 uu_pair Matrix::shape() const{return uu_pair{_r, _c};}
 uint Matrix::size() const{return _r * _c;}
 double const * Matrix::v() const{return _v;}
-
 
 void Matrix::set(std::vector<double> v){
     if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
@@ -124,11 +136,6 @@ void Matrix::set(uu_pair rs, uu_pair cs, Matrix m){
     }
 }
 
-
-bool Matrix::is_vec() const{
-    return this->_r == 1 || this->_c == 1;
-}
-
 Matrix Matrix::reshape(const uint & r, const uint & c) const{
     if(this->size() == 0) throw std::runtime_error("Matrix size is null");
     if(r*c != this->size()) throw std::invalid_argument("New matrix size must match the current one");
@@ -136,16 +143,6 @@ Matrix Matrix::reshape(const uint & r, const uint & c) const{
     Matrix ret(r,c);
     std::copy(_v, _v + this->size(), ret._v);
     return ret;
-}
-
-Matrix Matrix::to_c_vec() const{
-    if(this->size() == 0) throw std::runtime_error("Matrix size is null");
-    return this->reshape(this->size(), 1);
-}
-
-Matrix Matrix::to_r_vec() const{
-    if(this->size() == 0) throw std::runtime_error("Matrix size is null");
-    return this->reshape(1, this->size());
 }
 
 Matrix Matrix::diag() const{
@@ -187,14 +184,19 @@ void Matrix::swap_cols(const uint & c1, const uint & c2){
     this->set(ALL, c2, tmp);
 }
 
-Matrix Matrix::t() const{
-    Matrix ret = Matrix(this->_c, this->_r);
-    for (uint i = 0; i<this->_r; ++i) {
-        for (uint j = 0; j<this->_c; ++j) {
-            ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
-        }
-    }
-    return ret;
+#pragma endregion get_set
+
+
+#pragma region vector
+
+Matrix Matrix::to_c_vec() const{
+    if(this->size() == 0) throw std::runtime_error("Matrix size is null");
+    return this->reshape(this->size(), 1);
+}
+
+Matrix Matrix::to_r_vec() const{
+    if(this->size() == 0) throw std::runtime_error("Matrix size is null");
+    return this->reshape(1, this->size());
 }
 
 double Matrix::dot(const Matrix & v) const{
@@ -216,6 +218,100 @@ Matrix Matrix::cross(const Matrix & v) const{
     ret(0) =   ((*this)(1) * v(2)) - ((*this)(2) * v(1));
     ret(1) = -(((*this)(0) * v(2)) - ((*this)(2) * v(0)));
     ret(2) =   ((*this)(0) * v(1)) - ((*this)(1) * v(0));
+    return ret;
+}
+
+double Matrix::norm2() const{
+    if(this->_r == 1 || this->_c == 1){
+        double ret = 0;
+        for(uint i=0; i< this->_r+this->_c-1; ++i){
+            ret += _v[i] * _v[i];
+        }
+        return sqrt(ret);
+    }
+    else{
+        throw std::invalid_argument("Norm only appliable to row/column vectors");
+    }
+}
+
+Matrix Matrix::normalize() const{
+    return Matrix(*this) / this->norm2();
+}
+
+void Matrix::normalize_self(){
+    this->operator/=(this->norm2());
+}
+
+#pragma endregion vector
+
+
+#pragma region checks
+
+bool Matrix::is_vec() const{
+    return this->_r == 1 || this->_c == 1;
+}
+
+bool Matrix::is_sing() const{
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
+    return this->det() == 0;
+}
+
+bool Matrix::is_upper_triang() const{
+    uint n = std::min(_r, _c);
+    for(uint i=1; i<n; ++i){
+        for(uint j=0; j<i; ++j){
+            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
+        }
+    }
+
+    return true;
+}
+    
+bool Matrix::is_lower_triang() const{
+    uint n = std::min(_r, _c);
+    for(uint j=1; j<n; ++j){
+        for(uint i=0; i<j; ++i){
+            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
+        }
+    }
+
+    return true;
+}
+
+bool Matrix::is_upper_hessenberg() const{
+    uint n = std::min(_r, _c);
+    for(uint i=2; i<n; ++i){
+        for(uint j=0; j<i-1; ++j){
+            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
+        }
+    }
+
+    return true;
+}
+
+bool Matrix::is_lower_hessenberg() const{
+    uint n = std::min(_r, _c);
+    for(uint j=2; j<n; ++j){
+        for(uint i=0; i<j-1; ++i){
+            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
+        }
+    }
+
+    return true;
+}
+
+#pragma endregion checks
+
+
+#pragma region matrix_operations
+
+Matrix Matrix::t() const{
+    Matrix ret = Matrix(this->_c, this->_r);
+    for (uint i = 0; i<this->_r; ++i) {
+        for (uint j = 0; j<this->_c; ++j) {
+            ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
+        }
+    }
     return ret;
 }
 
@@ -274,11 +370,6 @@ double Matrix::det() const{
         for(uint i=0; i<U.c(); ++i) determinant *= U(i,i);
         return determinant;
     }
-}
-
-bool Matrix::is_sing() const{
-    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
-    return this->det() == 0;
 }
 
 double Matrix::minor(const uint & p, const uint & q) const{
@@ -360,121 +451,10 @@ Matrix Matrix::pinv_right() const{
     }
 }
 
-double Matrix::norm2() const{
-    if(this->_r == 1 || this->_c == 1){
-        double ret = 0;
-        for(uint i=0; i< this->_r+this->_c-1; ++i){
-            ret += _v[i] * _v[i];
-        }
-        return sqrt(ret);
-    }
-    else{
-        throw std::invalid_argument("Norm only appliable to row/column vectors");
-    }
-}
-
-Matrix Matrix::normalize() const{
-    return Matrix(*this) / this->norm2();
-}
-
-void Matrix::normalize_self(){
-    this->operator/=(this->norm2());
-}
-
-
-bool Matrix::is_upper_triang() const{
-    uint n = std::min(_r, _c);
-    for(uint i=1; i<n; ++i){
-        for(uint j=0; j<i; ++j){
-            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
-        }
-    }
-
-    return true;
-}
-    
-bool Matrix::is_lower_triang() const{
-    uint n = std::min(_r, _c);
-    for(uint j=1; j<n; ++j){
-        for(uint i=0; i<j; ++i){
-            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
-        }
-    }
-
-    return true;
-}
-
-bool Matrix::is_upper_hessenberg() const{
-    uint n = std::min(_r, _c);
-    for(uint i=2; i<n; ++i){
-        for(uint j=0; j<i-1; ++j){
-            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
-        }
-    }
-
-    return true;
-}
-
-bool Matrix::is_lower_hessenberg() const{
-    uint n = std::min(_r, _c);
-    for(uint j=2; j<n; ++j){
-        for(uint i=0; i<j-1; ++i){
-            if(abs(this->operator()(i,j)) > Matrix::epsilon) return false;
-        }
-    }
-
-    return true;
-}
-
-
-Matrix IdMat(const uint & dim){
-    Matrix ret = Matrix(dim,dim);
-    for(uint i=0; i<dim; ++i){
-        ret(i,i) = 1;
-    }
-    return ret;
-}
-
-Matrix Ones(const uint & r, const uint & c){
-    return Matrix(r,c)+1;
-}
-
-Matrix RandMat(const uint & r, const uint & c){
-    Matrix ret = Matrix(r,c);
-    for(uint i=0; i<r; ++i){
-        for(uint j=0; j<c; ++j){
-            ret(i,j) = Matrix::rand();
-        }
-    }
-
-    return ret;
-}
-
-Matrix diag(std::vector<double> v){
-    Matrix ret = Matrix(v.size(), v.size());
-    
-    for(uint i=0; i<v.size(); ++i){
-        ret(i,i) = v[i];
-    }
-
-    return ret;
-}
-
-Matrix diag(const Matrix& v){
-    if(! v.is_vec()) throw std::invalid_argument("Input matrix must be a vector");
-
-    Matrix ret = Matrix(v.size(), v.size());
-    
-    for(uint i=0; i<v.size(); ++i){
-        ret(i,i) = v(i);
-    }
-
-    return ret;
-}
+#pragma endregion matrix_operations
 
 
 #pragma region decomposition_methods
-
 
 void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
     uint n = std::min<double>(_r, _c);
@@ -498,7 +478,6 @@ void Matrix::qr_dec(Matrix & Q, Matrix & R) const{
         Q = Q * H;
     }
 }
-
 
 void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
 
@@ -540,7 +519,6 @@ void Matrix::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
         Q = Q * H;
     }
 }
-
 
 uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
     if(_r != _c) throw std::invalid_argument("The matrix must be square");
@@ -593,7 +571,6 @@ uint Matrix::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
     return ret;
 }
 
-
 void Matrix::hessenberg_dec(Matrix & Q, Matrix & H) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
@@ -622,6 +599,7 @@ void Matrix::hessenberg_dec(Matrix & Q, Matrix & H) const{
 
 
 #pragma region ls_solution
+
 Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
     if(U.c() != U.r()) throw std::invalid_argument("Coefficient matrix U must be square");
     if(B.r() != U.c()) throw std::invalid_argument("Rows of B must be equal to the columns of U");
@@ -653,7 +631,6 @@ Matrix Matrix::backward_sub(Matrix const & U, Matrix const & B){
     return res;
 }
 
-
 Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
     if(L.c() != L.r()) throw std::invalid_argument("Coefficient matrix L must be square");
     if(B.r() != L.c()) throw std::invalid_argument("Rows of B must be equal to the columns of L");
@@ -681,7 +658,6 @@ Matrix Matrix::forward_sub(Matrix const & L, Matrix const & B){
     
     return res;
 }
-
 
 Matrix Matrix::matrix_l_divide(Matrix const & A, Matrix const & B){
     if(A.r() != B.r()){
@@ -720,8 +696,11 @@ Matrix Matrix::matrix_r_divide(Matrix const & B, Matrix const & A){
     }
     return matrix_l_divide(A.t(), B.t()).t();
 }
+
 #pragma endregion ls_solution
 
+
+#pragma region eigen
 
 void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
@@ -816,6 +795,58 @@ void Matrix::eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations, double 
     }
 
 }
+
+#pragma endregion eigen
+
+
+#pragma region special_constructors
+
+Matrix IdMat(const uint & dim){
+    Matrix ret = Matrix(dim,dim);
+    for(uint i=0; i<dim; ++i){
+        ret(i,i) = 1;
+    }
+    return ret;
+}
+
+Matrix Ones(const uint & r, const uint & c){
+    return Matrix(r,c)+1;
+}
+
+Matrix RandMat(const uint & r, const uint & c){
+    Matrix ret = Matrix(r,c);
+    for(uint i=0; i<r; ++i){
+        for(uint j=0; j<c; ++j){
+            ret(i,j) = Matrix::rand();
+        }
+    }
+
+    return ret;
+}
+
+Matrix diag(std::vector<double> v){
+    Matrix ret = Matrix(v.size(), v.size());
+    
+    for(uint i=0; i<v.size(); ++i){
+        ret(i,i) = v[i];
+    }
+
+    return ret;
+}
+
+Matrix diag(const Matrix& v){
+    if(! v.is_vec()) throw std::invalid_argument("Input matrix must be a vector");
+
+    Matrix ret = Matrix(v.size(), v.size());
+    
+    for(uint i=0; i<v.size(); ++i){
+        ret(i,i) = v(i);
+    }
+
+    return ret;
+}
+
+#pragma endregion special_constructors
 
 } // namespace MA
 

@@ -738,8 +738,8 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
         if(sum < tolerance) break;
     }
 
-    std::cout << "QR algorithm steps: " << k << ", residuals: " << sum << std::endl;
-    std::cout << D << std::endl;
+    // std::cout << "QR algorithm steps: " << k << ", residuals: " << sum << std::endl;
+    // std::cout << D << std::endl;
     D = D.diag();
 
     V = Matrix(_r, _r);
@@ -751,11 +751,97 @@ void Matrix::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolera
 
 }
 
+Matrix Matrix::implicit_double_QR_step() const{
+    // for easier notation
+    uint n =  this->_r;
+    Matrix A = *this;
 
-void Matrix::eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
+    Matrix y,u,v;
+    double tau, tmp;
+
+    // -- compute and apply Q1
+    // compute first column of B
+    y = Matrix(3,1,{
+        (   (A(0,0) - A(n-2,n-2)) * 
+            (A(0,0) - A(n-1, n-1)) - 
+            A(n-1,n-2) * A(n-2,n-1)
+        ) / A(1,0) + A(0,1),
+        A(0,0) + A(1,1) - 
+            A(n-2,n-2) - A(n-1,n-1),
+        A(2,1)
+    });
+    // compute reflector
+    tau = copysign(y.norm2(), y(0));
+    u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau) });
+    v = (y(0) / tau + 1) * u;
+    // apply reflection B -> QB = B - v * (u.t * B)
+    for(uint j=0; j<n; j++){
+        tmp = 0;
+        for(uint k=0; k<3; k++) tmp += u(k) * A(k, j);
+        for(uint k=0; k<3; k++) A(k, j) -= tmp * v(k);
+    }
+    // apply reflection C -> CQ = C - (C * u) * v.t
+    for(uint j=0; j<n; j++){
+        tmp = 0;
+        for(uint k=0; k<3; k++) tmp += v(k) * A(j, k);
+        for(uint k=0; k<3; k++) A(j, k) -= tmp * u(k);
+    }
+    // std::cout << "after applying Q1: " << A << std::endl << std::endl;
+
+    // -- move the bulge
+    for(uint i=1; i<n-2; ++i){
+        // std::cout << "acting on column # " << i-1 << std::endl;
+        // extract column to transform in  [x 0 0]
+        y = A({i, i+2}, i-1);
+        // compute reflector
+        tau = copysign(y.norm2(), y(0));
+        u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau)});
+        v = (y(0) / tau + 1) * u;
+        // apply reflection B -> QB = B - v * (u.t * B)
+        for(uint j=0; j<n; j++){
+            tmp = 0;
+            for(uint k=0; k<3; k++) tmp += u(k) * A(i+k, j);
+            for(uint k=0; k<3; k++) A(i+k, j) -= tmp * v(k);
+        }
+        // apply reflection C -> CQ = C - (C * u) * v.t
+        for(uint j=0; j<n; j++){
+            tmp = 0;
+            for(uint k=0; k<3; k++) tmp += v(k) * A(j, i+k);
+            for(uint k=0; k<3; k++) A(j, i+k) -= tmp * u(k);
+        }
+        // std::cout << "moving the bulge: " << A << std::endl << std::endl;
+
+    }
+
+    // std::cout << "last iteration" << std::endl;
+    // -- implement step for n-1 with only 2 last rows
+    y = A({n-2, n-1}, n-3);
+    tau = copysign(y.norm2(), y(0));
+    u = Matrix(2,1,{1, y(1) / (y(0) + tau)});
+    v = (y(0) / tau + 1) * u;
+    // apply reflection B -> QB = B - v * (u.t * B)
+    for(uint j=0; j<n; j++){
+        tmp = 0;
+        for(uint k=0; k<2; k++) tmp += u(k) * A(n-2+k, j);
+        for(uint k=0; k<2; k++) A(n-2+k, j) -= tmp * v(k);
+    }
+    // apply reflection C -> CQ = C - (C * u) * v.t
+    for(uint j=0; j<n; j++){
+        tmp = 0;
+        for(uint k=0; k<2; k++) tmp += v(k) * A(j, n-2+k);
+        for(uint k=0; k<2; k++) A(j, n-2+k) -= tmp * u(k);
+    }
+    // std::cout << "end of QR step: " << A << std::endl << std::endl;
+
+
+    return A;
+}
+
+void Matrix::eigen_implicit_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
     Matrix Q, R, P;
+    // obtain an hessenberg matrix
     this->hessenberg_dec(Q,D);
 
     // init shift
@@ -764,6 +850,10 @@ void Matrix::eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations, double 
     double sum;
 
     for(k=0; k<max_iterations; ++k){
+        // implicit double QR step
+        
+
+
         Matrix tmp = D.diag();
         
         // apply shift

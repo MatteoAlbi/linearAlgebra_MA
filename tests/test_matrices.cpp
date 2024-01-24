@@ -1434,3 +1434,17 @@ TEST(Matrix, eigenvalues){
     Matrix::set_double_precision();
 
 }
+
+TEST(Matrix, implicit_double_QR_step){
+    Matrix m1 = RandMat(6,6);
+    Matrix Q,A;
+    m1.hessenberg_dec(Q,A);
+
+    for(uint i=0; i<5; i++){
+        cout << "step n# " << i << endl;
+        cout << "starting mat: " << A << endl;
+        A = A.implicit_double_QR_step();
+    }
+    cout << "result: " << A << endl;
+    
+} 

@@ -677,10 +677,11 @@ public:
      * @param tolerance parameter to define the convergence criteria (elements of the matrix
      *      lower than tolerance are considered to be zero)
     */
-    void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-10) const;
+    void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-16) const;
     
     /**
-     * @brief solution of the eigendecomposition porblem based on the QR algorithm with shift.
+     * @brief solution of the eigendecomposition porblem based on the double shift
+     *      implicit QR algorithm with deflation.
      *      To assert the convergence, the algorithm check if during iteration
      *      the matrix is approaching an upper triangular matrix.
      * @param D matrix where the eigenvalues are saved as a vector
@@ -690,7 +691,9 @@ public:
      * @param tolerance parameter to define the convergence criteria (elements of the matrix
      *      lower than tolerance are considered to be zero)
     */
-    void eigen_QR_shift(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-10) const;
+    void eigen_implicit_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-16) const;
+
+    Matrix implicit_double_QR_step() const;
 #pragma endregion eigen
 };
 

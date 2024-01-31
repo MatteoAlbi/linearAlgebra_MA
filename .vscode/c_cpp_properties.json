@@ -1,0 +1,41 @@
+{
+    "env": {
+        "myIncludePath": [
+            "${workspaceFolder}/include",
+            "${workspaceFolder}/src",
+            "/usr/include/c++/13"
+        ]
+        // "myDefines": [
+        //     "DEBUG",
+        //     "MY_FEATURE=1"
+        // ]
+    },
+    "configurations": [
+        {
+            "name": "Linux",
+            "compilerPath": "/usr/bin/gcc-13",
+            "intelliSenseMode": "${default}",
+            "includePath": [
+                "${myIncludePath}",
+                "/usr/include",
+                "/usr/include/**",
+                "build/GCC 13.1.0 x86_64-linux-gnu/Debug/_deps/googletest-src/googletest/include"
+            ],
+            // "defines": [
+            //     "${myDefines}"
+            // ],
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++20",
+            "browse": {
+                "path": [
+                    "${myIncludePath}",
+                    "/usr/include",
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db"
+            }
+        }
+    ],
+    "version": 4
+}

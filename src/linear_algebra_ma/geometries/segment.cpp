@@ -101,7 +101,7 @@ Point Segment::intersection(const Segment & l) const{
 
     // non singular A
     if(! A.is_sing()){
-        Matrix x = Matrix::solve_ls(A, b);
+        Matrix x = Matrix<T>::solve_ls(A, b);
         if( (0 <= x(0) && x(0) <= 1) && (0 <= x(1) && x(1) <= 1)){
             Matrix tmp = c_vec(_p1) * (1 - x(0)) + c_vec(_p2) * x(0);
             return Point(tmp(0), tmp(1));

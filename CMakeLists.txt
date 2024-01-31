@@ -1,10 +1,14 @@
+# Force CMake to use GCC-13
+# set(CMAKE_CXX_COMPILER "/usr/bin/gcc-13")
+
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 project(linear_algebra_ma VERSION 0.1 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # check used compiler
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
@@ -28,37 +32,44 @@ target_compile_options(complex PRIVATE
 
 #-- matrices
 # add library
-add_library(matrices 
-    "src/linear_algebra_ma/matrices/matrices.cpp"
-    "src/linear_algebra_ma/matrices/operators.cpp"
-)
+add_library(matrices INTERFACE)
+# set c++20 standard for the library
+target_compile_features(matrices INTERFACE cxx_std_20)
 # include directories
-target_include_directories(matrices PUBLIC
+target_include_directories(matrices INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+
     $<INSTALL_INTERFACE:include>
 )
+# source files
+target_sources(matrices INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/linear_algebra_ma/matrices.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/linear_algebra_ma/matrices/matrices.tpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/linear_algebra_ma/matrices/operators.tpp
+)
 # turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
-target_compile_options(matrices PRIVATE 
+target_compile_options(matrices INTERFACE 
     "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
 )
 
 
-#-- geometries
-# add library
-add_library(geometries
-    "src/linear_algebra_ma/geometries/point.cpp"
-    "src/linear_algebra_ma/geometries/segment.cpp"
-)
-# include directories
-target_include_directories(geometries PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-# turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
-target_compile_options(geometries PRIVATE 
-    "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
-)
-target_link_libraries(geometries matrices)
+# #-- geometries
+# # add library
+# add_library(geometries
+#     "src/linear_algebra_ma/geometries/point.cpp"
+#     "src/linear_algebra_ma/geometries/segment.cpp"
+# )
+# # include directories
+# target_include_directories(geometries PUBLIC
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#     $<INSTALL_INTERFACE:include>
+# )
+# # turn off warning from #pragma region, #pragma endregion and set default ros2 warnings
+# target_compile_options(geometries PRIVATE 
+#     "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wpedantic;-Wunused;-Wno-unknown-pragmas>"
+# )
+# target_link_libraries(geometries matrices)
 
 
 # #-- all
@@ -88,6 +99,15 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 # Unit tests
 ################################################################################
 
+add_executable(my_test "tests/test.cpp")
+target_link_libraries(my_test PRIVATE
+    matrices
+)
+target_include_directories(my_test PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
 #-- gtest
 include(FetchContent)
 FetchContent_Declare(
@@ -110,7 +130,7 @@ enable_testing()
 add_executable(${PROJECT_NAME}_unit_tests
     "tests/test_complex.cpp"
     "tests/test_matrices.cpp"
-    "tests/test_geometries.cpp"
+    # "tests/test_geometries.cpp"
 )
 target_link_libraries(${PROJECT_NAME}_unit_tests
     PRIVATE
@@ -118,15 +138,15 @@ target_link_libraries(${PROJECT_NAME}_unit_tests
     gtest_main
     complex
     matrices
-    geometries
+    # geometries
 )
 
 # add the gtest target as a ctest. CTests will be run in block
 add_test(${PROJECT_NAME}_gtests ${PROJECT_NAME}_unit_tests)
 
 # make google test register the tests. CTests will run the single defined tests 
-# include(GoogleTest)
-# gtest_discover_tests( ${PROJECT_NAME}_unit_tests )
+include(GoogleTest)
+gtest_discover_tests( ${PROJECT_NAME}_unit_tests )
 
 
 ################################################################################

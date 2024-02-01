@@ -4,16 +4,6 @@
 namespace MA
 {
 
-#pragma region template_requirements
-
-template <typename T>
-concept is_complex = requires (T x) {
-    x.imag();
-};
-
-#pragma endregion template_requirements
-
-
 #pragma region static_methods
 template<typename T>
 T Matrix<T>::rand(){
@@ -339,34 +329,76 @@ Matrix<T> Matrix<T>::to_r_vec() const{
     return this->reshape(1, this->size());
 }
 
-// double Matrix<T>::dot(const Matrix & v) const{
-//     if(! this->is_vec()) throw std::invalid_argument("This obj is not a vector");
-//     if(! v.is_vec()) throw std::invalid_argument("Given obj is not a vector");
-//     if(this->size() != v.size()) throw std::invalid_argument("Vectors length don't match");
+template<typename U, typename V>
+typename std::enable_if<
+    !is_complex<U>::value && !is_complex<V>::value, 
+    double
+>::type
+dot(const Matrix<U> & v1, const Matrix<V> & v2){
+    if(! v1.is_vec()) throw std::invalid_argument("Obj 1 is not a vector");
+    if(! v2.is_vec()) throw std::invalid_argument("Obj 2 is not a vector");
+    if(v1.size() != v2.size()) throw std::invalid_argument("Vectors length don't match");
 
-//     double ret = 0;
-//     for(uint i=0; i<v.size(); ++i) ret += this->operator()(i) * v(i);
-//     return ret;
-// }
+    double ret = 0;
+    for(uint i=0; i<v1.size(); ++i) ret += v1(i) * v2(i);
+    return ret;
+}
 
-// Matrix Matrix<T>::cross(const Matrix & v) const{
-//     if(! this->is_vec()) throw std::invalid_argument("This obj is not a vector");
-//     if(! v.is_vec()) throw std::invalid_argument("Given obj is not a vector");
-//     if(v.size() != 3 || this->size() != v.size()) throw std::invalid_argument("Cross product defined only for 3d vectors");
+template<typename U, typename V>
+typename std::enable_if<
+    is_complex<U>::value || is_complex<V>::value, 
+    std::complex<double>
+>::type
+dot(const Matrix<U> & v1, const Matrix<V> & v2){
+    if(! v1.is_vec()) throw std::invalid_argument("Obj 1 is not a vector");
+    if(! v2.is_vec()) throw std::invalid_argument("Obj 2 is not a vector");
+    if(v1.size() != v2.size()) throw std::invalid_argument("Vectors length don't match");
 
-//     Matrix ret(3,1);
-//     ret(0) =   ((*this)(1) * v(2)) - ((*this)(2) * v(1));
-//     ret(1) = -(((*this)(0) * v(2)) - ((*this)(2) * v(0)));
-//     ret(2) =   ((*this)(0) * v(1)) - ((*this)(1) * v(0));
-//     return ret;
-// }
+    std::complex<double> ret = 0.0;
+    for(uint i=0; i<v1.size(); ++i) ret += v1(i) * v2(i);
+    return ret;
+}
+
+template<typename U, typename V>
+typename std::enable_if<
+    is_complex<U>::value || is_complex<V>::value, 
+    Matrix<double>
+>::type
+cross(const Matrix<U> & v1, const Matrix<V> & v2){
+    if(! v1.is_vec()) throw std::invalid_argument("Obj 1 is not a vector");
+    if(! v2.is_vec()) throw std::invalid_argument("Obj 2 is not a vector");
+    if(v1.size() != 3 || v1.size() != v2.size()) throw std::invalid_argument("Cross product defined only for 3d vectors");
+
+    Matrix<double> ret(3,1);
+    ret(0) =   (v1(1) * v2(2)) - (v1(2) * v2(1));
+    ret(1) = -((v1(0) * v2(2)) - (v1(2) * v2(0)));
+    ret(2) =   (v1(0) * v2(1)) - (v1(1) * v2(0));
+    return ret;
+}
+
+template<typename U, typename V>
+typename std::enable_if<
+    is_complex<U>::value || is_complex<V>::value, 
+    Matrix<std::complex<double>>
+>::type
+cross(const Matrix<U> & v1, const Matrix<V> & v2){
+    if(! v1.is_vec()) throw std::invalid_argument("This obj is not a vector");
+    if(! v2.is_vec()) throw std::invalid_argument("Given obj is not a vector");
+    if(v1.size() != 3 || v1.size() != v2.size()) throw std::invalid_argument("Cross product defined only for 3d vectors");
+
+    Matrix<std::complex<double>> ret(3,1);
+    ret(0) =   (v1(1) * v2(2)) - (v1(2) * v2(1));
+    ret(1) = -((v1(0) * v2(2)) - (v1(2) * v2(0)));
+    ret(2) =   (v1(0) * v2(1)) - (v1(1) * v2(0));
+    return ret;
+}
 
 template<typename T>
 double Matrix<T>::norm2() const{
     if(this->_r == 1 || this->_c == 1){
         double ret = 0;
         for(uint i=0; i< this->_r+this->_c-1; ++i){
-            T tmp = abs(_v[i]);
+            double tmp = abs(_v[i]);
             ret += tmp * tmp;
         }
         return sqrt(ret);
@@ -376,76 +408,83 @@ double Matrix<T>::norm2() const{
     }
 }
 
-// Matrix Matrix<T>::normalize() const{
-//     return Matrix(*this) / this->norm2();
-// }
+template<typename T>
+Matrix<T> Matrix<T>::normalize() const{
+    return Matrix<T>(*this) / this->norm2();
+}
 
-// void Matrix<T>::normalize_self(){
-//     this->operator/=(this->norm2());
-// }
+template<typename T>
+void Matrix<T>::normalize_self(){
+    this->operator/=(this->norm2());
+}
 
 #pragma endregion vector
 
 
-// #pragma region checks
+#pragma region checks
 
-// bool Matrix<T>::is_vec() const{
-//     return this->_r == 1 || this->_c == 1;
-// }
+template<typename T>
+bool Matrix<T>::is_vec() const{
+    return this->_r == 1 || this->_c == 1;
+}
 
 // bool Matrix<T>::is_sing() const{
 //     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 //     return this->det() == 0;
 // }
 
-// bool Matrix<T>::is_upper_triang() const{
-//     uint n = std::min(_r, _c);
-//     for(uint i=1; i<n; ++i){
-//         for(uint j=0; j<i; ++j){
-//             if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
-//         }
-//     }
+template<typename T>
+bool Matrix<T>::is_upper_triang() const{
+    uint n = std::min(_r, _c);
+    for(uint i=1; i<n; ++i){
+        for(uint j=0; j<i; ++j){
+            if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
+        }
+    }
 
-//     return true;
-// }
+    return true;
+}
     
-// bool Matrix<T>::is_lower_triang() const{
-//     uint n = std::min(_r, _c);
-//     for(uint j=1; j<n; ++j){
-//         for(uint i=0; i<j; ++i){
-//             if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
-//         }
-//     }
+template<typename T>
+bool Matrix<T>::is_lower_triang() const{
+    uint n = std::min(_r, _c);
+    for(uint j=1; j<n; ++j){
+        for(uint i=0; i<j; ++i){
+            if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
+        }
+    }
 
-//     return true;
-// }
+    return true;
+}
 
-// bool Matrix<T>::is_upper_hessenberg() const{
-//     uint n = std::min(_r, _c);
-//     for(uint i=2; i<n; ++i){
-//         for(uint j=0; j<i-1; ++j){
-//             if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
-//         }
-//     }
+template<typename T>
+bool Matrix<T>::is_upper_hessenberg() const{
+    uint n = std::min(_r, _c);
+    for(uint i=2; i<n; ++i){
+        for(uint j=0; j<i-1; ++j){
+            if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
+        }
+    }
 
-//     return true;
-// }
+    return true;
+}
 
-// bool Matrix<T>::is_lower_hessenberg() const{
-//     uint n = std::min(_r, _c);
-//     for(uint j=2; j<n; ++j){
-//         for(uint i=0; i<j-1; ++i){
-//             if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
-//         }
-//     }
+template<typename T>
+bool Matrix<T>::is_lower_hessenberg() const{
+    uint n = std::min(_r, _c);
+    for(uint j=2; j<n; ++j){
+        for(uint i=0; i<j-1; ++i){
+            if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
+        }
+    }
 
-//     return true;
-// }
+    return true;
+}
 
-// #pragma endregion checks
+#pragma endregion checks
 
 
-// #pragma region matrix_operations
+#pragma region matrix_operations
 
 // Matrix Matrix<T>::t() const{
 //     Matrix ret = Matrix(this->_c, this->_r);
@@ -593,10 +632,10 @@ double Matrix<T>::norm2() const{
 //     }
 // }
 
-// #pragma endregion matrix_operations
+#pragma endregion matrix_operations
 
 
-// #pragma region decomposition_methods
+#pragma region decomposition_methods
 
 // void Matrix<T>::qr_dec(Matrix & Q, Matrix & R) const{
 //     uint n = std::min<double>(_r, _c);
@@ -737,10 +776,10 @@ double Matrix<T>::norm2() const{
 //     }
 // }
 
-// #pragma endregion decomposition_methods
+#pragma endregion decomposition_methods
 
 
-// #pragma region ls_solution
+#pragma region ls_solution
 
 // Matrix Matrix<T>::backward_sub(Matrix const & U, Matrix const & B){
 //     if(U.c() != U.r()) throw std::invalid_argument("Coefficient matrix U must be square");
@@ -839,10 +878,10 @@ double Matrix<T>::norm2() const{
 //     return matrix_l_divide(A.t(), B.t()).t();
 // }
 
-// #pragma endregion ls_solution
+#pragma endregion ls_solution
 
 
-// #pragma region eigen
+#pragma region eigen
 
 // void Matrix<T>::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
 //     if(_c != _r) throw std::invalid_argument("Matrix must be square");
@@ -1028,7 +1067,7 @@ double Matrix<T>::norm2() const{
 
 // }
 
-// #pragma endregion eigen
+#pragma endregion eigen
 
 
 #pragma region special_constructors

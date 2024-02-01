@@ -128,14 +128,14 @@ Matrix<T>& Matrix<T>::operator=(Matrix<T> m){
 
 #pragma region comparators
 
-template<typename T, typename U>
-bool operator==(const Matrix<T> & m1, const Matrix<U> & m2) {
+template<typename U, typename V>
+bool operator==(const Matrix<U> & m1, const Matrix<V> & m2) {
     // check shape
     if(m1.r() != m2.r()) return false;
     if(m1.c() != m2.c()) return false;
     // check values
     for(uint i=0; i<m1.r(); ++i) for(uint j=0; j<m1.c(); ++j){
-        if( abs(m1(i,j) - m2(i,j)) > Matrix<T>::epsilon) return false;
+        if( abs(m1(i,j) - m2(i,j)) > Matrix<U>::get_epsilon()) return false;
     }
 
     return true;
@@ -149,7 +149,7 @@ bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2){
 #pragma endregion comparators
 
 
-// #pragma region sum
+#pragma region sum
 
 // Matrix& Matrix<T>::operator+=(const double & k){
 //     for(uint i=0; i<this->_r; ++i){
@@ -194,10 +194,10 @@ bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2){
 //     return ret;
 // }
 
-// #pragma endregion sum
+#pragma endregion sum
 
 
-// #pragma region subtract
+#pragma region subtract
 
 // Matrix& Matrix<T>::operator-=(const double & k){
 //     for(uint i=0; i<this->_r; ++i){
@@ -251,10 +251,10 @@ bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2){
 //     return ret;
 // }
 
-// #pragma endregion subtract
+#pragma endregion subtract
 
 
-// #pragma region multiply
+#pragma region multiply
 
 // Matrix& Matrix<T>::operator*=(const double & k){
 //     for(uint i=0; i<this->_r; ++i){
@@ -301,31 +301,33 @@ bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2){
 //     return ret;
 // }
 
-// #pragma endregion multiply
+#pragma endregion multiply
 
 
-// #pragma region divide
+#pragma region divide
 
-// Matrix& Matrix<T>::operator/=(const double & k){
-//     for(uint i=0; i<this->_r; ++i){
-//         for(uint j=0; j<this->_c; ++j){
-//             this->operator()(i,j) /= k;
-//         }
-//     }
-//     return *this;
-// }
+template<typename T>
+Matrix<T>& Matrix<T>::operator/=(const double & k){
+    for(uint i=0; i<this->_r; ++i){
+        for(uint j=0; j<this->_c; ++j){
+            this->operator()(i,j) /= k;
+        }
+    }
+    return *this;
+}
 
 // Matrix& Matrix<T>::operator/=(const Matrix & m){
 //    this->operator=((*this) / m);
 //    return *this;
 // }
 
-// Matrix operator/(const Matrix& m, const double& k){
-//     Matrix ret = m;
-//     ret/=k;
+template<typename T>
+Matrix<T> operator/(const Matrix<T>& m, const double& k){
+    Matrix<T> ret(m);
+    ret/=k;
 
-//     return ret;
-// }
+    return ret;
+}
 
 // Matrix operator/(const double& k, const Matrix& m){
 //     if(m.r() == m.c()) return m.inv() * k;
@@ -337,10 +339,10 @@ bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2){
 //     return Matrix<T>::matrix_r_divide(m1,m2);
 // }
 
-// #pragma endregion divide
+#pragma endregion divide
 
 
-// #pragma region concatenate
+#pragma region concatenate
 
 // Matrix& Matrix<T>::operator&=(const Matrix & m){
 //     this->operator=((*this) & m);
@@ -382,7 +384,7 @@ bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2){
 //     return ret;
 // }
 
-// #pragma endregion concatenate
+#pragma endregion concatenate
 
 
 #pragma region output

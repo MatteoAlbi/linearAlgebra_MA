@@ -28,9 +28,13 @@ typedef std::pair<uint,uint> uu_pair;
 namespace MA
 {
 
-template<typename T, typename U> concept Assignable = requires {
-  typename T::type;
-};
+// Define a type trait to check if a type is std::complex
+template <typename T>
+struct is_complex : std::false_type {};
+
+template <typename T>
+struct is_complex<std::complex<T>> : std::true_type {};
+
 
 template<typename T = double>
 class Matrix {
@@ -406,9 +410,10 @@ public:
 //     friend Matrix operator*(const double& k, const Matrix& m);
 //     friend Matrix operator*(const Matrix& m1, const Matrix& m2);
     
-//     Matrix& operator/=(const double & k);
+    Matrix<T>& operator/=(const double & k);
 //     Matrix& operator/=(const Matrix & m);
-//     friend Matrix operator/(const Matrix& m, const double& k);
+    template<typename U>
+    friend Matrix<U> operator/(const Matrix<U>& m, const double& k);
 //     friend Matrix operator/(const double& k, const Matrix& m);
 //     friend Matrix operator/(const Matrix& m1, const Matrix& m2);
 
@@ -462,29 +467,65 @@ public:
      */
     Matrix<T> to_r_vec() const;
 
-    // /**
-    //  * @brief computes dot product this.v
-    //  * @param v second vector
-    //  * @return dot product 
-    //  */
-    // template<typename U, typename V>
-    // friend Matrix<double> dot(const Matrix<U> & v1, const Matrix<V> & v2);
+    /**
+     * @brief computes dot product this.v
+     * @param v second vector
+     * @return dot product 
+     */
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        double
+    >::type
+    dot(const Matrix<U> & v1, const Matrix<V> & v2);
 
-    // /**
-    //  * @brief computes dot product this.v
-    //  * @param v second vector
-    //  * @return dot product 
-    //  */
-    // template<typename U, typename V>
-    // friend Matrix<double> dot(const Matrix<U> & v1, const Matrix<V> & v2);
+    /**
+     * @brief computes dot product this.v
+     * @param v second vector
+     * @return dot product 
+     */
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        std::complex<double>
+    >::type
+    dot(const Matrix<U> & v1, const Matrix<V> & v2);
 
-//     /**
-//      * @brief computes cross product this*v
-//      * implemented only for vectors of length 2 and 3
-//      * @param v second vector
-//      * @return Matrix: cross product (as column vec)
-//      */
-//     Matrix cross(const Matrix & v) const;
+    /**
+     * @brief computes cross product this*v
+     * implemented only for vectors of length 2 and 3
+     * @param v second vector
+     * @return Matrix: cross product (as column vec)
+     */
+    /**
+     * @brief computes dot product this.v
+     * @param v second vector
+     * @return dot product 
+     */
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    cross(const Matrix<U> & v1, const Matrix<V> & v2);
+
+    /**
+     * @brief computes cross product this*v
+     * implemented only for vectors of length 2 and 3
+     * @param v second vector
+     * @return Matrix: cross product (as column vec)
+     */
+    /**
+     * @brief computes dot product this.v
+     * @param v second vector
+     * @return dot product 
+     */
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    cross(const Matrix<U> & v1, const Matrix<V> & v2);
 
     /**
      * @brief return norm2: sqrt(sum(v(i)^2)) of the given vector
@@ -493,57 +534,57 @@ public:
      */
     double norm2() const;
 
-    // /**
-    //  * @brief return the normalized vector
-    //  * 
-    //  * @return Matrix: normalized vector (matrix with one dim=1)
-    //  */
-    // Matrix<T> normalize() const;
+    /**
+     * @brief return the normalized vector
+     * 
+     * @return Matrix: normalized vector (matrix with one dim=1)
+     */
+    Matrix<T> normalize() const;
 
-    // /**
-    //  * @brief normalized the vector, modifying current object
-    //  * 
-    //  */
-    // void normalize_self();
+    /**
+     * @brief normalized the vector, modifying current object
+     * 
+     */
+    void normalize_self();
 #pragma endregion vector
 
-// #pragma region checks
-//     /**
-//      * @brief check if matrix is a vector
-//      * i.e. one of the dimension is 1
-//      * @return true if is at least one dim is == 1
-//      */
-//     bool is_vec() const;
+#pragma region checks
+    /**
+     * @brief check if matrix is a vector
+     * i.e. one of the dimension is 1
+     * @return true if is at least one dim is == 1
+     */
+    bool is_vec() const;
 
-//     /**
-//      * @brief test if the given matrix is singular
-//      * matrix must be square
-//      * @return bool: true if it's singular
-//      */
-//     bool is_sing() const;
+    // /**
+    //  * @brief test if the given matrix is singular
+    //  * matrix must be square
+    //  * @return bool: true if it's singular
+    //  */
+    // bool is_sing() const;
 
-//     /**
-//      * @brief return true if the matrix is upper triangular
-//      */
-//     bool is_upper_triang() const;
+    /**
+     * @brief return true if the matrix is upper triangular
+     */
+    bool is_upper_triang() const;
     
-//     /**
-//      * @brief return true if the matrix is lower triangular
-//      */
-//     bool is_lower_triang() const;
+    /**
+     * @brief return true if the matrix is lower triangular
+     */
+    bool is_lower_triang() const;
 
-//     /**
-//      * @brief return true if the matrix is an upper hessenberg matrix
-//      */
-//     bool is_upper_hessenberg() const;
+    /**
+     * @brief return true if the matrix is an upper hessenberg matrix
+     */
+    bool is_upper_hessenberg() const;
 
-//     /**
-//      * @brief return true if the matrix is an lower hessenberg matrix
-//      */
-//     bool is_lower_hessenberg() const;
-// #pragma endregion checks
+    /**
+     * @brief return true if the matrix is an lower hessenberg matrix
+     */
+    bool is_lower_hessenberg() const;
+#pragma endregion checks
 
-// #pragma region matrix_operations
+#pragma region matrix_operations
 //     /**
 //      * @brief compute transpose
 //      * @return Matrix: transpose
@@ -620,9 +661,9 @@ public:
 //      * @return Matrix: right pseudo-inverse
 //      */
 //     Matrix pinv_right() const;
-// #pragma endregion matrix_operations
+#pragma endregion matrix_operations
 
-// #pragma region decomposition_methods
+#pragma region decomposition_methods
 //     /**
 //      * @brief Compute QR decomposition of the given matrix: A=Q*R 
 //      *        with Q orthogonal matrix and R upper triangular matrix
@@ -671,9 +712,9 @@ public:
 //     */
 //     void hessenberg_dec(Matrix & Q, Matrix & H) const;
 
-// #pragma endregion decomposition_methods
+#pragma endregion decomposition_methods
 
-// #pragma region ls_solution
+#pragma region ls_solution
 //     /**
 //      * @brief Solve the system U*x=B using a backward substitution algorithm.
 //      *        U must be an upper triangular square matrix (n*n) and B is the 
@@ -748,9 +789,9 @@ public:
 //      */
 //     static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
 
-// #pragma endregion ls_solution
+#pragma endregion ls_solution
 
-// #pragma region eigen
+#pragma region eigen
 
 //     /**
 //      * @brief solution of the eigendecomposition porblem based on the QR algorithm.
@@ -780,7 +821,7 @@ public:
 //     void eigen_implicit_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-16) const;
 
 //     Matrix implicit_double_QR_step() const;
-// #pragma endregion eigen
+#pragma endregion eigen
 
 };
 

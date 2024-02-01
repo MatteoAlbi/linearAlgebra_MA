@@ -32,8 +32,7 @@
                     "/usr/include",
                     "${workspaceFolder}"
                 ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": "${workspaceFolder}/.vscode/browse.vc.db"
+                "limitSymbolsToIncludedHeaders": true
             }
         }
     ],

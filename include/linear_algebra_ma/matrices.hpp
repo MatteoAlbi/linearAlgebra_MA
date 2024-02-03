@@ -506,18 +506,121 @@ public:
     operator+(const Matrix<U>& m1, const Matrix<V>& m2);
 #pragma endregion sum_operator
 
+#pragma region subtract_operator
+    template <typename U = T, typename V,
+            typename std::enable_if<
+                !is_complex<V>::value || 
+                (is_complex<U>::value && is_complex<V>::value), 
+            int>::type = 0
+    >
+    Matrix<T>& operator-=(const V & k);
 
-//     Matrix<T>& operator-=(const double & k);
-//     Matrix<T>& operator-=(const Matrix<T> & m);
-//     friend Matrix operator-(const Matrix& m);
-//     friend Matrix operator-(const Matrix& m, const double& k);
-//     friend Matrix operator-(const double& k, const Matrix& m);
-//     friend Matrix operator-(const Matrix& m1, const Matrix& m2);
+    template <typename U = T, typename V,
+        typename std::enable_if<
+            !is_complex<V>::value || 
+            (is_complex<U>::value && is_complex<V>::value), 
+        int>::type = 0
+    >
+    Matrix<T>& operator-=(const Matrix<V> & m);
 
-//     Matrix& operator*=(const double & k);
-//     Matrix& operator*=(const Matrix & m);
-//     friend Matrix operator*(const Matrix& m, const double& k);
-//     friend Matrix operator*(const double& k, const Matrix& m);
+
+    template<typename U>
+    friend Matrix<U> operator-(const Matrix<U>& m);
+
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator-(const Matrix<U>& m, const V& k);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator-(const Matrix<U>& m, const V& k);
+
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator-(const U& k, const Matrix<V>& m);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator-(const U& k, const Matrix<V>& m);
+
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator-(const Matrix<U>& m1, const Matrix<V>& m2);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator-(const Matrix<U>& m1, const Matrix<V>& m2);
+#pragma endregion subtract_operator
+
+#pragma region multiply_operator
+    template <typename U = T, typename V,
+        typename std::enable_if<
+            !is_complex<V>::value || 
+            (is_complex<U>::value && is_complex<V>::value), 
+        int>::type = 0
+    >
+    Matrix<T>& operator*=(const V & k);
+
+    template <typename U = T, typename V,
+        typename std::enable_if<
+            !is_complex<V>::value || 
+            (is_complex<U>::value && is_complex<V>::value), 
+        int>::type = 0
+    >
+    Matrix<T>& operator*=(const Matrix<V> & m);
+
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator*(const Matrix<U>& m, const V& k);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator*(const Matrix<U>& m, const V& k);
+
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator*(const U& k, const Matrix<V>& m);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator*(const U& k, const Matrix<V>& m);
+
+
     template<typename U, typename V>
     friend typename std::enable_if<
         !is_complex<U>::value && !is_complex<V>::value, 
@@ -531,50 +634,98 @@ public:
         Matrix<std::complex<double>>
     >::type
     operator*(const Matrix<U>& m1, const Matrix<V>& m2);
-    
+#pragma endregion multiply_operator
+// todo
+#pragma region divide_operator
     Matrix<T>& operator/=(const double & k);
 //     Matrix& operator/=(const Matrix & m);
     template<typename U>
     friend Matrix<U> operator/(const Matrix<U>& m, const double& k);
 //     friend Matrix operator/(const double& k, const Matrix& m);
 //     friend Matrix operator/(const Matrix& m1, const Matrix& m2);
+#pragma endregion divide_operator
 
+#pragma region output_operator
     template<typename U>
     friend std::ostream& operator<<(std::ostream& os, const Matrix<U>& m);
 
     friend std::ostream& operator<<(std::ostream& os, const uu_pair & p);
+#pragma endregion output_operator
 
-//     /**
-//      * @brief concatenate matrices per columns
-//      * @param m matrix to concatenate
-//      */
-//     Matrix& operator&=(const Matrix & m);
+#pragma region concatenate_operators
+    /**
+     * @brief concatenate matrices per columns
+     * @param m matrix to concatenate
+     */
+    template <typename U = T, typename V,
+        typename std::enable_if<
+            !is_complex<V>::value || 
+            (is_complex<U>::value && is_complex<V>::value), 
+        int>::type = 0
+    >
+    Matrix<T>& operator&=(const Matrix<V> & m);
 
-//     /**
-//      * @brief concatenates matrices per columns
-//      * 
-//      * @param m1 first matrix
-//      * @param m2 second matrix
-//      * @return Matrix 
-//      */
-//     friend Matrix operator&(const Matrix& m1, const Matrix& m2);
+    /**
+     * @brief concatenate matrices per columns
+     * @param m1 first matrix to concatenate
+     * @param m2 second matrix to concatenate
+     */
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator&(const Matrix<U>& m1, const Matrix<V>& m2);
 
-//     /**
-//      * @brief concatenate matrices per rows
-//      * @param m matrix to concatenate
-//      */
-//     Matrix& operator|=(const Matrix & m);
+    /**
+     * @brief concatenate matrices per columns
+     * @param m1 first matrix to concatenate
+     * @param m2 second matrix to concatenate
+     */
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator&(const Matrix<U>& m1, const Matrix<V>& m2);
 
-//     /**
-//      * @brief concatenates matrices per rows
-//      * 
-//      * @param m1 first matrix
-//      * @param m2 second matrix
-//      * @return Matrix
-//      */
-//     friend Matrix operator|(const Matrix& m1, const Matrix& m2);
 
-#pragma endregion operators
+    /**
+     * @brief concatenate matrices per rows
+     * @param m matrix to concatenate
+     */
+    template <typename U = T, typename V,
+        typename std::enable_if<
+            !is_complex<V>::value || 
+            (is_complex<U>::value && is_complex<V>::value), 
+        int>::type = 0
+    >
+    Matrix<T>& operator|=(const Matrix<V> & m);
+
+    /**
+     * @brief concatenate matrices per rows
+     * @param m1 first matrix to concatenate
+     * @param m2 second matrix to concatenate
+     */
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator|(const Matrix<U>& m1, const Matrix<V>& m2);
+
+    /**
+     * @brief concatenate matrices per rows
+     * @param m1 first matrix to concatenate
+     * @param m2 second matrix to concatenate
+     */
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator|(const Matrix<U>& m1, const Matrix<V>& m2);
+#pragma endregion concatenate_operators
 
 #pragma region vector
     /**
@@ -859,6 +1010,7 @@ public:
 #pragma endregion eigen
 
 };
+
 // todo
 #pragma region ls_solution
     // /**

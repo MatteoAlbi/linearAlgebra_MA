@@ -175,7 +175,7 @@ template <typename U, typename V,
     int>::type
 >
 Matrix<T>& Matrix<T>::operator+=(const Matrix<V> & m){
-    if(this->_r != m._r || this->_c != m._c) throw std::invalid_argument("Matrices' shapes don't match");
+    if(this->_r != m.r() || this->_c != m.c()) throw std::invalid_argument("Matrices' shapes don't match");
     
     for(uint i=0; i<this->_r; ++i){
         for(uint j=0; j<this->_c; ++j){

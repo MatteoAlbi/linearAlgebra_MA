@@ -780,84 +780,90 @@ TEST(Matrix, unequal_operator){
 TEST(Matrix, sum_operator){
     std::vector<double> v1 =  {10,11,12,13,14,15,16,17,18,19,20,21};
     std::vector<double> v2;
-    Matrix m1(3,4,v1), m2;
+    Matrix m1, m2;
 
     std::vector<complex<double>> v1c =  {10,11.0+1i,12,13,14.0+1i,15,16.0+1i,17,18,19.0+1i,20,21};
     std::vector<complex<double>> v2c;
-    Matrix m1c(3,4,v1), m2c;
+    Matrix<complex<double>> m1c, m2c;
 
-    v2 = v1;
     // int
     EXPECT_NO_THROW(Matrix(0,3)+=3);
     EXPECT_NO_THROW(Matrix(3,0)+3);
+    v2 = v1;
     for(uint i=0; i<v2.size(); ++i) v2[i]+=7;
-    EXPECT_EQ(m1+7, Matrix(3,4, v2));
-    m1+=7;
-    EXPECT_EQ(m1, Matrix(3,4, v2));
+    EXPECT_EQ(Matrix(3,4,v1)+7, Matrix(3,4, v2));
+    EXPECT_EQ(Matrix(3,4,v1)+=7, Matrix(3,4, v2));
 
     // double
     EXPECT_NO_THROW(Matrix(0,3)+=7.72);
     EXPECT_NO_THROW(Matrix(3,0)+8.13);
-    m1 = Matrix(3,4,v1);
     v2 = v1;
     for(uint i=0; i<v2.size(); ++i) v2[i]+=(-3.14);
-    EXPECT_EQ(m1+(-3.14), Matrix(3,4, v2));
-    m1+=(-3.14);
-    EXPECT_EQ(m1, Matrix(3,4, v2));
+    EXPECT_EQ(Matrix(3,4,v1)+(-3.14), Matrix(3,4, v2));
+    EXPECT_EQ(Matrix(3,4,v1)+=(-3.14), Matrix(3,4, v2));
 
     // complex
     EXPECT_NO_THROW(Matrix(3,0)+(8.13+1i));
-    m1 = Matrix(3,4,v1);
     v2c.clear();
     for(uint i=0; i<v1.size(); ++i) v2c.push_back(v1[i]+(8.13+1i));
-    EXPECT_EQ(m1+(8.13+1i), Matrix(3,4, v2c));
+    EXPECT_EQ(Matrix(3,4,v1)+(8.13+1i), Matrix(3,4, v2c));
     // EXPECT_NO_THROW(Matrix(3,0)+=(8.13+1i));
     // -> no operator "+=" matches these operands
 
     // matrices
-    m2 = Matrix(4,3, v2);
-    EXPECT_THROW(m1+m2, invalid_argument);
-    EXPECT_THROW(m1+=m2, invalid_argument);
-    m1 = Matrix(3,4,v1);
+    EXPECT_THROW(Matrix(3,4,v1)+Matrix(4,3, v2), invalid_argument);
+    EXPECT_THROW(Matrix(3,4,v1)+=Matrix(4,3, v2), invalid_argument);
     v2 = v1;
-    m2 = m1 + 2.28;
     for(uint i=0; i<v2.size(); ++i) v2[i] = v2[i] + v2[i] + 2.28;
-    EXPECT_EQ((m1+m2), Matrix(3,4, v2));
-    m1+=m2;
-    EXPECT_EQ(m1, Matrix(3,4, v2));
+    EXPECT_EQ((Matrix(3,4,v1) + Matrix(3,4,v1) + 2.28), Matrix(3,4, v2));
+    EXPECT_EQ((Matrix(3,4,v1) += Matrix(3,4,v1) + 2.28), Matrix(3,4, v2));
+    // EXPECT_THROW(Matrix(3,4,v1)+=Matrix<complex<double>>(4,3, v1c), invalid_argument);
+    // -> no match for ‘operator+=’ (operand types are ‘double’ and ‘const MA::Matrix<std::complex<double> >’)
+
 
     // -- complex matrix -- //
     
-    // v2c = v1c;
-    // // int
-    // for(int i=0; i<v2.size(); ++i) v2[i]+=7;
-    // EXPECT_EQ(m1+7, Matrix(3,4, v2));
-    // m1+=7;
-    // EXPECT_EQ(m1, Matrix(3,4, v2));
-    // EXPECT_NO_THROW(Matrix(0,3)+=3);
-    // EXPECT_NO_THROW(Matrix(3,0)+3);
+    // int
+    EXPECT_NO_THROW(Matrix<complex<double>>(0,3)+=3);
+    EXPECT_NO_THROW(Matrix<complex<double>>(3,0)+3);
+    v2c = v1c;
+    for(uint i=0; i<v2c.size(); ++i) v2c[i]+=7;
+    EXPECT_EQ(Matrix(3,4, v1c)+7, Matrix(3,4, v2c));
+    EXPECT_EQ(Matrix(3,4, v1c)+=7, Matrix(3,4, v2c));
 
-    // // double
-    // m1 = Matrix(3,4,v1);
-    // v2 = v1;
-    // for(int i=0; i<v2.size(); ++i) v2[i]+=(-3.14);
-    // EXPECT_EQ(m1+(-3.14) ,Matrix(3,4, v2));
-    // m1+=(-3.14);
-    // EXPECT_EQ(m1, Matrix(3,4, v2));
-    // EXPECT_NO_THROW(Matrix(0,3)+=7.72);
-    // EXPECT_NO_THROW(Matrix(3,0)+8.13);
+    // double
+    EXPECT_NO_THROW(Matrix<complex<double>>(0,3)+=7.72);
+    EXPECT_NO_THROW(Matrix<complex<double>>(3,0)+8.13);
+    v2c = v1c;
+    for(uint i=0; i<v2.size(); ++i) v2c[i]+=(-3.14);
+    EXPECT_EQ(Matrix(3,4,v1c)+(-3.14), Matrix(3,4, v2c));
+    EXPECT_EQ(Matrix(3,4,v1c)+=(-3.14), Matrix(3,4, v2c));
 
-    // // matrices
-    // m2 = Matrix(4,3, v2);
-    // EXPECT_THROW(m1+m2, invalid_argument);
-    // EXPECT_THROW(m1+=m2, invalid_argument);
-    // m1 = Matrix(3,4,v1);
-    // v2 = v1;
-    // m2 = m1 + 2.28;
-    // for(int i=0; i<v2.size(); ++i) v2[i] = v2[i] + v2[i] + 2.28;
-    // EXPECT_EQ((m1+m2), Matrix(3,4, v2));
-    // m1+=m2;
-    // EXPECT_EQ(m1, Matrix(3,4, v2));
+    // complex
+    EXPECT_NO_THROW(Matrix<complex<double>>(3,0)+(8.13+1i));
+    EXPECT_NO_THROW(Matrix<complex<double>>(3,0)+=(8.13+1i));
+    v2c = v1c;
+    for(uint i=0; i<v1.size(); ++i) v2c[i]+=(8.13+1i);
+    EXPECT_EQ(Matrix(3,4,v1c)+(8.13+1i), Matrix(3,4, v2c));
+    EXPECT_EQ(Matrix(3,4,v1c)+=(8.13+1i), Matrix(3,4, v2c));
+
+    // matrices
+    EXPECT_THROW(Matrix(3,4,v1c)+Matrix(4,3, v2c), invalid_argument);
+    EXPECT_THROW(Matrix(3,4,v1c)+=Matrix(4,3, v2c), invalid_argument);
+    EXPECT_NO_THROW(Matrix(3,4,v1c)+Matrix(3,4, v2c));
+    EXPECT_NO_THROW(Matrix(3,4,v1c)+=Matrix(3,4, v2c));
+    EXPECT_NO_THROW(Matrix(3,4,v1)+Matrix(3,4, v2c));
+    EXPECT_NO_THROW(Matrix(3,4,v1c)+Matrix(3,4, v2));
+    EXPECT_NO_THROW(Matrix(3,4,v1c)+=Matrix(3,4, v2));
+    v2c = v1c;
+    for(uint i=0; i<v2.size(); ++i) v2c[i] = v2c[i] + v2c[i] + 2.28+2i;
+    EXPECT_EQ((Matrix(3,4,v1c) + (Matrix(3,4,v1c) + 2.28+2i)), Matrix(3,4, v2c));
+    EXPECT_EQ((Matrix(3,4,v1c) += (Matrix(3,4,v1c) + 2.28+2i)), Matrix(3,4, v2c));
+    v2c = v1c;
+    for(uint i=0; i<v2.size(); ++i) v2c[i] += v1[i];
+    EXPECT_EQ((Matrix(3,4,v1c) + Matrix(3,4,v1)), Matrix(3,4, v2c));
+    EXPECT_EQ((Matrix(3,4,v1) + Matrix(3,4,v1c)), Matrix(3,4, v2c));
+    EXPECT_EQ((Matrix(3,4,v1c) += Matrix(3,4,v1)), Matrix(3,4, v2c));
 
 }
 // todo

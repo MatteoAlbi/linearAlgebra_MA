@@ -111,7 +111,12 @@ public:
      * @param c number of columns
      * @param v vector used to init the matrix
      */
-    template<typename U>
+    template<typename U,
+        typename std::enable_if<
+            !is_complex<U>::value ||
+            (is_complex<T>::value && is_complex<U>::value), int
+        >::type = 0
+    >
     Matrix(const uint & r, const uint & c, std::vector<U> v);
 
     /**
@@ -124,7 +129,12 @@ public:
      * @brief copy constructor
      * @param m matrix to copy
     */
-    template<typename U>
+    template<typename U,
+        typename std::enable_if<
+            !is_complex<U>::value ||
+            (is_complex<T>::value && is_complex<U>::value), int
+        >::type = 0
+    >
     Matrix(const Matrix<U> & m);
 
     /**
@@ -227,9 +237,22 @@ public:
      * @return underlaying array
      */
     T const * v() const;
+
+    template <typename U = T, 
+        typename std::enable_if<is_complex<U>::value, int>::type = 0
+    >
+    Matrix<double> real() const;
+
+    template <typename U = T, 
+        typename std::enable_if<is_complex<U>::value, int>::type = 0
+    >
+    Matrix<double> imag() const;
+
 #pragma endregion get
 
 #pragma region set
+    Matrix<T>& operator=(Matrix<T> m);
+
     /**
      * @brief uses the vector to fill in the elements of the matrix
      * @param v used vector
@@ -242,7 +265,12 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < this.size
      */
-    template<typename U>
+    template<typename U,
+        typename std::enable_if<
+            !is_complex<U>::value ||
+            (is_complex<T>::value && is_complex<U>::value), int
+        >::type = 0
+    >
     void set(std::vector<U> v);
 
     /**
@@ -263,7 +291,12 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < submatrix size
      */
-    template<typename U>
+    template<typename U,
+        typename std::enable_if<
+            !is_complex<U>::value ||
+            (is_complex<T>::value && is_complex<U>::value), int
+        >::type = 0
+    >
     void set(uu_pair rs, uu_pair cs, std::vector<U> v);
 
     /**
@@ -274,7 +307,12 @@ public:
      * @param m used matrix
      * @throw out_of_range if r or c are out of range
      */
-    template<typename U>
+    template<typename U,
+        typename std::enable_if<
+            !is_complex<U>::value ||
+            (is_complex<T>::value && is_complex<U>::value), int
+        >::type = 0
+    >
     void set(uint r, uint c, U x);
 
     /**
@@ -287,7 +325,12 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    template<typename U>
+    template<typename U,
+        typename std::enable_if<
+            !is_complex<U>::value ||
+            (is_complex<T>::value && is_complex<U>::value), int
+        >::type = 0
+    >
     void set(uu_pair rs, uint c, Matrix<U> m);
 
     /**
@@ -312,7 +355,12 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    template<typename U>
+    template<typename U,
+        typename std::enable_if<
+            !is_complex<U>::value ||
+            (is_complex<T>::value && is_complex<U>::value), int
+        >::type = 0
+    >
     void set(uint r, uu_pair cs, Matrix<U> m);
 
     /**
@@ -337,7 +385,12 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    template<typename U>
+    template<typename U,
+        typename std::enable_if<
+            !is_complex<U>::value ||
+            (is_complex<T>::value && is_complex<U>::value), int
+        >::type = 0
+    >
     void set(uu_pair rs, uu_pair cs, Matrix<U> m);
 
     /**
@@ -380,22 +433,79 @@ public:
     void swap_cols(const uint & c1, const uint & c2);
 #pragma endregion set
 
-#pragma region operators
-    Matrix<T>& operator=(Matrix<T> m);
+#pragma region comparison_operators   
 
     template<typename U, typename V>
     friend bool operator==(const Matrix<U> & m1, const Matrix<V> & m2);
+
     template<typename U, typename V>
     friend bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2);
 
-//     Matrix<T>& operator+=(const double & k);
-//     Matrix<T>& operator+=(const Matrix<T> & m);
-//     template<typename RET, typename T>
-//     friend Matrix<RET> operator+(const Matrix<T>& m, const double& k);
-//     template<typename RET, typename T>
-//     friend Matrix<RET> operator+(const double& k, const Matrix<T>& m);
-//     template<typename RET, typename T1, typename T2>
-//     friend Matrix<RET> operator+(const Matrix<T1>& m1, const Matrix<T2>& m2);
+#pragma endregion comparison_operators
+
+#pragma region sum_operator
+    template <typename U = T, typename V,
+        typename std::enable_if<
+            !is_complex<V>::value || 
+            (is_complex<U>::value && is_complex<V>::value), 
+        int>::type = 0
+    >
+    Matrix<T>& operator+=(const V & k);
+
+    template <typename U = T, typename V,
+        typename std::enable_if<
+            !is_complex<V>::value || 
+            (is_complex<U>::value && is_complex<V>::value), 
+        int>::type = 0
+    >
+    Matrix<T>& operator+=(const Matrix<V> & m);
+
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator+(const Matrix<U>& m, const V& k);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator+(const Matrix<U>& m, const V& k);
+
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator+(const U& k, const Matrix<V>& m);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator+(const U& k, const Matrix<V>& m);
+
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator+(const Matrix<U>& m1, const Matrix<V>& m2);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator+(const Matrix<U>& m1, const Matrix<V>& m2);
+#pragma endregion sum_operator
+
 
 //     Matrix<T>& operator-=(const double & k);
 //     Matrix<T>& operator-=(const Matrix<T> & m);
@@ -408,7 +518,19 @@ public:
 //     Matrix& operator*=(const Matrix & m);
 //     friend Matrix operator*(const Matrix& m, const double& k);
 //     friend Matrix operator*(const double& k, const Matrix& m);
-//     friend Matrix operator*(const Matrix& m1, const Matrix& m2);
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        !is_complex<U>::value && !is_complex<V>::value, 
+        Matrix<double>
+    >::type
+    operator*(const Matrix<U>& m1, const Matrix<V>& m2);
+
+    template<typename U, typename V>
+    friend typename std::enable_if<
+        is_complex<U>::value || is_complex<V>::value, 
+        Matrix<std::complex<double>>
+    >::type
+    operator*(const Matrix<U>& m1, const Matrix<V>& m2);
     
     Matrix<T>& operator/=(const double & k);
 //     Matrix& operator/=(const Matrix & m);
@@ -497,11 +619,6 @@ public:
      * @param v second vector
      * @return Matrix: cross product (as column vec)
      */
-    /**
-     * @brief computes dot product this.v
-     * @param v second vector
-     * @return dot product 
-     */
     template<typename U, typename V>
     friend typename std::enable_if<
         is_complex<U>::value || is_complex<V>::value, 
@@ -514,11 +631,6 @@ public:
      * implemented only for vectors of length 2 and 3
      * @param v second vector
      * @return Matrix: cross product (as column vec)
-     */
-    /**
-     * @brief computes dot product this.v
-     * @param v second vector
-     * @return dot product 
      */
     template<typename U, typename V>
     friend typename std::enable_if<
@@ -545,7 +657,7 @@ public:
      * @brief normalized the vector, modifying current object
      * 
      */
-    void normalize_self();
+    Matrix<T>& normalize_self();
 #pragma endregion vector
 
 #pragma region checks
@@ -556,12 +668,12 @@ public:
      */
     bool is_vec() const;
 
-    // /**
-    //  * @brief test if the given matrix is singular
-    //  * matrix must be square
-    //  * @return bool: true if it's singular
-    //  */
-    // bool is_sing() const;
+    /**
+     * @brief test if the given matrix is singular
+     * matrix must be square
+     * @return bool: true if it's singular
+     */
+    bool is_sing() const;
 
     /**
      * @brief return true if the matrix is upper triangular
@@ -583,63 +695,63 @@ public:
      */
     bool is_lower_hessenberg() const;
 #pragma endregion checks
-
+// todo
 #pragma region matrix_operations
-//     /**
-//      * @brief compute transpose
-//      * @return Matrix: transpose
-//      */
-//     Matrix t() const;
+    /**
+     * @brief compute transpose
+     * @return Matrix: transpose
+     */
+    Matrix<T> t() const;
 
-//     /**
-//      * @brief compute submatrix matrix obtained by deleting
-//      * the p-th row and q-t column
-//      * 
-//      * @param p row index
-//      * @param q column index
-//      * @return Matrix: submatrix
-//      */
-//     Matrix submat_del(const uint & p, const uint & q) const;
+    /**
+     * @brief compute submatrix matrix obtained by deleting
+     * the p-th row and q-t column
+     * 
+     * @param p row index
+     * @param q column index
+     * @return Matrix: submatrix
+     */
+    Matrix<T> submat_del(const uint & p, const uint & q) const;
 
-//     /**
-//      * @brief compute determinant
-//      * matrix must be square
-//      * @return double: determinant
-//      */
-//     double det() const;
+    /**
+     * @brief compute determinant
+     * matrix must be square
+     * @return determinant
+     */
+    T det() const;
 
-//     /**
-//      * @brief computes minor of the matrix wrt row p and column q
-//      * (minor: determinant of the submatrix obtained by deletin
-//      * the p row and q column). The matrix must be square.
-//      * @param p row index
-//      * @param q column index
-//      * @return double: minor
-//     */
-//     double minor(const uint & p, const uint & q) const;
+    /**
+     * @brief computes minor of the matrix wrt row p and column q
+     * (minor: determinant of the submatrix obtained by deletin
+     * the p row and q column). The matrix must be square.
+     * @param p row index
+     * @param q column index
+     * @return minor
+    */
+    T minor(const uint & p, const uint & q) const;
 
-//     /**
-//      * @brief computes cofactor of the matrix wrt row p and column q.
-//      * The matrix must be square.
-//      * @param p row index
-//      * @param q column index
-//      * @return double: cofactor
-//     */
-//     double cof(const uint & p, const uint & q) const;
+    /**
+     * @brief computes cofactor of the matrix wrt row p and column q.
+     * The matrix must be square.
+     * @param p row index
+     * @param q column index
+     * @return cofactor
+    */
+    T cof(const uint & p, const uint & q) const;
 
-//     /**
-//      * @brief computes the cofactors matrix.
-//      * The input matrix must be square.
-//      * @return Matrix: cofactor matrix
-//     */
-//     Matrix cof_mat() const;
+    /**
+     * @brief computes the cofactors matrix.
+     * The input matrix must be square.
+     * @return Matrix: cofactor matrix
+    */
+    Matrix<T> cof_mat() const;
 
-//     /**
-//      * @brief create adjoint of the matrix
-//      * 
-//      * @return Matrix: adjoint
-//      */
-//     Matrix adj() const;
+    /**
+     * @brief create adjoint of the matrix
+     * 
+     * @return Matrix: adjoint
+     */
+    Matrix<T> adj() const;
 
 //     /**
 //      * @brief compute inverse of the matrix using adjoint/det method
@@ -662,7 +774,7 @@ public:
 //      */
 //     Matrix pinv_right() const;
 #pragma endregion matrix_operations
-
+// todo
 #pragma region decomposition_methods
 //     /**
 //      * @brief Compute QR decomposition of the given matrix: A=Q*R 
@@ -689,18 +801,18 @@ public:
 //     void qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const;
 
 
-//     /**
-//      * @brief Compute LUP decomposition of the given matrix: PA = LU with
-//      *        L lower triangular matrix and U upper triangular matrix and
-//      *        P permutation matrix
-//      *      https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
-//      * 
-//      * @param L lower triangular matrix
-//      * @param U upper triangular matrix
-//      * @param P permutation matrix
-//      * @return number of swap performed during permutation
-//      */
-//     uint lup_dec(Matrix & L, Matrix & U, Matrix & P) const;
+    /**
+     * @brief Compute LUP decomposition of the given matrix: PA = LU with
+     *        L lower triangular matrix and U upper triangular matrix and
+     *        P permutation matrix
+     *      https://www.tutorialspoint.com/cplusplus-program-to-perform-lu-decomposition-of-any-matrix
+     * 
+     * @param L lower triangular matrix
+     * @param U upper triangular matrix
+     * @param P permutation matrix
+     * @return number of swap performed during permutation
+     */
+    uint lup_dec(Matrix<T> & L, Matrix<T> & U, Matrix<double> & P) const;
 
 //     /**
 //      * @brief preform hessenberg decomposition of the given matrix
@@ -713,84 +825,7 @@ public:
 //     void hessenberg_dec(Matrix & Q, Matrix & H) const;
 
 #pragma endregion decomposition_methods
-
-#pragma region ls_solution
-//     /**
-//      * @brief Solve the system U*x=B using a backward substitution algorithm.
-//      *        U must be an upper triangular square matrix (n*n) and B is the 
-//      *        known terms matrix with number of rows equalt to U -> B is (n*c_b)
-//      * 
-//      * @param U     upper triangular matrix (n*n)
-//      * @param B     known terms matrix (n*c_b)
-//      */
-//     static Matrix backward_sub(Matrix const & U, Matrix const & B);
-
-//     /**
-//      * @brief Solve the system L*x=B using a forward substitution algorithm.
-//      *        L must be a lower triangular square matrix (n*n) and B is the 
-//      *        known terms matrix with number of rows equalt to L -> B is (n*c_b)
-//      * 
-//      * @param L     lower triangular matrix (n*n)
-//      * @param B     known terms matrix (n*c_b)
-//      */
-//     static Matrix forward_sub(Matrix const & L, Matrix const & B);
-
-
-//     /**
-//      * @brief computes the left division A\B, which corresponds to solve the 
-//      *        linear equation system Ax=B or performing the operation (A^-1)*b.
-//      *        The rows of A must be equal the rows of B. The result has dimensions (r_a*c_b)
-//      *        The functions solves the problem depending on the dimensions of the 
-//      *        given matrices: 
-//      *        
-//      *        - A is a square matrix (r_a*c_r_common): A is decomposed using
-//      *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
-//      *          subsequentially solving the two systems:
-//      *              - L*(U*x) = PB, thus solving it using forward substitution the system 
-//      *                L*y=PB equal to y=L\PB
-//      *              - U*x=y, thus solving it using backward substitution the system 
-//      *                U*x=y equal to x=U\y
-//      *        - A is rectangular and represent an overconstrained problem (rows > cols): A
-//      *          is decomposed using QRP decomposition (AP = QR) and performing the operation
-//      *          X = P*(R\(Q'*b)). Notably, using the householder projectiob for the QRP
-//      *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
-//      *          the diagonal are zero. Such rows are discared along with the corresponding 
-//      *          rows of b. R\(Q'*b) is solved using backward substitution.
-//      * 
-//      * @param A             left hand division term
-//      * @param B             right hand division term
-//      * @return Matrix: result of the division
-//      * @throw invalid_argument if rows don't match
-//      */
-//     static Matrix matrix_l_divide(Matrix const & A, Matrix const & B);
-
-//     /**
-//      * @brief solves the linear system A*x=B. 
-//      *        Calls matrix_l_divide.
-//      * @param A coefficient matrix (must be square nxn)
-//      * @param B known terms matrix (B.rows == A.cols)
-//      * @return Matrix: x (dimensions A.rows x B.cols)
-//      * @throw invalid_argument if rows don't match
-//      */
-//     static Matrix solve_ls(Matrix const & A, Matrix const & B);
-
-//     /**
-//      * @brief computes the right division B/A translating it in a left 
-//      *        division problem following the equality B/A = (A.t\B.t).t
-//      *        where .t stands for transpose. 
-//      *        The columns of A must be equal the columns of B.
-//      *        The functions solves the problem depending on the dimensions of the 
-//      *        given matrices, as described in  matrix_l_divide.
-//      * 
-//      * @param B             left hand division term 
-//      * @param A             right hand division term
-//      * @return Matrix: result of the division
-//      * @throw invalid_argument if columns don't match
-//      */
-//     static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
-
-#pragma endregion ls_solution
-
+// todo
 #pragma region eigen
 
 //     /**
@@ -824,7 +859,82 @@ public:
 #pragma endregion eigen
 
 };
+// todo
+#pragma region ls_solution
+    // /**
+    //  * @brief Solve the system U*x=B using a backward substitution algorithm.
+    //  *        U must be an upper triangular square matrix (n*n) and B is the 
+    //  *        known terms matrix with number of rows equalt to U -> B is (n*c_b)
+    //  * 
+    //  * @param U     upper triangular matrix (n*n)
+    //  * @param B     known terms matrix (n*c_b)
+    //  */
+    // static Matrix backward_sub(Matrix const & U, Matrix const & B);
 
+    // /**
+    //  * @brief Solve the system L*x=B using a forward substitution algorithm.
+    //  *        L must be a lower triangular square matrix (n*n) and B is the 
+    //  *        known terms matrix with number of rows equalt to L -> B is (n*c_b)
+    //  * 
+    //  * @param L     lower triangular matrix (n*n)
+    //  * @param B     known terms matrix (n*c_b)
+    //  */
+    // static Matrix forward_sub(Matrix const & L, Matrix const & B);
+
+    // /**
+    //  * @brief computes the left division A\B, which corresponds to solve the 
+    //  *        linear equation system Ax=B or performing the operation (A^-1)*b.
+    //  *        The rows of A must be equal the rows of B. The result has dimensions (r_a*c_b)
+    //  *        The functions solves the problem depending on the dimensions of the 
+    //  *        given matrices: 
+    //  *        
+    //  *        - A is a square matrix (r_a*c_r_common): A is decomposed using
+    //  *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
+    //  *          subsequentially solving the two systems:
+    //  *              - L*(U*x) = PB, thus solving it using forward substitution the system 
+    //  *                L*y=PB equal to y=L\PB
+    //  *              - U*x=y, thus solving it using backward substitution the system 
+    //  *                U*x=y equal to x=U\y
+    //  *        - A is rectangular and represent an overconstrained problem (rows > cols): A
+    //  *          is decomposed using QRP decomposition (AP = QR) and performing the operation
+    //  *          X = P*(R\(Q'*b)). Notably, using the householder projectiob for the QRP
+    //  *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
+    //  *          the diagonal are zero. Such rows are discared along with the corresponding 
+    //  *          rows of b. R\(Q'*b) is solved using backward substitution.
+    //  * 
+    //  * @param A             left hand division term
+    //  * @param B             right hand division term
+    //  * @return Matrix: result of the division
+    //  * @throw invalid_argument if rows don't match
+    //  */
+    // static Matrix matrix_l_divide(Matrix const & A, Matrix const & B);
+
+    // /**
+    //  * @brief solves the linear system A*x=B. 
+    //  *        Calls matrix_l_divide.
+    //  * @param A coefficient matrix (must be square nxn)
+    //  * @param B known terms matrix (B.rows == A.cols)
+    //  * @return Matrix: x (dimensions A.rows x B.cols)
+    //  * @throw invalid_argument if rows don't match
+    //  */
+    // static Matrix solve_ls(Matrix const & A, Matrix const & B);
+
+    // /**
+    //  * @brief computes the right division B/A translating it in a left 
+    //  *        division problem following the equality B/A = (A.t\B.t).t
+    //  *        where .t stands for transpose. 
+    //  *        The columns of A must be equal the columns of B.
+    //  *        The functions solves the problem depending on the dimensions of the 
+    //  *        given matrices, as described in  matrix_l_divide.
+    //  * 
+    //  * @param B             left hand division term 
+    //  * @param A             right hand division term
+    //  * @return Matrix: result of the division
+    //  * @throw invalid_argument if columns don't match
+    //  */
+    // static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
+
+#pragma endregion ls_solution
 
 #pragma region special_constructors
 /**

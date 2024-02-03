@@ -151,48 +151,110 @@ bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2){
 
 #pragma region sum
 
-// Matrix& Matrix<T>::operator+=(const double & k){
-//     for(uint i=0; i<this->_r; ++i){
-//         for(uint j=0; j<this->_c; ++j){
-//             this->operator()(i,j) += k;
-//         }
-//     }
-//     return *this;
-// }
+template<typename T>
+template <typename U, typename V,
+    typename std::enable_if<
+        !is_complex<V>::value || 
+        (is_complex<U>::value && is_complex<V>::value), 
+    int>::type
+>
+Matrix<T>& Matrix<T>::operator+=(const V & k){
+    for(uint i=0; i<this->_r; ++i){
+        for(uint j=0; j<this->_c; ++j){
+            this->operator()(i,j) += k;
+        }
+    }
+    return *this;
+}
 
-// Matrix& Matrix<T>::operator+=(const Matrix & m){
-//     if(this->_r != m._r || this->_c != m._c) throw std::invalid_argument("Matrices' shapes don't match");
+template<typename T>
+template <typename U, typename V,
+    typename std::enable_if<
+        !is_complex<V>::value || 
+        (is_complex<U>::value && is_complex<V>::value), 
+    int>::type
+>
+Matrix<T>& Matrix<T>::operator+=(const Matrix<V> & m){
+    if(this->_r != m._r || this->_c != m._c) throw std::invalid_argument("Matrices' shapes don't match");
     
-//     for(uint i=0; i<this->_r; ++i){
-//         for(uint j=0; j<this->_c; ++j){
-//             this->operator()(i,j) += m(i,j);
-//         }
-//     }
-//     return *this;
-// }
+    for(uint i=0; i<this->_r; ++i){
+        for(uint j=0; j<this->_c; ++j){
+            this->operator()(i,j) += m(i,j);
+        }
+    }
+    return *this;
+}
 
-// Matrix operator+(const Matrix& m, const double& k){
-//     Matrix ret = m;
-//     ret+=k;
 
-//     return ret;
-// }
+template<typename U, typename V>
+typename std::enable_if<
+    !is_complex<U>::value && !is_complex<V>::value, 
+    Matrix<double>
+>::type
+operator+(const Matrix<U>& m, const V& k){
+    Matrix<double> ret = m;
+    ret+=k;
+    return ret;
+}
 
-// Matrix operator+(const double& k, const Matrix& m){
-//     Matrix ret = m;
-//     ret+=k;
+template<typename U, typename V>
+typename std::enable_if<
+    is_complex<U>::value || is_complex<V>::value, 
+    Matrix<std::complex<double>>
+>::type
+operator+(const Matrix<U>& m, const V& k){
+    Matrix<std::complex<double>> ret = m;
+    ret+=k;
+    return ret;
+}
 
-//     return ret;
-// }
 
-// Matrix operator+(const Matrix& m1, const Matrix& m2){
-//     if(m1.r() != m2.r() || m1.c() != m2.c()) throw std::invalid_argument("Matrices' shapes don't match");
-    
-//     Matrix ret = m1;
-//     ret+=m2;
+template<typename U, typename V>
+typename std::enable_if<
+    !is_complex<U>::value && !is_complex<V>::value, 
+    Matrix<double>
+>::type
+operator+(const U& k, const Matrix<V>& m){
+    Matrix<double> ret = m;
+    ret+=k;
+    return ret;
+}
 
-//     return ret;
-// }
+template<typename U, typename V>
+typename std::enable_if<
+    is_complex<U>::value || is_complex<V>::value, 
+    Matrix<std::complex<double>>
+>::type
+operator+(const U& k, const Matrix<V>& m){
+    Matrix<std::complex<double>> ret = m;
+    ret+=k;
+    return ret;
+}
+
+
+template<typename U, typename V>
+typename std::enable_if<
+    !is_complex<U>::value && !is_complex<V>::value, 
+    Matrix<double>
+>::type
+operator+(const Matrix<U>& m1, const Matrix<V>& m2){
+    if(m1.r() != m2.r() || m1.c() != m2.c()) throw std::invalid_argument("Matrices' shapes don't match");
+    Matrix<double> ret = m1;
+    ret+=m2;
+    return ret;
+}
+
+template<typename U, typename V>
+typename std::enable_if<
+    is_complex<U>::value || is_complex<V>::value, 
+    Matrix<std::complex<double>>
+>::type
+operator+(const Matrix<U>& m1, const Matrix<V>& m2){
+    if(m1.r() != m2.r() || m1.c() != m2.c()) throw std::invalid_argument("Matrices' shapes don't match");
+    Matrix<std::complex<double>> ret = m1;
+    ret+=m2;
+    return ret;
+}
 
 #pragma endregion sum
 
@@ -284,22 +346,49 @@ bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2){
 //     return ret;
 // }
 
-// Matrix operator*(const Matrix& m1, const Matrix& m2){
-//     if(m1.c() != m2.r()) throw std::invalid_argument("Matrices' shapes don't match");
+template<typename U, typename V>
+typename std::enable_if<
+    !is_complex<U>::value && !is_complex<V>::value, 
+    Matrix<double>
+>::type
+operator*(const Matrix<U>& m1, const Matrix<V>& m2){
+    if(m1.c() != m2.r()) throw std::invalid_argument("Matrices' shapes don't match");
     
-//     Matrix ret = Matrix(m1.r(), m2.c());
+    Matrix<double> ret(m1.r(), m2.c());
 
-//     for (uint i = 0; i<m1.r(); ++i) {
-//         for (uint j = 0; j<m2.c(); ++j) {
-//             ret(i,j) = 0;
-//             for (uint k = 0; k<m1.c(); ++k) {
-//                 ret(i,j) += m1(i,k) * m2(k,j);
-//             }
-//         }
-//     }
+    for (uint i = 0; i<m1.r(); ++i) {
+        for (uint j = 0; j<m2.c(); ++j) {
+            ret(i,j) = 0.0;
+            for (uint k = 0; k<m1.c(); ++k) {
+                ret(i,j) += m1(i,k) * m2(k,j);
+            }
+        }
+    }
 
-//     return ret;
-// }
+    return ret;
+}
+
+template<typename U, typename V>
+typename std::enable_if<
+    is_complex<U>::value || is_complex<V>::value, 
+    Matrix<std::complex<double>>
+>::type
+operator*(const Matrix<U>& m1, const Matrix<V>& m2){
+    if(m1.c() != m2.r()) throw std::invalid_argument("Matrices' shapes don't match");
+    
+    Matrix<std::complex<double>> ret(m1.r(), m2.c());
+
+    for (uint i = 0; i<m1.r(); ++i) {
+        for (uint j = 0; j<m2.c(); ++j) {
+            ret(i,j) = 0.0;
+            for (uint k = 0; k<m1.c(); ++k) {
+                ret(i,j) += m1(i,k) * m2(k,j);
+            }
+        }
+    }
+
+    return ret;
+}
 
 #pragma endregion multiply
 

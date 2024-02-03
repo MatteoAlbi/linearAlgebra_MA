@@ -1,6 +1,8 @@
 #ifndef MA_MATRICES_TPP
 #define MA_MATRICES_TPP
 
+#include "linear_algebra_ma/matrices.hpp"
+
 namespace MA
 {
 
@@ -43,7 +45,12 @@ Matrix<T>::Matrix(const uint & r, const uint & c, std::vector<T> v){
 }
 
 template<typename T>
-template<typename U>
+template<typename U,
+    typename std::enable_if<
+        !is_complex<U>::value ||
+        (is_complex<T>::value && is_complex<U>::value), int
+    >::type
+>
 Matrix<T>::Matrix(const uint & r, const uint & c, std::vector<U> v) {
     this->_r = r;
     this->_c = c;
@@ -60,7 +67,12 @@ Matrix<T>::Matrix(const Matrix<T> & m){
 }
 
 template<typename T>
-template<typename U>
+template<typename U,
+    typename std::enable_if<
+        !is_complex<U>::value ||
+        (is_complex<T>::value && is_complex<U>::value), int
+    >::type
+>
 Matrix<T>::Matrix(const Matrix<U> & m){
     this->_r = m.r();
     this->_c = m.c();
@@ -85,7 +97,7 @@ Matrix<T>::~Matrix() {
 #pragma endregion constructor_destructor
 
 
-#pragma region get_set
+#pragma region getter
 
 template<typename T>
 uint Matrix<T>::r() const{return _r;}
@@ -99,6 +111,47 @@ template<typename T>
 T const * Matrix<T>::v() const{return _v;}
 
 template<typename T>
+Matrix<T> Matrix<T>::diag() const{
+    uint dim = std::min(_c, _r);
+    Matrix v = Matrix(dim,1);
+
+    for(uint i=0; i<dim; ++i){
+        v(i) = this->operator()(i,i);
+    }
+
+    return v;
+}
+
+template<typename T>
+template <typename U, 
+    typename std::enable_if<is_complex<U>::value, int>::type
+>
+Matrix<double> Matrix<T>::real() const{
+    std::vector<double> v;
+    for(uint i=0; i<this->size(); ++i){
+        v.push_back(this->_v[i].real());
+    }
+    return Matrix<double>(_r, _c, v);
+}
+
+template<typename T>
+template <typename U, 
+    typename std::enable_if<is_complex<U>::value, int>::type
+>
+Matrix<double> Matrix<T>::imag() const{
+    std::vector<double> v;
+    for(uint i=0; i<this->size(); ++i){
+        v.push_back(this->_v[i].imag());
+    }
+    return Matrix<double>(_r, _c, v);
+}
+
+#pragma endregion getter
+
+
+#pragma region setter
+
+template<typename T>
 void Matrix<T>::set(std::vector<T> v){
     if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
 
@@ -106,7 +159,12 @@ void Matrix<T>::set(std::vector<T> v){
 }
 
 template<typename T>
-template<typename U>
+template<typename U,
+    typename std::enable_if<
+        !is_complex<U>::value ||
+        (is_complex<T>::value && is_complex<U>::value), int
+    >::type
+>
 void Matrix<T>::set(std::vector<U> v){
     if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
 
@@ -135,7 +193,12 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<T> v){
 }
 
 template<typename T>
-template<typename U>
+template<typename U,
+    typename std::enable_if<
+        !is_complex<U>::value ||
+        (is_complex<T>::value && is_complex<U>::value), int
+    >::type
+>
 void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
@@ -157,13 +220,23 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
 }
 
 template<typename T>
-template<typename U>
+template<typename U,
+    typename std::enable_if<
+        !is_complex<U>::value ||
+        (is_complex<T>::value && is_complex<U>::value), int
+    >::type
+>
 void Matrix<T>::set(uint r, uint c, U x){
     this->operator()(r,c) = x;
 }
 
 template<typename T>
-template<typename U>
+template<typename U,
+    typename std::enable_if<
+        !is_complex<U>::value ||
+        (is_complex<T>::value && is_complex<U>::value), int
+    >::type
+>
 void Matrix<T>::set(uu_pair rs, uint c, Matrix<U> m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
@@ -196,7 +269,12 @@ void Matrix<T>::set(uint r, uu_pair cs, Matrix<T> m){
 }
 
 template<typename T>
-template<typename U>
+template<typename U,
+    typename std::enable_if<
+        !is_complex<U>::value ||
+        (is_complex<T>::value && is_complex<U>::value), int
+    >::type
+>
 void Matrix<T>::set(uint r, uu_pair cs, Matrix<U> m){
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
@@ -231,7 +309,12 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<T> m){
 }
 
 template<typename T>
-template<typename U>
+template<typename U,
+    typename std::enable_if<
+        !is_complex<U>::value ||
+        (is_complex<T>::value && is_complex<U>::value), int
+    >::type
+>
 void Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<U> m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
@@ -261,17 +344,10 @@ Matrix<T> Matrix<T>::reshape(const uint & r, const uint & c) const{
     return ret;
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::diag() const{
-    uint dim = std::min(_c, _r);
-    Matrix v = Matrix(dim,1);
+#pragma endregion setter
 
-    for(uint i=0; i<dim; ++i){
-        v(i) = this->operator()(i,i);
-    }
 
-    return v;
-}
+#pragma region swap
 
 template<typename T>
 void swap(Matrix<T> & m1, Matrix<T> & m2){
@@ -312,7 +388,7 @@ void Matrix<T>::swap_cols(const uint & c1, const uint & c2){
     this->set(ALL, c2, tmp);
 }
 
-#pragma endregion get_set
+#pragma endregion swap
 
 
 #pragma region vector
@@ -414,8 +490,8 @@ Matrix<T> Matrix<T>::normalize() const{
 }
 
 template<typename T>
-void Matrix<T>::normalize_self(){
-    this->operator/=(this->norm2());
+Matrix<T>& Matrix<T>::normalize_self(){
+    return this->operator/=(this->norm2());
 }
 
 #pragma endregion vector
@@ -428,10 +504,11 @@ bool Matrix<T>::is_vec() const{
     return this->_r == 1 || this->_c == 1;
 }
 
-// bool Matrix<T>::is_sing() const{
-//     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
-//     return this->det() == 0;
-// }
+template<typename T>
+bool Matrix<T>::is_sing() const{
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
+    return this->det() == 0.0;
+}
 
 template<typename T>
 bool Matrix<T>::is_upper_triang() const{
@@ -486,105 +563,125 @@ bool Matrix<T>::is_lower_hessenberg() const{
 
 #pragma region matrix_operations
 
-// Matrix Matrix<T>::t() const{
-//     Matrix ret = Matrix(this->_c, this->_r);
-//     for (uint i = 0; i<this->_r; ++i) {
-//         for (uint j = 0; j<this->_c; ++j) {
-//             ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
-//         }
-//     }
-//     return ret;
-// }
+template<typename T>
+Matrix<T> Matrix<T>::t() const{
+    Matrix<T> ret(this->_c, this->_r);
+    for (uint i = 0; i<this->_r; ++i) {
+        for (uint j = 0; j<this->_c; ++j) {
+            ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
+        }
+    }
+    return ret;
+}
 
-// Matrix Matrix<T>::submat_del(const uint & p, const uint & q) const{
-//     if(this->_r <= p) throw std::invalid_argument("p greater than matrix rows");
-//     if(this->_c <= q) throw std::invalid_argument("q greater than matrix cols");
+template <>
+Matrix<std::complex<double>> Matrix<std::complex<double>>::t() const{
+    Matrix<std::complex<double>> ret(this->_c, this->_r);
+    for (uint i = 0; i<this->_r; ++i) {
+        for (uint j = 0; j<this->_c; ++j) {
+            ret._v[j * ret._c + i] = std::conj(this->_v[i * this->_c + j]);
+        }
+    }
+    return ret;
+}
 
-//     uint i = 0, j = 0;
+template<typename T>
+Matrix<T> Matrix<T>::submat_del(const uint & p, const uint & q) const{
+    if(this->_r <= p) throw std::invalid_argument("p greater than matrix rows");
+    if(this->_c <= q) throw std::invalid_argument("q greater than matrix cols");
 
-//     Matrix ret = Matrix(this->_r-1,this->_c-1);
+    uint i = 0, j = 0;
 
-//     // Looping for each element of the matrix
-//     for (uint row = 0; row < this->_r; row++){
+    Matrix<T> ret = Matrix(this->_r-1,this->_c-1);
 
-//         for (uint col = 0; col < this->_c; col++){
+    // Looping for each element of the matrix
+    for (uint row = 0; row < this->_r; row++){
 
-//             // Copying into result matrix only those element
-//             // which are not in given row and column
-//             if (row != p && col != q){
-//                 ret(i,j) = this->operator()(row,col);
-//                 ++j;
+        for (uint col = 0; col < this->_c; col++){
+
+            // Copying into result matrix only those element
+            // which are not in given row and column
+            if (row != p && col != q){
+                ret(i,j) = this->operator()(row,col);
+                ++j;
  
-//                 // Row is filled, so increase row index and
-//                 // reset col index
-//                 if (j == ret._c){
-//                     j = 0;
-//                     ++i;
-//                 }
-//             }
-//         }
-//     }
+                // Row is filled, so increase row index and
+                // reset col index
+                if (j == ret._c){
+                    j = 0;
+                    ++i;
+                }
+            }
+        }
+    }
 
-//     return ret;
-// }
+    return ret;
+}
 
-// double Matrix<T>::det() const{
-//     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
+template<typename T>
+T Matrix<T>::det() const{
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-//     // empty matrix: return 0
-//     if (this->_r == 0){
-//         return 0;
-//     } 
-//     // matrix contains single element
-//     if (this->_r == 1){
-//         return this->_v[0];
-//     } 
-//     // matrix is 2x2
-//     else if (this->_r == 2){
-//         return this->_v[0]*this->_v[3] - this->_v[1]*this->_v[2];
-//     }
-//     // matrix is bigger then 2x2
-//     else{
-//         Matrix L, U, P;
-//         uint n_swaps = this->lup_dec(L,U,P);
-//         double determinant = n_swaps % 2 == 0 ? 1.0 : -1.0;
-//         for(uint i=0; i<U.c(); ++i) determinant *= U(i,i);
-//         return determinant;
-//     }
-// }
+    // empty matrix: return 0
+    if (this->_r == 0){
+        return 0;
+    } 
+    // matrix contains single element
+    if (this->_r == 1){
+        return this->_v[0];
+    } 
+    // matrix is 2x2
+    else if (this->_r == 2){
+        return this->_v[0]*this->_v[3] - this->_v[1]*this->_v[2];
+    }
+    // matrix is bigger then 2x2
+    else{
+        Matrix<T> L, U; 
+        Matrix<double> P;
+        uint n_swaps = this->lup_dec(L,U,P);
+        T determinant = n_swaps % 2 == 0 ? 1.0 : -1.0;
+        for(uint i=0; i<U.c(); ++i) determinant *= U(i,i);
+        return determinant;
+    }
+}
 
-// double Matrix<T>::minor(const uint & p, const uint & q) const{
-//     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-//     return this->submat_del(p,q).det();
-// }
+template<typename T>
+T Matrix<T>::minor(const uint & p, const uint & q) const{
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-// double Matrix<T>::cof(const uint & p, const uint & q) const{
-//     return (((p+q) % 2) == 0 ? 1 : -1) * this->minor(p, q);
-// }
+    return this->submat_del(p,q).det();
+}
 
-// Matrix Matrix<T>::cof_mat() const{
-//     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
+template<typename T>
+T Matrix<T>::cof(const uint & p, const uint & q) const{
+    return (((p+q) % 2) == 0 ? 1.0 : -1.0) * this->minor(p, q);
+}
 
-//     Matrix ret(this->_r, this->_c);
-//     for(uint i=0; i<this->_r; ++i) for(uint j=0; j<this->_c; ++j){
-//         ret(i,j) = this->cof(i,j);
-//     }
+template<typename T>
+Matrix<T> Matrix<T>::cof_mat() const{
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-//     return ret;
-// }
+    Matrix<T> ret(this->_r, this->_c);
+    for(uint i=0; i<this->_r; ++i) for(uint j=0; j<this->_c; ++j){
+        ret(i,j) = this->cof(i,j);
+    }
 
-// Matrix Matrix<T>::adj() const{
-//     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
+    return ret;
+}
 
-//     // same formula of cofactor matrix, but inverting indeces to get the transpose
-//     Matrix ret(this->_r, this->_c);
-//     for(uint i=0; i<this->_r; ++i) for(uint j=0; j<this->_c; ++j){
-//         ret(j,i) = this->cof(i,j);
-//     }
+template<typename T>
+Matrix<T> Matrix<T>::adj() const{
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-//     return ret;
-// }
+    // same formula of cofactor matrix, but inverting indeces to get the transpose
+    Matrix<T> ret(this->_r, this->_c);
+    for(uint i=0; i<this->_r; ++i) for(uint j=0; j<this->_c; ++j){
+        ret(j,i) = this->cof(i,j);
+    }
+
+    return ret;
+}
 
 // Matrix Matrix<T>::inv() const{
 //     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
@@ -701,56 +798,57 @@ bool Matrix<T>::is_lower_hessenberg() const{
 //     }
 // }
 
-// uint Matrix<T>::lup_dec(Matrix & L, Matrix & U, Matrix & P) const{
-//     if(_r != _c) throw std::invalid_argument("The matrix must be square");
+template<typename T>
+uint Matrix<T>::lup_dec(Matrix<T> & L, Matrix<T> & U, Matrix<double> & P) const{
+    if(_r != _c) throw std::invalid_argument("The matrix must be square");
 
-//     L = IdMat(_r);
-//     U = *this;
-//     P = IdMat(_r);
-//     uint ret = 0;
+    L = IdMat(_r);
+    U = *this;
+    P = IdMat(_r);
+    uint ret = 0;
 
-//     for (uint i = 0; i < _c; ++i) { // scroll columns
-//         // pivoting
-//         double u_max = 0;
-//         uint max_index = i;
-//         for (uint j = i; j < _r; ++j){ // scroll rows
-//             // find max value
-//             if(u_max < abs(U(j,i))){
-//                 max_index = j;
-//                 u_max = abs(U(j,i));
-//             }
-//         }
-//         // if max value is zero we can skip this iteration
-//         if(u_max == 0) continue;
+    for (uint i = 0; i < _c; ++i) { // scroll columns
+        // pivoting
+        double u_max = 0.0;
+        uint max_index = i;
+        for (uint j = i; j < _r; ++j){ // scroll rows
+            // find max value
+            if(u_max < abs(U(j,i))){
+                max_index = j;
+                u_max = abs(U(j,i));
+            }
+        }
+        // if max value is zero we can skip this iteration
+        if(u_max == 0.0) continue;
 
-//         // swap rows
-//         if(max_index != i){
-//             P.swap_rows(i, max_index);
-//             U.swap_rows(i, max_index);
-//             ret++;
-//         }
+        // swap rows
+        if(max_index != i){
+            P.swap_rows(i, max_index);
+            U.swap_rows(i, max_index);
+            ret++;
+        }
 
-//         // elimination
-//         for (uint j = i+1; j < _r; ++j){ // scroll rows
-//             // compute l(j,i)
-//             U(j,i) = U(j,i) / U(i,i);
-//             // apply elimination over all elements of the row
-//             for (uint k = i+1; k < _c; ++k){ // scroll columns
-//                 U(j,k) -= U(j,i) * U(i,k);
-//             }
-//         }    
-//     }
+        // elimination
+        for (uint j = i+1; j < _r; ++j){ // scroll rows
+            // compute l(j,i)
+            U(j,i) = U(j,i) / U(i,i);
+            // apply elimination over all elements of the row
+            for (uint k = i+1; k < _c; ++k){ // scroll columns
+                U(j,k) -= U(j,i) * U(i,k);
+            }
+        }    
+    }
 
-//     // compose matrices
-//     for(uint i=1; i<_r; ++i) { //scroll rows
-//         for(uint j=0; j<i; ++j){ //scroll columns
-//             L(i,j) = U(i,j);
-//             U(i,j) = 0;
-//         }
-//     }
+    // compose matrices
+    for(uint i=1; i<_r; ++i) { //scroll rows
+        for(uint j=0; j<i; ++j){ //scroll columns
+            L(i,j) = U(i,j);
+            U(i,j) = 0.0;
+        }
+    }
 
-//     return ret;
-// }
+    return ret;
+}
 
 // void Matrix<T>::hessenberg_dec(Matrix & Q, Matrix & H) const{
 //     if(_c != _r) throw std::invalid_argument("Matrix must be square");

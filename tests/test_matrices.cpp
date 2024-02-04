@@ -1917,6 +1917,9 @@ TEST(Matrix, qrp_dec){
     Matrix Q, R, P;
     Matrix<c_double> Qc, Rc;
 
+    Matrix<c_double>::set_double_precision(13);
+    Matrix<double>::set_double_precision  (13);
+
     Matrix A(3,3, {2, -2, 18,
                    2,  1,  0,
                    1,  2,  0});
@@ -1953,9 +1956,6 @@ TEST(Matrix, qrp_dec){
 
 
     // -- complex matrix -- //
-
-    Matrix<c_double>::set_double_precision(13);
-    Matrix<double>::set_double_precision  (13);
 
     Matrix<c_double> Ac(3,3, 
         {2.0+1i, -2.0-1i, 18,

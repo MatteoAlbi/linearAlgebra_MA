@@ -1169,8 +1169,8 @@ Matrix<T> RandMat(const uint & r, const uint & c){
 }
 
 template<typename T>
-Matrix<T> diag(std::vector<T> v){
-    Matrix ret = Matrix(v.size(), v.size());
+Matrix<T> diag(const std::vector<T> & v){
+    Matrix<T> ret(v.size(), v.size());
     
     for(uint i=0; i<v.size(); ++i){
         ret(i,i) = v[i];

@@ -4,7 +4,7 @@
 using namespace MA;
 using namespace std::complex_literals;
 
-using std::cout, std::endl, std::string, std::complex;
+using std::cout, std::endl, std::string, std::vector, std::complex;
 using std::invalid_argument, std::runtime_error, std::out_of_range;
 using c_double = complex<double>;
 
@@ -1244,71 +1244,113 @@ TEST(Matrix, normalize_self){
 }
 
 
-// todo
+
 TEST(Matrix, IdMat){
-//     Matrix m1;
+    Matrix m1;
     
-//     EXPECT_NO_THROW(m1 = IdMat(4));
-//     EXPECT_EQ(m1.r(), (uint)4);
-//     EXPECT_EQ(m1.c(), (uint)4);
+    EXPECT_NO_THROW(m1 = IdMat(4));
+    EXPECT_EQ(m1.r(), (uint)4);
+    EXPECT_EQ(m1.c(), (uint)4);
 
-//     for(uint i=0; i<4; ++i){
-//         for(uint j=0; j<4; ++j){
-//             if(i == j) EXPECT_EQ(m1(i,j), 1);
-//             else EXPECT_EQ(m1(i,j), 0);
-//         }
-//     }
+    for(uint i=0; i<4; ++i){
+        for(uint j=0; j<4; ++j){
+            if(i == j) EXPECT_EQ(m1(i,j), 1);
+            else EXPECT_EQ(m1(i,j), 0);
+        }
+    }
 }
-// todo
+
 TEST(Matrix, Ones){
-//     Matrix m1;
+    Matrix m1;
     
-//     EXPECT_NO_THROW(m1 = Ones(4,3));
-//     EXPECT_EQ(m1.r(), (uint)4);
-//     EXPECT_EQ(m1.c(), (uint)3);
+    EXPECT_NO_THROW(m1 = Ones(4,3));
+    EXPECT_EQ(m1.r(), (uint)4);
+    EXPECT_EQ(m1.c(), (uint)3);
 
-//     for(uint i=0; i<4; ++i) for(uint j=0; j<3; ++j) EXPECT_EQ(m1(i,j), 1);
+    for(uint i=0; i<4; ++i) for(uint j=0; j<3; ++j) EXPECT_EQ(m1(i,j), 1.0);
 }
-// todo
+
 TEST(Matrix, RandMat){
-//     Matrix m1;
+    Matrix m1;
+    Matrix<c_double> m1c;
     
-//     EXPECT_NO_THROW(m1 = RandMat(5,6));
-//     EXPECT_EQ(m1.r(), (uint)5);
-//     EXPECT_EQ(m1.c(), (uint)6);
+    EXPECT_NO_THROW(m1 = RandMat(5,6));
+    EXPECT_EQ(m1.r(), (uint)5);
+    EXPECT_EQ(m1.c(), (uint)6);
 
-//     const double * v = m1.v();
-//     double tmp = v[0];
-//     for(uint i=1; i<30; ++i){
-//         EXPECT_TRUE(tmp != v[i]);
-//         tmp = v[i];
-//     }
+    const double * v = m1.v();
+    double tmp = v[0];
+    for(uint i=1; i<30; ++i){
+        EXPECT_TRUE(tmp != v[i]);
+        tmp = v[i];
+    }
+
+
+    // -- complex matrix -- // 
+
+    EXPECT_NO_THROW(m1c = RandMat(5,6));
+    EXPECT_EQ(m1c.r(), (uint)5);
+    EXPECT_EQ(m1c.c(), (uint)6);
+
+    const c_double * vc = m1c.v();
+    c_double tmp_c = vc[0];
+    for(uint i=1; i<30; ++i){
+        EXPECT_TRUE(tmp_c != vc[i]);
+        tmp_c = vc[i];
+    }
 }
-// todo
+
 TEST(Matrix, diag){
-//     Matrix m1;
+    Matrix m1;
+    Matrix<c_double> m1c;
     
-//     EXPECT_NO_THROW(m1 = diag({1,2,3,4}));
-//     EXPECT_EQ(m1.r(), (uint)4);
-//     EXPECT_EQ(m1.c(), (uint)4);
-//     for(uint i=0; i<4; ++i){
-//         for(uint j=0; j<4; ++j){
-//             if(i == j) EXPECT_EQ(m1(i,j), i + 1);
-//             else EXPECT_EQ(m1(i,j), 0);
-//         }
-//     }
+    EXPECT_NO_THROW(m1 = diag(vector<double>{1.0,2.0,3.0,4.0}));
+    EXPECT_EQ(m1.r(), (uint)4);
+    EXPECT_EQ(m1.c(), (uint)4);
+    for(uint i=0; i<4; ++i){
+        for(uint j=0; j<4; ++j){
+            if(i == j) EXPECT_EQ(m1(i,j), i + 1);
+            else EXPECT_EQ(m1(i,j), 0);
+        }
+    }
 
-//     Matrix m2(1,4,{1,3,5,9});
+    Matrix m2(1,4,{1,3,5,9});
 
-//     EXPECT_NO_THROW(m1 = diag(m2));
-//     EXPECT_EQ(m1.r(), (uint)4);
-//     EXPECT_EQ(m1.c(), (uint)4);
-//     for(uint i=0; i<4; ++i){
-//         for(uint j=0; j<4; ++j){
-//             if(i == j) EXPECT_EQ(m1(i,j), m2(i));
-//             else EXPECT_EQ(m1(i,j), 0);
-//         }
-//     }
+    EXPECT_NO_THROW(m1 = diag(m2));
+    EXPECT_EQ(m1.r(), (uint)4);
+    EXPECT_EQ(m1.c(), (uint)4);
+    for(uint i=0; i<4; ++i){
+        for(uint j=0; j<4; ++j){
+            if(i == j) EXPECT_EQ(m1(i,j), m2(i));
+            else EXPECT_EQ(m1(i,j), 0);
+        }
+    }
+
+
+    // -- complex matrix -- // 
+    
+    vector<c_double> vec{1.0+1i,2.0-1i,3.0+1i,4.0-1i};
+    EXPECT_NO_THROW(m1c = diag(vec));
+    EXPECT_EQ(m1c.r(), (uint)4);
+    EXPECT_EQ(m1c.c(), (uint)4);
+    for(uint i=0; i<4; ++i){
+        for(uint j=0; j<4; ++j){
+            if(i == j) EXPECT_EQ(m1c(i,j), vec[i]);
+            else EXPECT_EQ(m1c(i,j), 0.0);
+        }
+    }
+
+    Matrix<c_double> m2c(1,4,{1.0+1i,3.0,5.0+1i,9.0-1i});
+
+    EXPECT_NO_THROW(m1c = diag(m2c));
+    EXPECT_EQ(m1c.r(), (uint)4);
+    EXPECT_EQ(m1c.c(), (uint)4);
+    for(uint i=0; i<4; ++i){
+        for(uint j=0; j<4; ++j){
+            if(i == j) EXPECT_EQ(m1c(i,j), m2c(i));
+            else EXPECT_EQ(m1c(i,j), 0.0);
+        }
+    }
 }
 
 

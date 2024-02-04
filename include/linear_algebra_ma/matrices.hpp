@@ -259,14 +259,10 @@ public:
      */
     T const * v() const;
 
-    template <typename U = T, 
-        typename std::enable_if<is_complex<U>::value, int>::type = 0
-    >
+    template <typename U = T, typename std::enable_if<is_complex<U>::value, int>::type = 0>
     Matrix<double> real() const;
 
-    template <typename U = T, 
-        typename std::enable_if<is_complex<U>::value, int>::type = 0
-    >
+    template <typename U = T, typename std::enable_if<is_complex<U>::value, int>::type = 0>
     Matrix<double> imag() const;
 
 #pragma endregion get
@@ -286,9 +282,7 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < this.size
      */
-    template<typename U,
-        typename = enable_if_not_comp2d_t<T,U>
-    >
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
     void set(std::vector<U> v);
 
     /**
@@ -309,9 +303,7 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < submatrix size
      */
-    template<typename U,
-        typename = enable_if_not_comp2d_t<T,U>
-    >
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
     void set(uu_pair rs, uu_pair cs, std::vector<U> v);
 
     /**
@@ -322,9 +314,7 @@ public:
      * @param m used matrix
      * @throw out_of_range if r or c are out of range
      */
-    template<typename U,
-        typename = enable_if_not_comp2d_t<T,U>
-    >
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
     void set(uint r, uint c, U x);
 
     /**
@@ -337,9 +327,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    template<typename U,
-        typename = enable_if_not_comp2d_t<T,U>
-    >
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
     void set(uu_pair rs, uint c, Matrix<U> m);
 
     /**
@@ -364,9 +352,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    template<typename U,
-        typename = enable_if_not_comp2d_t<T,U>
-    >
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
     void set(uint r, uu_pair cs, Matrix<U> m);
 
     /**
@@ -391,9 +377,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    template<typename U,
-        typename = enable_if_not_comp2d_t<T,U>
-    >
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
     void set(uu_pair rs, uu_pair cs, Matrix<U> m);
 
     /**
@@ -942,7 +926,7 @@ Matrix<T> RandMat(const uint & r, const uint & c);
  * @param v input vector 
 */
 template<typename T>
-Matrix<T> diag(std::vector<T> v);
+Matrix<T> diag(const std::vector<T> & v);
 
 /**
  * @brief given a row or column vector of N elements, creates a NxN matrix

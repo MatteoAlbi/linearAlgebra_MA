@@ -763,7 +763,7 @@ void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
         Matrix<T> v_t = v.t();
 
         // Update R: HR = R - 2v * (v' * R)
-        for(uint j=0; j<_c; ++j){
+        for(uint j=i; j<_c; ++j){
             T tmp = 0.0;
             for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * R(i+k,j);
             for(uint k=0; k<v.size(); ++k) R(i+k,j) -= 2.0 * v(k) * tmp;
@@ -809,7 +809,7 @@ void Matrix<T>::qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const{
         Matrix<T> v_t = v.t();
 
         // Update R: HR = R - 2v * (v' * R)
-        for(uint j=0; j<_c; ++j){
+        for(uint j=i; j<_c; ++j){
             T tmp = 0.0;
             for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * R(i+k,j);
             for(uint k=0; k<v.size(); ++k) R(i+k,j) -= 2.0 * v(k) * tmp;
@@ -884,43 +884,34 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
     
     using namespace std;
 
-    for (uint i=0; i<_r-1; ++i){
+    for (uint i=1; i<_r-1; ++i){
         // compute vk
-        Matrix<T> v = H({i+1, _r-1}, i).householder_v();
+        Matrix<T> v = H({i, _r-1}, i-1).householder_v();
         Matrix<T> v_t = v.t();
         
         // compute U matrix
         Matrix<T> U = IdMat(_r);
-        U.set({i+1, _r-1},{i+1, _r-1}, IdMat(v.size()) - 2 * v * v.t());
-
-        // // Update R: HR = R - 2v * (v' * R)
-        // for(uint j=0; j<_c; ++j){
-        //     T tmp = 0.0;
-        //     for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * R(i+k,j);
-        //     for(uint k=0; k<v.size(); ++k) R(i+k,j) -= 2.0 * v(k) * tmp;
-        // }
-        // // Update Q: QH = Q - (Q * v) * 2v'
-        // for(uint j=0; j<_r; ++j){
-        //     T tmp = 0.0;
-        //     for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
-        //     for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= 2.0 * v_t(k) * tmp;
-        // }
+        U.set({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
 
         // Update H: UH = H - 2v * (v' * H) -> H'
-        // for(uint j=0; j<_c; ++j){
-        //     T tmp = 0.0;
-        //     for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * H(i+k,j);
-        //     for(uint k=0; k<v.size(); ++k) H(i+k,j) -= 2.0 * v(k) * tmp;
-        // }
-        // // Update H': H'U = H - (H * v) * 2v'
-        // for(uint j=0; j<_r; ++j){
-        //     T tmp = 0.0;
-        //     for(uint k=0; k<v.size(); ++k) tmp += v(k) * H(j,i+k);
-        //     for(uint k=0; k<v.size(); ++k) H(j,i+k) -= 2.0 * v_t(k) * tmp;
-        // }
+        for(uint j=i-1; j<_c; ++j){
+            T tmp = 0.0;
+            for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * H(i+k,j);
+            for(uint k=0; k<v.size(); ++k) H(i+k,j) -= 2.0 * v(k) * tmp;
+        }
+        // Update H': H'U = H - (H * v) * 2v'
+        for(uint j=0; j<_r; ++j){
+            T tmp = 0.0;
+            for(uint k=0; k<v.size(); ++k) tmp += v(k) * H(j,i+k);
+            for(uint k=0; k<v.size(); ++k) H(j,i+k) -= 2.0 * v_t(k) * tmp;
+        }
 
-        H = U * H * U;
-        Q = Q * U;
+        // Update Q: QU = Q - (Q * v) * 2v'
+        for(uint j=0; j<_r; ++j){
+            T tmp = 0.0;
+            for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
+            for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= 2.0 * v_t(k) * tmp;
+        }
     }
 }
 

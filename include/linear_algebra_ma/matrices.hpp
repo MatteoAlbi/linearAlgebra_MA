@@ -438,7 +438,7 @@ public:
     void swap_cols(const uint & c1, const uint & c2);
 #pragma endregion set
 
-#pragma region comparison_operators   
+#pragma region comparison_operators
 
     template <typename U, typename V>
     friend std::enable_if_t<!is_complex<U>::value && !is_complex<V>::value, bool>

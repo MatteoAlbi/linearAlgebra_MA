@@ -2064,6 +2064,9 @@ TEST(Matrix, hessenberg_dec){
     );
     EXPECT_THROW(m1c.hessenberg_dec(Qc, Hc), invalid_argument);
 
+    Matrix<c_double>::set_double_precision(13);
+    Matrix<double>::set_double_precision  (13);
+
     // matrix decomposable
     m1 = Matrix (4,4,
         {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
@@ -2086,6 +2089,9 @@ TEST(Matrix, hessenberg_dec){
     EXPECT_EQ(Qc * Qc.t(), IdMat(4));
     EXPECT_TRUE(Hc.is_upper_hessenberg());
     EXPECT_EQ(Qc * Hc * Qc.t(), m1c);
+
+    Matrix<c_double>::set_double_precision();
+    Matrix<double>::set_double_precision  ();
 }
 
 

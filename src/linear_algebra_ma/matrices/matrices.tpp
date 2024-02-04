@@ -887,7 +887,8 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
     for (uint i=0; i<_r-1; ++i){
         // compute vk
         Matrix<T> v = H({i+1, _r-1}, i).householder_v();
-
+        Matrix<T> v_t = v.t();
+        
         // compute U matrix
         Matrix<T> U = IdMat(_r);
         U.set({i+1, _r-1},{i+1, _r-1}, IdMat(v.size()) - 2 * v * v.t());
@@ -905,13 +906,18 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
         //     for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= 2.0 * v_t(k) * tmp;
         // }
 
-        // // Update H: UH = H - 2v * (v' * H) -> H'
+        // Update H: UH = H - 2v * (v' * H) -> H'
         // for(uint j=0; j<_c; ++j){
         //     T tmp = 0.0;
         //     for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * H(i+k,j);
         //     for(uint k=0; k<v.size(); ++k) H(i+k,j) -= 2.0 * v(k) * tmp;
         // }
-        // // Update H': H'U.t = H - (H * v) * 2v'
+        // // Update H': H'U = H - (H * v) * 2v'
+        // for(uint j=0; j<_r; ++j){
+        //     T tmp = 0.0;
+        //     for(uint k=0; k<v.size(); ++k) tmp += v(k) * H(j,i+k);
+        //     for(uint k=0; k<v.size(); ++k) H(j,i+k) -= 2.0 * v_t(k) * tmp;
+        // }
 
         H = U * H * U;
         Q = Q * U;

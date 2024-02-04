@@ -754,7 +754,7 @@ void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
     Q = IdMat(_r);
     R = *this;
     
-    for(uint i=0; i<n-1; ++i){
+    for(uint i=0; i<n; ++i){
         //compute vk
         Matrix<T> v = R({i, _r-1}, i).householder_v();
         Matrix<T> v_t = v.t();
@@ -784,7 +784,7 @@ void Matrix<T>::qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const{
     R = *this;
     P = IdMat(_c);
     
-    for(uint i=0; i<n-1; ++i){ // main loop
+    for(uint i=0; i<n; ++i){ // main loop
 
         // find column with largest norm
         uint index = 0;

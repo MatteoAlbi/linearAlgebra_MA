@@ -1924,7 +1924,6 @@ TEST(Matrix, qr_dec){
     EXPECT_NO_THROW(A.qr_dec(Q,R));
     EXPECT_EQ(Q.t()*Q, IdMat(6));
     EXPECT_TRUE(R.is_upper_triang());
-    cout << Q << endl << R << endl;
     EXPECT_EQ(A, Q*R);
 
 

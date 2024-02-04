@@ -21,12 +21,15 @@
 #include <vector>
 #include <random>
 
-typedef unsigned int uint;
-typedef std::pair<uint,uint> uu_pair;
-#define ALL uu_pair{}
 
 namespace MA
 {
+
+typedef unsigned int uint;
+typedef std::pair<uint,uint> uu_pair;
+typedef std::complex<double> c_double;
+
+#define ALL uu_pair{}
 
 // Define a type trait to check if a type is std::complex
 template <typename T>
@@ -35,10 +38,24 @@ struct is_complex : std::false_type {};
 template <typename T>
 struct is_complex<std::complex<T>> : std::true_type {};
 
-// overload coypsign function
-double copysign(double mag, std::complex<double> sgn){
-    return std::copysign(mag, sgn.real());
-}
+// Helper type to conditionally determine the type of V
+template <typename T, typename U>
+struct RetType {
+    using type = std::conditional_t<is_complex<T>::value || is_complex<U>::value, c_double, double>;
+};
+template <typename T, typename U>
+using RetType_t = typename RetType<T, U>::type;
+
+// Helper type to conditionally enable a function (if there is no conversion from complex to double)
+template <typename T, typename U, typename = void>
+struct enable_if_not_comp2d : 
+    std::enable_if<
+        !is_complex<U>::value || 
+        (is_complex<T>::value && is_complex<U>::value),
+    int> 
+{};
+template <typename T, typename U>
+using enable_if_not_comp2d_t = typename enable_if_not_comp2d<T, U>::type;
 
 
 template<typename T = double>
@@ -135,10 +152,7 @@ public:
      * @param m matrix to copy
     */
     template<typename U,
-        typename std::enable_if<
-            !is_complex<U>::value ||
-            (is_complex<T>::value && is_complex<U>::value), int
-        >::type = 0
+        typename = enable_if_not_comp2d_t<T,U>
     >
     Matrix(const Matrix<U> & m);
 
@@ -271,10 +285,7 @@ public:
      * @throw out_of_range if v.size < this.size
      */
     template<typename U,
-        typename std::enable_if<
-            !is_complex<U>::value ||
-            (is_complex<T>::value && is_complex<U>::value), int
-        >::type = 0
+        typename = enable_if_not_comp2d_t<T,U>
     >
     void set(std::vector<U> v);
 
@@ -297,10 +308,7 @@ public:
      * @throw out_of_range if v.size < submatrix size
      */
     template<typename U,
-        typename std::enable_if<
-            !is_complex<U>::value ||
-            (is_complex<T>::value && is_complex<U>::value), int
-        >::type = 0
+        typename = enable_if_not_comp2d_t<T,U>
     >
     void set(uu_pair rs, uu_pair cs, std::vector<U> v);
 
@@ -313,10 +321,7 @@ public:
      * @throw out_of_range if r or c are out of range
      */
     template<typename U,
-        typename std::enable_if<
-            !is_complex<U>::value ||
-            (is_complex<T>::value && is_complex<U>::value), int
-        >::type = 0
+        typename = enable_if_not_comp2d_t<T,U>
     >
     void set(uint r, uint c, U x);
 
@@ -331,10 +336,7 @@ public:
      * submatrix
      */
     template<typename U,
-        typename std::enable_if<
-            !is_complex<U>::value ||
-            (is_complex<T>::value && is_complex<U>::value), int
-        >::type = 0
+        typename = enable_if_not_comp2d_t<T,U>
     >
     void set(uu_pair rs, uint c, Matrix<U> m);
 
@@ -361,10 +363,7 @@ public:
      * submatrix
      */
     template<typename U,
-        typename std::enable_if<
-            !is_complex<U>::value ||
-            (is_complex<T>::value && is_complex<U>::value), int
-        >::type = 0
+        typename = enable_if_not_comp2d_t<T,U>
     >
     void set(uint r, uu_pair cs, Matrix<U> m);
 
@@ -391,10 +390,7 @@ public:
      * submatrix
      */
     template<typename U,
-        typename std::enable_if<
-            !is_complex<U>::value ||
-            (is_complex<T>::value && is_complex<U>::value), int
-        >::type = 0
+        typename = enable_if_not_comp2d_t<T,U>
     >
     void set(uu_pair rs, uu_pair cs, Matrix<U> m);
 
@@ -454,196 +450,57 @@ public:
 #pragma endregion comparison_operators
 
 #pragma region sum_operator
-    template <typename U = T, typename V,
-        typename std::enable_if<
-            !is_complex<V>::value || 
-            (is_complex<U>::value && is_complex<V>::value), 
-        int>::type = 0
-    >
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
     Matrix<T>& operator+=(const V & k);
 
-    template <typename U = T, typename V,
-        typename std::enable_if<
-            !is_complex<V>::value || 
-            (is_complex<U>::value && is_complex<V>::value), 
-        int>::type = 0
-    >
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
     Matrix<T>& operator+=(const Matrix<V> & m);
 
+    template<typename U, typename V>
+    friend Matrix<RetType_t<U,V>> operator+(const Matrix<U>& m, const V& k);
 
     template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator+(const Matrix<U>& m, const V& k);
+    friend Matrix<RetType_t<U,V>> operator+(const U& k, const Matrix<V>& m);
 
     template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator+(const Matrix<U>& m, const V& k);
-
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator+(const U& k, const Matrix<V>& m);
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator+(const U& k, const Matrix<V>& m);
-
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator+(const Matrix<U>& m1, const Matrix<V>& m2);
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator+(const Matrix<U>& m1, const Matrix<V>& m2);
+    friend Matrix<RetType_t<U,V>> operator+(const Matrix<U>& m1, const Matrix<V>& m2);
 #pragma endregion sum_operator
 
 #pragma region subtract_operator
-    template <typename U = T, typename V,
-            typename std::enable_if<
-                !is_complex<V>::value || 
-                (is_complex<U>::value && is_complex<V>::value), 
-            int>::type = 0
-    >
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
     Matrix<T>& operator-=(const V & k);
 
-    template <typename U = T, typename V,
-        typename std::enable_if<
-            !is_complex<V>::value || 
-            (is_complex<U>::value && is_complex<V>::value), 
-        int>::type = 0
-    >
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
     Matrix<T>& operator-=(const Matrix<V> & m);
-
 
     template<typename U>
     friend Matrix<U> operator-(const Matrix<U>& m);
 
+    template<typename U, typename V>
+    friend Matrix<RetType_t<U,V>> operator-(const Matrix<U>& m, const V& k);
 
     template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator-(const Matrix<U>& m, const V& k);
+    friend Matrix<RetType_t<U,V>> operator-(const U& k, const Matrix<V>& m);
 
     template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator-(const Matrix<U>& m, const V& k);
-
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator-(const U& k, const Matrix<V>& m);
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator-(const U& k, const Matrix<V>& m);
-
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator-(const Matrix<U>& m1, const Matrix<V>& m2);
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator-(const Matrix<U>& m1, const Matrix<V>& m2);
+    friend Matrix<RetType_t<U,V>> operator-(const Matrix<U>& m1, const Matrix<V>& m2);
 #pragma endregion subtract_operator
 
 #pragma region multiply_operator
-    template <typename U = T, typename V,
-        typename std::enable_if<
-            !is_complex<V>::value || 
-            (is_complex<U>::value && is_complex<V>::value), 
-        int>::type = 0
-    >
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
     Matrix<T>& operator*=(const V & k);
 
-    template <typename U = T, typename V,
-        typename std::enable_if<
-            !is_complex<V>::value || 
-            (is_complex<U>::value && is_complex<V>::value), 
-        int>::type = 0
-    >
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
     Matrix<T>& operator*=(const Matrix<V> & m);
 
+    template<typename U, typename V>
+    friend Matrix<RetType_t<U,V>> operator*(const Matrix<U>& m, const V& k);
 
     template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator*(const Matrix<U>& m, const V& k);
+    friend Matrix<RetType_t<U,V>> operator*(const U& k, const Matrix<V>& m);
 
     template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator*(const Matrix<U>& m, const V& k);
-
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator*(const U& k, const Matrix<V>& m);
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator*(const U& k, const Matrix<V>& m);
-
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator*(const Matrix<U>& m1, const Matrix<V>& m2);
-
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator*(const Matrix<U>& m1, const Matrix<V>& m2);
+    friend Matrix<RetType_t<U,V>> operator*(const Matrix<U>& m1, const Matrix<V>& m2);
 #pragma endregion multiply_operator
 // todo
 #pragma region divide_operator
@@ -665,12 +522,7 @@ public:
      * @brief concatenate matrices per columns
      * @param m matrix to concatenate
      */
-    template <typename U = T, typename V,
-        typename std::enable_if<
-            !is_complex<V>::value || 
-            (is_complex<U>::value && is_complex<V>::value), 
-        int>::type = 0
-    >
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
     Matrix<T>& operator&=(const Matrix<V> & m);
 
     /**
@@ -679,35 +531,13 @@ public:
      * @param m2 second matrix to concatenate
      */
     template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator&(const Matrix<U>& m1, const Matrix<V>& m2);
-
-    /**
-     * @brief concatenate matrices per columns
-     * @param m1 first matrix to concatenate
-     * @param m2 second matrix to concatenate
-     */
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator&(const Matrix<U>& m1, const Matrix<V>& m2);
-
+    friend Matrix<RetType_t<U,V>> operator&(const Matrix<U>& m1, const Matrix<V>& m2);
 
     /**
      * @brief concatenate matrices per rows
      * @param m matrix to concatenate
      */
-    template <typename U = T, typename V,
-        typename std::enable_if<
-            !is_complex<V>::value || 
-            (is_complex<U>::value && is_complex<V>::value), 
-        int>::type = 0
-    >
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
     Matrix<T>& operator|=(const Matrix<V> & m);
 
     /**
@@ -716,23 +546,7 @@ public:
      * @param m2 second matrix to concatenate
      */
     template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    operator|(const Matrix<U>& m1, const Matrix<V>& m2);
-
-    /**
-     * @brief concatenate matrices per rows
-     * @param m1 first matrix to concatenate
-     * @param m2 second matrix to concatenate
-     */
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    operator|(const Matrix<U>& m1, const Matrix<V>& m2);
+    friend Matrix<RetType_t<U,V>> operator|(const Matrix<U>& m1, const Matrix<V>& m2);
 #pragma endregion concatenate_operators
 
 #pragma region vector
@@ -754,23 +568,7 @@ public:
      * @return dot product 
      */
     template<typename U, typename V>
-    friend typename std::enable_if<
-        !is_complex<U>::value && !is_complex<V>::value, 
-        double
-    >::type
-    dot(const Matrix<U> & v1, const Matrix<V> & v2);
-
-    /**
-     * @brief computes dot product this.v
-     * @param v second vector
-     * @return dot product 
-     */
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        std::complex<double>
-    >::type
-    dot(const Matrix<U> & v1, const Matrix<V> & v2);
+    friend RetType_t<U,V> dot(const Matrix<U> & v1, const Matrix<V> & v2);
 
     /**
      * @brief computes cross product this*v
@@ -779,24 +577,7 @@ public:
      * @return Matrix: cross product (as column vec)
      */
     template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<double>
-    >::type
-    cross(const Matrix<U> & v1, const Matrix<V> & v2);
-
-    /**
-     * @brief computes cross product this*v
-     * implemented only for vectors of length 2 and 3
-     * @param v second vector
-     * @return Matrix: cross product (as column vec)
-     */
-    template<typename U, typename V>
-    friend typename std::enable_if<
-        is_complex<U>::value || is_complex<V>::value, 
-        Matrix<std::complex<double>>
-    >::type
-    cross(const Matrix<U> & v1, const Matrix<V> & v2);
+    friend Matrix<RetType_t<U,V>> cross(const Matrix<U> & v1, const Matrix<V> & v2);
 
     /**
      * @brief return norm2: sqrt(sum(v(i)^2)) of the given vector
@@ -1038,8 +819,8 @@ public:
      * @param U     upper triangular matrix (n*n)
      * @param B     known terms matrix (n*c_b)
      */
-    template<typename T>
-    Matrix<T> backward_sub(Matrix<T> const & U, Matrix<T> const & B);
+    template<typename T, typename V, typename W = RetType_t<T,V>>
+    Matrix<W> backward_sub(Matrix<T> const & U, Matrix<V> const & B);
 
     /**
      * @brief Solve the system L*x=B using a forward substitution algorithm.
@@ -1049,8 +830,8 @@ public:
      * @param L     lower triangular matrix (n*n)
      * @param B     known terms matrix (n*c_b)
      */
-    template<typename T>
-    Matrix<T> forward_sub(Matrix<T> const & L, Matrix<T> const & B);
+    template<typename T, typename U, typename V = RetType_t<T,U>>
+    Matrix<V> forward_sub(Matrix<T> const & L, Matrix<U> const & B);
 
     /**
      * @brief computes the left division A\B, which corresponds to solve the 

@@ -67,12 +67,7 @@ Matrix<T>::Matrix(const Matrix<T> & m){
 }
 
 template<typename T>
-template<typename U,
-    typename std::enable_if<
-        !is_complex<U>::value ||
-        (is_complex<T>::value && is_complex<U>::value), int
-    >::type
->
+template<typename U, typename>
 Matrix<T>::Matrix(const Matrix<U> & m){
     this->_r = m.r();
     this->_c = m.c();
@@ -159,12 +154,7 @@ void Matrix<T>::set(std::vector<T> v){
 }
 
 template<typename T>
-template<typename U,
-    typename std::enable_if<
-        !is_complex<U>::value ||
-        (is_complex<T>::value && is_complex<U>::value), int
-    >::type
->
+template<typename U, typename>
 void Matrix<T>::set(std::vector<U> v){
     if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
 
@@ -193,12 +183,7 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<T> v){
 }
 
 template<typename T>
-template<typename U,
-    typename std::enable_if<
-        !is_complex<U>::value ||
-        (is_complex<T>::value && is_complex<U>::value), int
-    >::type
->
+template<typename U, typename>
 void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
@@ -220,23 +205,13 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
 }
 
 template<typename T>
-template<typename U,
-    typename std::enable_if<
-        !is_complex<U>::value ||
-        (is_complex<T>::value && is_complex<U>::value), int
-    >::type
->
+template<typename U, typename>
 void Matrix<T>::set(uint r, uint c, U x){
     this->operator()(r,c) = x;
 }
 
 template<typename T>
-template<typename U,
-    typename std::enable_if<
-        !is_complex<U>::value ||
-        (is_complex<T>::value && is_complex<U>::value), int
-    >::type
->
+template<typename U, typename>
 void Matrix<T>::set(uu_pair rs, uint c, Matrix<U> m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
@@ -269,12 +244,7 @@ void Matrix<T>::set(uint r, uu_pair cs, Matrix<T> m){
 }
 
 template<typename T>
-template<typename U,
-    typename std::enable_if<
-        !is_complex<U>::value ||
-        (is_complex<T>::value && is_complex<U>::value), int
-    >::type
->
+template<typename U, typename>
 void Matrix<T>::set(uint r, uu_pair cs, Matrix<U> m){
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
@@ -309,12 +279,7 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<T> m){
 }
 
 template<typename T>
-template<typename U,
-    typename std::enable_if<
-        !is_complex<U>::value ||
-        (is_complex<T>::value && is_complex<U>::value), int
-    >::type
->
+template<typename U, typename>
 void Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<U> m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
@@ -406,63 +371,23 @@ Matrix<T> Matrix<T>::to_r_vec() const{
 }
 
 template<typename U, typename V>
-typename std::enable_if<
-    !is_complex<U>::value && !is_complex<V>::value, 
-    double
->::type
-dot(const Matrix<U> & v1, const Matrix<V> & v2){
+RetType_t<U,V> dot(const Matrix<U> & v1, const Matrix<V> & v2){
     if(! v1.is_vec()) throw std::invalid_argument("Obj 1 is not a vector");
     if(! v2.is_vec()) throw std::invalid_argument("Obj 2 is not a vector");
     if(v1.size() != v2.size()) throw std::invalid_argument("Vectors length don't match");
 
-    double ret = 0;
+    RetType_t<U,V> ret = 0;
     for(uint i=0; i<v1.size(); ++i) ret += v1(i) * v2(i);
     return ret;
 }
 
 template<typename U, typename V>
-typename std::enable_if<
-    is_complex<U>::value || is_complex<V>::value, 
-    std::complex<double>
->::type
-dot(const Matrix<U> & v1, const Matrix<V> & v2){
-    if(! v1.is_vec()) throw std::invalid_argument("Obj 1 is not a vector");
-    if(! v2.is_vec()) throw std::invalid_argument("Obj 2 is not a vector");
-    if(v1.size() != v2.size()) throw std::invalid_argument("Vectors length don't match");
-
-    std::complex<double> ret = 0.0;
-    for(uint i=0; i<v1.size(); ++i) ret += v1(i) * v2(i);
-    return ret;
-}
-
-template<typename U, typename V>
-typename std::enable_if<
-    is_complex<U>::value || is_complex<V>::value, 
-    Matrix<double>
->::type
-cross(const Matrix<U> & v1, const Matrix<V> & v2){
+Matrix<RetType_t<U,V>> cross(const Matrix<U> & v1, const Matrix<V> & v2){
     if(! v1.is_vec()) throw std::invalid_argument("Obj 1 is not a vector");
     if(! v2.is_vec()) throw std::invalid_argument("Obj 2 is not a vector");
     if(v1.size() != 3 || v1.size() != v2.size()) throw std::invalid_argument("Cross product defined only for 3d vectors");
 
-    Matrix<double> ret(3,1);
-    ret(0) =   (v1(1) * v2(2)) - (v1(2) * v2(1));
-    ret(1) = -((v1(0) * v2(2)) - (v1(2) * v2(0)));
-    ret(2) =   (v1(0) * v2(1)) - (v1(1) * v2(0));
-    return ret;
-}
-
-template<typename U, typename V>
-typename std::enable_if<
-    is_complex<U>::value || is_complex<V>::value, 
-    Matrix<std::complex<double>>
->::type
-cross(const Matrix<U> & v1, const Matrix<V> & v2){
-    if(! v1.is_vec()) throw std::invalid_argument("This obj is not a vector");
-    if(! v2.is_vec()) throw std::invalid_argument("Given obj is not a vector");
-    if(v1.size() != 3 || v1.size() != v2.size()) throw std::invalid_argument("Cross product defined only for 3d vectors");
-
-    Matrix<std::complex<double>> ret(3,1);
+    Matrix<RetType_t<U,V>> ret(3,1);
     ret(0) =   (v1(1) * v2(2)) - (v1(2) * v2(1));
     ret(1) = -((v1(0) * v2(2)) - (v1(2) * v2(0)));
     ret(2) =   (v1(0) * v2(1)) - (v1(1) * v2(0));
@@ -917,8 +842,8 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
 
 #pragma region ls_solution
 
-template<typename T>
-Matrix<T> backward_sub(Matrix<T> const & U, Matrix<T> const & B){
+template<typename T, typename V, typename W>
+Matrix<W> backward_sub(Matrix<T> const & U, Matrix<V> const & B){
     if(U.c() != U.r()) throw std::invalid_argument("Coefficient matrix U must be square");
     if(B.r() != U.c()) throw std::invalid_argument("Rows of B must be equal to the columns of U");
     // check all U diagonal elements are different from zero
@@ -926,9 +851,9 @@ Matrix<T> backward_sub(Matrix<T> const & U, Matrix<T> const & B){
         throw std::runtime_error("System of equation is underdetermined");
     }
 
-    Matrix<T> res(U.r(), B.c());
+    Matrix<W> res(U.r(), B.c());
 
-    T tmp;
+    W tmp;
     // printf("start i loop\n");
     for(uint i=0; i<B.c(); ++i){ //col of res == col of B
         // printf("start j loop with i:%d\n", i);
@@ -949,8 +874,8 @@ Matrix<T> backward_sub(Matrix<T> const & U, Matrix<T> const & B){
     return res;
 }
 
-template<typename T>
-Matrix<T> forward_sub(Matrix<T> const & L, Matrix<T> const & B){
+template<typename T, typename U, typename V>
+Matrix<V> forward_sub(Matrix<T> const & L, Matrix<U> const & B){
     if(L.c() != L.r()) throw std::invalid_argument("Coefficient matrix L must be square");
     if(B.r() != L.c()) throw std::invalid_argument("Rows of B must be equal to the columns of L");
     // check all L diagonal elements are different from zero
@@ -958,9 +883,9 @@ Matrix<T> forward_sub(Matrix<T> const & L, Matrix<T> const & B){
         throw std::runtime_error("System of equation is underdetermined");
     }
 
-    Matrix<T> res(L.r(), B.c());
+    Matrix<V> res(L.r(), B.c());
     
-    T tmp;
+    V tmp;
     for(uint j=0; j<L.r(); ++j){ //row of res == row of L == row of B
         // printf("j: %d\n", j);
         for(uint i=0; i<B.c(); ++i){ //col of res == col of B

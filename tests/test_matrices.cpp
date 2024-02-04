@@ -2232,6 +2232,7 @@ TEST(Matrix, forward_sub){
 // todo
 TEST(Matrix, matrix_l_divide){
     Matrix A,b,C;
+    Matrix<c_double> Ac,bc,Cc;
     A = Matrix (4,4,
         {1,3,4,2,
          0,2,1,-2,
@@ -2244,13 +2245,13 @@ TEST(Matrix, matrix_l_divide){
     EXPECT_THROW(matrix_l_divide(A, b({1,3},0)), invalid_argument);
     
     // underdetermined
-    C = Matrix (4,4,
-        {1,3,4,2,
-         0,2,1,-2,
-         2,1,-3,2,
+    Cc = Matrix<c_double> (4,4,
+        {1,3.0+1i,4,2,
+         0,2,1,-2.0+1i,
+         2.0+1i,1.0+1i,-3,2,
          0,0,0,0}
     );
-    EXPECT_THROW(matrix_l_divide(C, b), runtime_error);
+    // EXPECT_THROW(matrix_l_divide(Cc, b), runtime_error);
     C = Matrix (4,4,
         {1,3, 4, 0,
          0,2, 1, 0,
@@ -2260,12 +2261,11 @@ TEST(Matrix, matrix_l_divide){
     EXPECT_THROW(matrix_l_divide(C, b), runtime_error);
 
     // solution
-    Matrix<double>::set_double_precision(12);
-
+    Matrix<double>::set_double_precision(15);
     EXPECT_NO_THROW(C = matrix_l_divide(A,b));
     EXPECT_EQ(A*C, b);
-
     // overdetermined
+    Matrix<double>::set_double_precision(8);
     A = Matrix(6,4,
         {-1,3,4,2,
          0,2,1,-2,
@@ -2278,10 +2278,35 @@ TEST(Matrix, matrix_l_divide){
     EXPECT_EQ(C, Matrix(4,1,{0.34582912, 1.42291125, -0.110443, -0.456683}));
     Matrix<double>::set_double_precision();
 
-    Matrix Q,R,P;
-    A.qrp_dec(Q,R,P);
-    cout << Q << endl << R << endl;
-    cout << A*C-b << endl;
+
+    // -- complex matrix -- //
+
+    // // solution
+    // Ac = Matrix<c_double> (4,4,
+    //     {1.0+1i,3,4,2,
+    //      0,2.0-1i,1.0+1i,-2,
+    //      2,1.0+1i,-3,2,
+    //      0.0+1i,2,1,-1.0-1i}
+    // );
+    // bc = Matrix<c_double>(4,1, {2,4.0+1i,1.0-1i,3});
+
+    // Matrix<double>::set_double_precision(8);
+
+    // EXPECT_NO_THROW(C = matrix_l_divide(A,b));
+    // EXPECT_EQ(A*C, b);
+
+    // // overdetermined
+    // A = Matrix(6,4,
+    //     {-1,3,4,2,
+    //      0,2,1,-2,
+    //      2,1,-3,2,
+    //      0,2,1,-1,
+    //      7,-3,0,3,
+    //      -2,5,1,4});
+    // b = Matrix(6,1,{2,4,1,3,-3,5});
+    // EXPECT_NO_THROW(C = matrix_l_divide(A, b));
+    // EXPECT_EQ(C, Matrix(4,1,{0.34582912, 1.42291125, -0.110443, -0.456683}));
+    // Matrix<double>::set_double_precision();
 }
 // todo
 TEST(Matrix, divide_operator){

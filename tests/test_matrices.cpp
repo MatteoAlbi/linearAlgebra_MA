@@ -1865,72 +1865,138 @@ TEST(Matrix, is_lower_hessenberg){
 }
 
 
-// todo
+
 TEST(Matrix, qr_dec){
-//     Matrix Q, R;
+    Matrix Q, R;
+    Matrix<c_double> Qc, Rc;
 
-//     Matrix A(3,3, {2, -2, 18,
-//                    2, 1, 0,
-//                    1, 2, 0});
-//     EXPECT_NO_THROW(A.qr_dec(Q,R));
-//     EXPECT_EQ(Q.t()*Q, IdMat(3));
-//     EXPECT_TRUE(R.is_upper_triang());
-//     EXPECT_EQ(A, Q*R);
+    Matrix<double>::set_double_precision(12);
+    Matrix<c_double>::set_double_precision(12);
 
-//     A = Matrix (3,3, {12, -51, 4,
-//                       6, 167, -68,
-//                       -4, 24, -41});
-//     EXPECT_NO_THROW(A.qr_dec(Q,R));
-//     EXPECT_EQ(Q.t()*Q, IdMat(3));
-//     EXPECT_TRUE(R.is_upper_triang());
-//     EXPECT_EQ(A, Q*R);
+    Matrix A(3,3, {2, -2, 18,
+                   2, 1, 0,
+                   1, 2, 0});
+    EXPECT_NO_THROW(A.qr_dec(Q,R));
+    EXPECT_EQ(Q.t()*Q, IdMat(3));
+    EXPECT_TRUE(R.is_upper_triang());
+    EXPECT_EQ(A, Q*R);
 
-//     A = Matrix(4,6,{ 14,   4, -16, -20, -3,  -4,
-//                      17,  17, -16,   5,  6, -13,
-//                      -2,  12,  -7,  15, -1,  -3,
-//                      19,   4,  -3,   5, 16,  -9});
-//     EXPECT_NO_THROW(A.qr_dec(Q,R));
-//     EXPECT_EQ(Q.t()*Q, IdMat(4));
-//     EXPECT_TRUE(R.is_upper_triang());
-//     EXPECT_EQ(A, Q*R);
+    A = Matrix(4,6,{ 14,   4, -16, -20, -3,  -4,
+                     17,  17, -16,   5,  6, -13,
+                     -2,  12,  -7,  15, -1,  -3,
+                     19,   4,  -3,   5, 16,  -9});
+    EXPECT_NO_THROW(A.qr_dec(Q,R));
+    EXPECT_EQ(Q.t()*Q, IdMat(4));
+    EXPECT_TRUE(R.is_upper_triang());
+    EXPECT_EQ(A, Q*R);
+
+
+    // -- complex matrix -- //
+
+    Matrix<c_double> Ac(3,3, 
+       {12.0+1i, -51,   4,
+         6, 167, -68.0+1i,
+        -4,  24.0+1i, -41});
+    EXPECT_NO_THROW(Ac.qr_dec(Qc,Rc));
+    EXPECT_EQ(Qc.t()*Qc, IdMat(3));
+    EXPECT_TRUE(Rc.is_upper_triang());
+    EXPECT_EQ(Ac, Qc*Rc);
+
+    Ac = Matrix<c_double>(4,6,
+       {14.0+1i,  4, -16, -20, -3.0+1i,  -4,
+        17, 17, -16.0+1i,   5.0+1i,  6, -13,
+        -2, 12.0+1i,  -7,  15.0+1i, -1,  -3,
+        19.0+1i,  4,  -3,   5, 16.0+1i,  -9});
+    EXPECT_NO_THROW(Ac.qr_dec(Qc,Rc));
+    EXPECT_EQ(Qc.t()*Qc, IdMat(4));
+    EXPECT_TRUE(Rc.is_upper_triang());
+    EXPECT_EQ(Ac, Qc*Rc);
 }
-// todo
+
 TEST(Matrix, qrp_dec){
-//     Matrix Q, R, P;
+    Matrix Q, R, P;
+    Matrix<c_double> Qc, Rc;
 
-//     Matrix A(3,3, {2, -2, 18,
-//                    2, 1, 0,
-//                    1, 2, 0});
-//     EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
-//     EXPECT_EQ(Q.t()*Q, IdMat(3));
-//     EXPECT_TRUE(R.is_upper_triang());
-//     EXPECT_EQ(A*P, Q*R);
+    Matrix A(3,3, {2, -2, 18,
+                   2,  1,  0,
+                   1,  2,  0});
+    EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
+    EXPECT_EQ(Q.t()*Q, IdMat(3));
+    EXPECT_TRUE(R.is_upper_triang());
+    EXPECT_EQ(A*P, Q*R);
 
-//     A = Matrix (3,3, {12, -51, 4,
-//                       6, 167, -68,
-//                       -4, 24, -41});
-//     EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
-//     EXPECT_EQ(Q.t()*Q, IdMat(3));
-//     EXPECT_TRUE(R.is_upper_triang());
-//     EXPECT_EQ(A*P, Q*R);
+    A = Matrix (3,3, {12, -51,   4,
+                       6, 167, -68,
+                      -4,  24, -41});
+    EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
+    EXPECT_EQ(Q.t()*Q, IdMat(3));
+    EXPECT_TRUE(R.is_upper_triang());
+    EXPECT_EQ(A*P, Q*R);
 
-//     A = Matrix(4,6,{ 14,   4, -16, -20, -3,  -4,
-//                      17,  17, -16,   5,  6, -13,
-//                      -2,  12,  -7,  15, -1,  -3,
-//                      19,   4,  -3,   5, 16,  -9});
-//     EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
-//     EXPECT_EQ(Q.t()*Q, IdMat(4));
-//     EXPECT_TRUE(R.is_upper_triang());
-//     EXPECT_EQ(A*P, Q*R);
+    A = Matrix(4,6,{ 14,   4, -16, -20, -3,  -4,
+                     17,  17, -16,   5,  6, -13,
+                     -2,  12,  -7,  15, -1,  -3,
+                     19,   4,  -3,   5, 16,  -9});
+    EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
+    EXPECT_EQ(Q.t()*Q, IdMat(4));
+    EXPECT_TRUE(R.is_upper_triang());
+    EXPECT_EQ(A*P, Q*R);
 
-//     A = Matrix(6,4,{ 14,   4, -16, -20, -3,  -4,
-//                      17,  17, -16,   5,  6, -13,
-//                      -2,  12,  -7,  15, -1,  -3,
-//                      19,   4,  -3,   5, 16,  -9});
-//     EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
-//     EXPECT_EQ(Q.t()*Q, IdMat(6));
-//     EXPECT_TRUE(R.is_upper_triang());
-//     EXPECT_EQ(A*P, Q*R);
+    A = Matrix(6,4,{ 14,   4, -16, -20, -3,  -4,
+                     17,  17, -16,   5,  6, -13,
+                     -2,  12,  -7,  15, -1,  -3,
+                     19,   4,  -3,   5, 16,  -9});
+    EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
+    EXPECT_EQ(Q.t()*Q, IdMat(6));
+    EXPECT_TRUE(R.is_upper_triang());
+    EXPECT_EQ(A*P, Q*R);
+
+
+    // -- complex matrix -- //
+
+    Matrix<c_double>::set_double_precision(13);
+    Matrix<double>::set_double_precision  (13);
+
+    Matrix<c_double> Ac(3,3, 
+        {2.0+1i, -2.0-1i, 18,
+         2,  1,  0.0+1i,
+         1,  2.0-1i,  0});
+    EXPECT_NO_THROW(Ac.qrp_dec(Qc,Rc,P));
+    EXPECT_EQ(Qc.t()*Qc, IdMat(3));
+    EXPECT_TRUE(Rc.is_upper_triang());
+    EXPECT_EQ(Ac*P, Qc*Rc);
+
+    Ac = Matrix<c_double>(3,3, 
+        {12, -51.0-1i,   4,
+          6.0+1i, 167, -68,
+         -4,  24.0+1i, -41.0-1i});
+    EXPECT_NO_THROW(Ac.qrp_dec(Qc,Rc,P));
+    EXPECT_EQ(Qc.t()*Qc, IdMat(3));
+    EXPECT_TRUE(Rc.is_upper_triang());
+    EXPECT_EQ(Ac*P, Qc*Rc);
+
+    Ac = Matrix<c_double>(4,6,
+        { 14.0+1i,   4, -16.0-1i, -20, -3,  -4,
+          17,  17, -16,   5.0+1i,  6, -13.0-1i,
+          -2,  12,  -7.0+1i,  15, -1.0-1i,  -3,
+          19,   4.0-1i,  -3,   5, 16,  -9.0+1i});
+    EXPECT_NO_THROW(Ac.qrp_dec(Qc,Rc,P));
+    EXPECT_EQ(Qc.t()*Qc, IdMat(4));
+    EXPECT_TRUE(Rc.is_upper_triang());
+    EXPECT_EQ(Ac*P, Qc*Rc);
+
+    Ac = Matrix<c_double>(6,4,
+        { 14.0+1i,   4, -16, -20.0-1i, -3,  -4,
+          17,  17.0-1i, -16.0+1i,   5,  6, -13.0-1i,
+          -2,  12.0+1i,  -7,  15, -1.0-1i,  -3,
+          19,   4,  -3,   5, 16,  -9.0+1i});
+    EXPECT_NO_THROW(Ac.qrp_dec(Qc,Rc,P));
+    EXPECT_EQ(Qc.t()*Qc, IdMat(6));
+    EXPECT_TRUE(Rc.is_upper_triang());
+    EXPECT_EQ(Ac*P, Qc*Rc);
+
+    Matrix<c_double>::set_double_precision();
+    Matrix<double>::set_double_precision  ();
 }
 
 TEST(Matrix, lup_dec){
@@ -1977,30 +2043,49 @@ TEST(Matrix, lup_dec){
     // Matrix<c_double>::set_double_precision();
 
 }
-// todo
+
 TEST(Matrix, hessenberg_dec){
-//     Matrix m1, Q, H;
+    Matrix m1, Q, H;
+    Matrix<c_double> m1c, Qc, Hc;
 
-//     // matrix not square
-//     m1 = Matrix (3,4,
-//         {1,3,5,9,
-//          0,2,1,7,
-//          4,1,8,2,
-//          5,2,1,9}
-//     );
-//     EXPECT_THROW(m1.hessenberg_dec(Q, H), invalid_argument);
+    // matrix not square
+    m1 = Matrix (3,4,
+        {1,3,5,9,
+         0,2,1,7,
+         4,1,8,2,
+         5,2,1,9}
+    );
+    EXPECT_THROW(m1.hessenberg_dec(Q, H), invalid_argument);
+    m1c = Matrix<c_double> (3,4,
+        {1.0+1i,3,5,9,
+         0,2,1.0+1i,7,
+         4.0+1i,1,8,2,
+         5,2,1,9.0+1i}
+    );
+    EXPECT_THROW(m1c.hessenberg_dec(Qc, Hc), invalid_argument);
 
-//     // matrix decomposable
-//     m1 = Matrix (4,4,
-//         {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
-//          6.4349e-01,   2.9453e-01,   4.3203e-01,   8.8371e-03,
-//          1.4175e-01,   8.3325e-01,   6.4892e-01,   8.3927e-02,
-//          8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
-//     );
-//     EXPECT_NO_THROW(m1.hessenberg_dec(Q, H));
-//     EXPECT_EQ(Q * Q.t(), IdMat(4));
-//     EXPECT_TRUE(H.is_upper_hessenberg());
-//     EXPECT_EQ(Q * H * Q.t(), m1);
+    // matrix decomposable
+    m1 = Matrix (4,4,
+        {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
+         6.4349e-01,   2.9453e-01,   4.3203e-01,   8.8371e-03,
+         1.4175e-01,   8.3325e-01,   6.4892e-01,   8.3927e-02,
+         8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
+    );
+    EXPECT_NO_THROW(m1.hessenberg_dec(Q, H));
+    EXPECT_EQ(Q * Q.t(), IdMat(4));
+    EXPECT_TRUE(H.is_upper_hessenberg());
+    EXPECT_EQ(Q * H * Q.t(), m1);
+
+    m1c = Matrix<c_double> (4,4,
+        {7.5+1i, 8.7, 3.6+1i, 4.6,
+         6.4, 2.9+1i, 4.3, 8.8+1i,
+         1.4, 8.3+1i, 6.4+1i, 8.3,
+         8.1+1i, 9.5, 9.0, 1.0+1i}
+    );
+    EXPECT_NO_THROW(m1c.hessenberg_dec(Qc, Hc));
+    EXPECT_EQ(Qc * Qc.t(), IdMat(4));
+    EXPECT_TRUE(Hc.is_upper_hessenberg());
+    EXPECT_EQ(Qc * Hc * Qc.t(), m1c);
 }
 
 

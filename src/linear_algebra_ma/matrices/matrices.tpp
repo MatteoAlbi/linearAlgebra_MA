@@ -734,69 +734,94 @@ Matrix<T> Matrix<T>::adj() const{
 
 #pragma region decomposition_methods
 
-// void Matrix<T>::qr_dec(Matrix & Q, Matrix & R) const{
-//     uint n = std::min<double>(_r, _c);
+template<typename T>
 
-//     // init matrices
-//     Q = IdMat(_r);
-//     R = *this;
+Matrix<T> Matrix<T>::householder_v() const{
+    if(!this->is_vec()) throw std::invalid_argument("The object must be a vector");
+
+    using namespace std::complex_literals;
+    Matrix<T> u(*this);
+    T alpha;
+
+    if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm2();
+    else alpha = -copysign(u.norm2(), u(0));
+
+    u(0) -= alpha;
+    return u.normalize();
+}
+
+template<typename T>
+void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
+    // init matrices
+    uint n = std::min<double>(_r, _c);
+    Q = IdMat(_r);
+    R = *this;
     
-//     for(uint i=0; i<n-1; ++i){
-//         //compute vk
-//         Matrix v = R({i, _r-1}, i);
-//         v(0) += copysign(v.norm2(), v(0));
+    for(uint i=0; i<n-1; ++i){
+        //compute vk
+        Matrix<T> v = R({i, _r-1}, i).householder_v();
+        Matrix<T> v_t = v.t();
 
-//         // compute H matrix
-//         v.normalize_self();
-//         Matrix H = IdMat(_r);
-//         H.set({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
+        // Update R: HR = R - 2v * (v' * R)
+        for(uint j=0; j<_c; ++j){
+            T tmp = 0.0;
+            for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * R(i+k,j);
+            for(uint k=0; k<v.size(); ++k) R(i+k,j) -= 2.0 * v(k) * tmp;
+        }
+        // Update Q: QH = Q - (Q * v) * 2v'
+        for(uint j=0; j<_r; ++j){
+            T tmp = 0.0;
+            for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
+            for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= 2.0 * v_t(k) * tmp;
+        }
+    }
+}
 
-//         //update R
-//         R = H * R;
-//         Q = Q * H;
-//     }
-// }
+template<typename T>
+void Matrix<T>::qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const{
 
-// void Matrix<T>::qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const{
+    uint n = std::min<double>(_r, _c);
 
-//     uint n = std::min<double>(_r, _c);
-
-//     // init matrices
-//     Q = IdMat(_r);
-//     R = *this;
-//     P = IdMat(_c);
+    // init matrices
+    Q = IdMat(_r);
+    R = *this;
+    P = IdMat(_c);
     
-//     for(uint i=0; i<n; ++i){ // main loop
+    for(uint i=0; i<n-1; ++i){ // main loop
 
-//         // find column with largest norm
-//         uint j = 0;
-//         double max_norm = -1;
-//         for(uint k=i; k<n; ++k){
-//             double norm = R({i, _r-1}, k).norm2();
-//             if(norm > max_norm){
-//                 max_norm = norm;
-//                 j = k;
-//             }
-//         }
+        // find column with largest norm
+        uint index = 0;
+        double max_norm = -1;
+        for(uint k=i; k<n; ++k){
+            double norm = R({i, _r-1}, k).norm2();
+            if(norm > max_norm){
+                max_norm = norm;
+                index = k;
+            }
+        }
 
-//         // swap columns
-//         R.swap_cols(i, j);
-//         P.swap_cols(i, j);
+        // swap columns
+        R.swap_cols(i, index);
+        P.swap_cols(i, index);
 
-//         //compute vk
-//         Matrix v = R({i, _r-1}, i);
-//         v(0) += copysign(v.norm2(), v(0));
+        //compute vk
+        Matrix<T> v = R({i, _r-1}, i).householder_v();
+        Matrix<T> v_t = v.t();
 
-//         // compute H matrix
-//         v.normalize_self();
-//         Matrix H = IdMat(_r);
-//         H.set({i, _r-1},{i, _r-1}, IdMat(v.size()) - 2 * v * v.t());
-
-//         //update R
-//         R = H * R;
-//         Q = Q * H;
-//     }
-// }
+        // Update R: HR = R - 2v * (v' * R)
+        for(uint j=0; j<_c; ++j){
+            T tmp = 0.0;
+            for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * R(i+k,j);
+            for(uint k=0; k<v.size(); ++k) R(i+k,j) -= 2.0 * v(k) * tmp;
+        }
+        // Update Q: QH = Q - (Q * v) * 2v'
+        for(uint j=0; j<_r; ++j){
+            T tmp = 0.0;
+            for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
+            for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= 2.0 * v_t(k) * tmp;
+        }
+    }
+}
 
 template<typename T>
 uint Matrix<T>::lup_dec(Matrix<T> & L, Matrix<T> & U, Matrix<double> & P) const{
@@ -850,29 +875,48 @@ uint Matrix<T>::lup_dec(Matrix<T> & L, Matrix<T> & U, Matrix<double> & P) const{
     return ret;
 }
 
-// void Matrix<T>::hessenberg_dec(Matrix & Q, Matrix & H) const{
-//     if(_c != _r) throw std::invalid_argument("Matrix must be square");
+template<typename T>
+void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
-//     H = *this;
-//     Q = IdMat(_r);
+    H = *this;
+    Q = IdMat(_r);
     
-//     using namespace std;
+    using namespace std;
 
-//     for (uint i=0; i<_r-1; ++i){
-//         // compute vk
-//         Matrix v = H({i+1, _r-1}, i);
-//         v(0) += copysign(v.norm2(), v(0));
-//         // v(0) += (v(0) == 0 ? 1 : copysign(1.0, v(0))) * v.norm2();
+    for (uint i=0; i<_r-1; ++i){
+        // compute vk
+        Matrix<T> v = H({i+1, _r-1}, i).householder_v();
 
-//         // compute U matrix
-//         v.normalize_self();
-//         Matrix U = IdMat(_r);
-//         U.set({i+1, _r-1},{i+1, _r-1}, IdMat(v.size()) - 2 * v * v.t());
+        // compute U matrix
+        Matrix<T> U = IdMat(_r);
+        U.set({i+1, _r-1},{i+1, _r-1}, IdMat(v.size()) - 2 * v * v.t());
 
-//         H = U * H * U.t();
-//         Q = Q * U.t();
-//     }
-// }
+        // // Update R: HR = R - 2v * (v' * R)
+        // for(uint j=0; j<_c; ++j){
+        //     T tmp = 0.0;
+        //     for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * R(i+k,j);
+        //     for(uint k=0; k<v.size(); ++k) R(i+k,j) -= 2.0 * v(k) * tmp;
+        // }
+        // // Update Q: QH = Q - (Q * v) * 2v'
+        // for(uint j=0; j<_r; ++j){
+        //     T tmp = 0.0;
+        //     for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
+        //     for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= 2.0 * v_t(k) * tmp;
+        // }
+
+        // // Update H: UH = H - 2v * (v' * H) -> H'
+        // for(uint j=0; j<_c; ++j){
+        //     T tmp = 0.0;
+        //     for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * H(i+k,j);
+        //     for(uint k=0; k<v.size(); ++k) H(i+k,j) -= 2.0 * v(k) * tmp;
+        // }
+        // // Update H': H'U.t = H - (H * v) * 2v'
+
+        H = U * H * U;
+        Q = Q * U;
+    }
+}
 
 #pragma endregion decomposition_methods
 
@@ -1024,91 +1068,91 @@ uint Matrix<T>::lup_dec(Matrix<T> & L, Matrix<T> & U, Matrix<double> & P) const{
 
 // }
 
-// Matrix Matrix<T>::implicit_double_QR_step() const{
-//     // for easier notation
-//     uint n =  this->_r;
-//     Matrix A = *this;
+template<typename T>
+Matrix<T> Matrix<T>::implicit_double_QR_step() const{
+    // for easier notation
+    uint n =  this->_r;
+    Matrix A = *this;
 
-//     Matrix y,u,v;
-//     double tau, tmp;
+    Matrix y,u,v;
+    double tau, tmp;
 
-//     // -- compute and apply Q1
-//     // compute first column of B
-//     y = Matrix(3,1,{
-//         (   (A(0,0) - A(n-2,n-2)) * 
-//             (A(0,0) - A(n-1, n-1)) - 
-//             A(n-1,n-2) * A(n-2,n-1)
-//         ) / A(1,0) + A(0,1),
-//         A(0,0) + A(1,1) - 
-//             A(n-2,n-2) - A(n-1,n-1),
-//         A(2,1)
-//     });
-//     // compute reflector
-//     tau = copysign(y.norm2(), y(0));
-//     u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau) });
-//     v = (y(0) / tau + 1) * u;
-//     // apply reflection B -> QB = B - v * (u.t * B)
-//     for(uint j=0; j<n; j++){
-//         tmp = 0;
-//         for(uint k=0; k<3; k++) tmp += u(k) * A(k, j);
-//         for(uint k=0; k<3; k++) A(k, j) -= tmp * v(k);
-//     }
-//     // apply reflection C -> CQ = C - (C * u) * v.t
-//     for(uint j=0; j<n; j++){
-//         tmp = 0;
-//         for(uint k=0; k<3; k++) tmp += v(k) * A(j, k);
-//         for(uint k=0; k<3; k++) A(j, k) -= tmp * u(k);
-//     }
-//     // std::cout << "after applying Q1: " << A << std::endl << std::endl;
+    // -- compute and apply Q1
+    // compute first column of B
+    y = Matrix(3,1,{
+        (   (A(0,0) - A(n-2,n-2)) * 
+            (A(0,0) - A(n-1, n-1)) - 
+            A(n-1,n-2) * A(n-2,n-1)
+        ) / A(1,0) + A(0,1),
+        A(0,0) + A(1,1) - 
+            A(n-2,n-2) - A(n-1,n-1),
+        A(2,1)
+    });
+    // compute reflector
+    tau = copysign(y.norm2(), y(0));
+    u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau) });
+    v = (y(0) / tau + 1) * u;
+    // apply reflection B -> QB = B - v * (u.t * B)
+    for(uint j=0; j<n; j++){
+        tmp = 0;
+        for(uint k=0; k<3; k++) tmp += u(k) * A(k, j);
+        for(uint k=0; k<3; k++) A(k, j) -= tmp * v(k);
+    }
+    // apply reflection C -> CQ = C - (C * u) * v.t
+    for(uint j=0; j<n; j++){
+        tmp = 0;
+        for(uint k=0; k<3; k++) tmp += v(k) * A(j, k);
+        for(uint k=0; k<3; k++) A(j, k) -= tmp * u(k);
+    }
+    // std::cout << "after applying Q1: " << A << std::endl << std::endl;
 
-//     // -- move the bulge
-//     for(uint i=1; i<n-2; ++i){
-//         // std::cout << "acting on column # " << i-1 << std::endl;
-//         // extract column to transform in  [x 0 0]
-//         y = A({i, i+2}, i-1);
-//         // compute reflector
-//         tau = copysign(y.norm2(), y(0));
-//         u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau)});
-//         v = (y(0) / tau + 1) * u;
-//         // apply reflection B -> QB = B - v * (u.t * B)
-//         for(uint j=0; j<n; j++){
-//             tmp = 0;
-//             for(uint k=0; k<3; k++) tmp += u(k) * A(i+k, j);
-//             for(uint k=0; k<3; k++) A(i+k, j) -= tmp * v(k);
-//         }
-//         // apply reflection C -> CQ = C - (C * u) * v.t
-//         for(uint j=0; j<n; j++){
-//             tmp = 0;
-//             for(uint k=0; k<3; k++) tmp += v(k) * A(j, i+k);
-//             for(uint k=0; k<3; k++) A(j, i+k) -= tmp * u(k);
-//         }
-//         // std::cout << "moving the bulge: " << A << std::endl << std::endl;
+    // -- move the bulge
+    for(uint i=1; i<n-2; ++i){
+        // std::cout << "acting on column # " << i-1 << std::endl;
+        // extract column to transform in  [x 0 0]
+        y = A({i, i+2}, i-1);
+        // compute reflector
+        tau = copysign(y.norm2(), y(0));
+        u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau)});
+        v = (y(0) / tau + 1) * u;
+        // apply reflection B -> QB = B - v * (u.t * B)
+        for(uint j=0; j<n; j++){
+            tmp = 0;
+            for(uint k=0; k<3; k++) tmp += u(k) * A(i+k, j);
+            for(uint k=0; k<3; k++) A(i+k, j) -= tmp * v(k);
+        }
+        // apply reflection C -> CQ = C - (C * u) * v.t
+        for(uint j=0; j<n; j++){
+            tmp = 0;
+            for(uint k=0; k<3; k++) tmp += v(k) * A(j, i+k);
+            for(uint k=0; k<3; k++) A(j, i+k) -= tmp * u(k);
+        }
+        // std::cout << "moving the bulge: " << A << std::endl << std::endl;
 
-//     }
+    }
 
-//     // std::cout << "last iteration" << std::endl;
-//     // -- implement step for n-1 with only 2 last rows
-//     y = A({n-2, n-1}, n-3);
-//     tau = copysign(y.norm2(), y(0));
-//     u = Matrix(2,1,{1, y(1) / (y(0) + tau)});
-//     v = (y(0) / tau + 1) * u;
-//     // apply reflection B -> QB = B - v * (u.t * B)
-//     for(uint j=0; j<n; j++){
-//         tmp = 0;
-//         for(uint k=0; k<2; k++) tmp += u(k) * A(n-2+k, j);
-//         for(uint k=0; k<2; k++) A(n-2+k, j) -= tmp * v(k);
-//     }
-//     // apply reflection C -> CQ = C - (C * u) * v.t
-//     for(uint j=0; j<n; j++){
-//         tmp = 0;
-//         for(uint k=0; k<2; k++) tmp += v(k) * A(j, n-2+k);
-//         for(uint k=0; k<2; k++) A(j, n-2+k) -= tmp * u(k);
-//     }
-//     // std::cout << "end of QR step: " << A << std::endl << std::endl;
+    // std::cout << "last iteration" << std::endl;
+    // -- implement step for n-1 with only 2 last rows
+    y = A({n-2, n-1}, n-3);
+    tau = copysign(y.norm2(), y(0));
+    u = Matrix(2,1,{1, y(1) / (y(0) + tau)});
+    v = (y(0) / tau + 1) * u;
+    // apply reflection B -> QB = B - v * (u.t * B)
+    for(uint j=0; j<n; j++){
+        tmp = 0;
+        for(uint k=0; k<2; k++) tmp += u(k) * A(n-2+k, j);
+        for(uint k=0; k<2; k++) A(n-2+k, j) -= tmp * v(k);
+    }
+    // apply reflection C -> CQ = C - (C * u) * v.t
+    for(uint j=0; j<n; j++){
+        tmp = 0;
+        for(uint k=0; k<2; k++) tmp += v(k) * A(j, n-2+k);
+        for(uint k=0; k<2; k++) A(j, n-2+k) -= tmp * u(k);
+    }
+    // std::cout << "end of QR step: " << A << std::endl << std::endl;
 
-
-//     return A;
-// }
+    return A;
+}
 
 // void Matrix<T>::eigen_implicit_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
 //     if(_c != _r) throw std::invalid_argument("Matrix must be square");

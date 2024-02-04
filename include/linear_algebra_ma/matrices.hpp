@@ -35,13 +35,18 @@ struct is_complex : std::false_type {};
 template <typename T>
 struct is_complex<std::complex<T>> : std::true_type {};
 
+// overload coypsign function
+double copysign(double mag, std::complex<double> sgn){
+    return std::copysign(mag, sgn.real());
+}
+
 
 template<typename T = double>
 class Matrix {
 protected:
 
     // number of decimals used in double comparison
-    inline static uint double_precision = 16;
+    inline static double double_precision = 16.0;
     // epsilon used in double comparison
     inline static double epsilon = 1e-16;
     // random number generator objects
@@ -59,8 +64,8 @@ public:
      * @brief set the double precision used in comparison
      * @param dp number of digits considered during comparison
      */
-    inline static void set_double_precision(int dp = 10){ 
-        if(dp > 15) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
+    inline static void set_double_precision(double dp = 16.0){ 
+        if(dp > 16) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
         Matrix<T>::double_precision = dp; 
         Matrix<T>::epsilon = pow(10.0,-dp);
     }
@@ -435,8 +440,13 @@ public:
 
 #pragma region comparison_operators   
 
-    template<typename U, typename V>
-    friend bool operator==(const Matrix<U> & m1, const Matrix<V> & m2);
+    template <typename U, typename V>
+    friend std::enable_if_t<!is_complex<U>::value && !is_complex<V>::value, bool>
+    operator==(const Matrix<U> & m1, const Matrix<V> & m2);
+
+    template <typename U, typename V>
+    friend std::enable_if_t<is_complex<U>::value || is_complex<V>::value, bool>
+    operator==(const Matrix<U> & m1, const Matrix<V> & m2);
 
     template<typename U, typename V>
     friend bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2);
@@ -648,8 +658,6 @@ public:
 #pragma region output_operator
     template<typename U>
     friend std::ostream& operator<<(std::ostream& os, const Matrix<U>& m);
-
-    friend std::ostream& operator<<(std::ostream& os, const uu_pair & p);
 #pragma endregion output_operator
 
 #pragma region concatenate_operators
@@ -925,31 +933,40 @@ public:
 //      */
 //     Matrix pinv_right() const;
 #pragma endregion matrix_operations
-// todo
-#pragma region decomposition_methods
-//     /**
-//      * @brief Compute QR decomposition of the given matrix: A=Q*R 
-//      *        with Q orthogonal matrix and R upper triangular matrix
-//      *      http://matlab.izmiran.ru/help/techdoc/ref/mldivide.html
-//      *      https://rpubs.com/aaronsc32/qr-decomposition-householder
-//      * 
-//      * @param Q orthogonal matrix
-//      * @param R upper triangular matrix
-//      */
-//     void qr_dec(Matrix & Q, Matrix & R) const;
 
-//     /**
-//      * @brief Compute QR decomposition of the given matrix with partial permutation
-//      *      A*P=Q*R with: 
-//      *      Q orthogonal matrix 
-//      *      R upper triangular matrix
-//      *      P permutation matrix
-//      * 
-//      * @param Q orthogonal matrix
-//      * @param R upper triangular matrix
-//      * @param P permutation matrix
-//      */
-//     void qrp_dec(Matrix & Q, Matrix & R, Matrix & P) const;
+#pragma region decomposition_methods
+    /**
+     * @brief computes the vector v associated to the 
+     * Householder matrix:
+     * https://en.wikipedia.org/wiki/QR_decomposition
+     * 
+     * @return transformation vector
+    */
+    Matrix<T> householder_v() const;
+
+    /**
+     * @brief Compute QR decomposition of the given matrix: A=Q*R 
+     *        with Q orthogonal matrix and R upper triangular matrix
+     *      http://matlab.izmiran.ru/help/techdoc/ref/mldivide.html
+     *      https://rpubs.com/aaronsc32/qr-decomposition-householder
+     * 
+     * @param Q orthogonal matrix
+     * @param R upper triangular matrix
+     */
+    void qr_dec(Matrix<T> & Q, Matrix<T> & R) const;
+
+    /**
+     * @brief Compute QR decomposition of the given matrix with partial permutation
+     *      A*P=Q*R with: 
+     *      Q orthogonal matrix 
+     *      R upper triangular matrix
+     *      P permutation matrix
+     * 
+     * @param Q orthogonal matrix
+     * @param R upper triangular matrix
+     * @param P permutation matrix
+     */
+    void qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const;
 
 
     /**
@@ -965,15 +982,15 @@ public:
      */
     uint lup_dec(Matrix<T> & L, Matrix<T> & U, Matrix<double> & P) const;
 
-//     /**
-//      * @brief preform hessenberg decomposition of the given matrix
-//      *        QHQ* = A
-//      *      https://en.wikipedia.org/wiki/Hessenberg_matrix
-//      * 
-//      * @param Q unitary matrix
-//      * @param H hessenberg matrix
-//     */
-//     void hessenberg_dec(Matrix & Q, Matrix & H) const;
+    /**
+     * @brief preform hessenberg decomposition of the given matrix
+     *        QHQ* = A
+     *      https://en.wikipedia.org/wiki/Hessenberg_matrix
+     * 
+     * @param Q unitary matrix
+     * @param H hessenberg matrix
+    */
+    void hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const;
 
 #pragma endregion decomposition_methods
 // todo
@@ -1006,7 +1023,7 @@ public:
 //     */
 //     void eigen_implicit_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-16) const;
 
-//     Matrix implicit_double_QR_step() const;
+    Matrix<T> implicit_double_QR_step() const;
 #pragma endregion eigen
 
 };
@@ -1132,6 +1149,8 @@ Matrix<T> diag(std::vector<T> v);
 template<typename T>
 Matrix<T> diag(const Matrix<T>& v);
 #pragma endregion special_constructors
+
+std::ostream& operator<<(std::ostream& os, const uu_pair & p);
 
 } // namespace MA
 

@@ -491,18 +491,19 @@ Matrix<T> Matrix<T>::t() const{
     Matrix<T> ret(this->_c, this->_r);
     for (uint i = 0; i<this->_r; ++i) {
         for (uint j = 0; j<this->_c; ++j) {
-            ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
+            if constexpr (is_complex<T>::value) ret._v[j * ret._c + i] = std::conj(this->_v[i * this->_c + j]);
+            else ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
         }
     }
     return ret;
 }
 
-template <>
-Matrix<std::complex<double>> Matrix<std::complex<double>>::t() const{
-    Matrix<std::complex<double>> ret(this->_c, this->_r);
+template<typename T>
+Matrix<T> Matrix<T>::no_conj_t() const{
+    Matrix<T> ret(this->_c, this->_r);
     for (uint i = 0; i<this->_r; ++i) {
         for (uint j = 0; j<this->_c; ++j) {
-            ret._v[j * ret._c + i] = std::conj(this->_v[i * this->_c + j]);
+            ret._v[j * ret._c + i] = this->_v[i * this->_c + j];
         }
     }
     return ret;
@@ -568,7 +569,6 @@ T Matrix<T>::det() const{
     }
 }
 
-
 template<typename T>
 T Matrix<T>::minor(const uint & p, const uint & q) const{
     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
@@ -606,51 +606,54 @@ Matrix<T> Matrix<T>::adj() const{
     return ret;
 }
 
-// Matrix Matrix<T>::inv() const{
-//     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
+template<typename T>
+Matrix<T> Matrix<T>::inv() const{
+    if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
 
-//     return matrix_l_divide(*this, IdMat(_r));
-// }
+    return matrix_l_divide(*this, IdMat(_r));
+}
 
-// Matrix Matrix<T>::pinv_left() const{
-//     if(_c > _r) throw std::invalid_argument("Matrix must be full column rank");
-//     try{
-//         Matrix tmp = this->t() * *this;
-//         double det = tmp.det();
-//         if(abs(det) < Matrix<T>::epsilon) {
-//             std::cout << "Matrix is bad conditioned, det = " << det << "; this may result in bad numerical result" << std::endl;
-//         }
-//         return tmp.inv() * this->t();
-//     }
-//     catch(const std::runtime_error& rte){
-//         std::cerr << rte.what() << '\n';
-//         throw std::runtime_error("Matrix (m.t * m) not invertible");
-//     }
-//     catch(const std::exception& e){
-//         std::cerr << e.what() << '\n';
-//         throw std::runtime_error("Unknown error occured");
-//     }
-// }
+template<typename T>
+Matrix<T> Matrix<T>::pinv_left() const{
+    if(_c > _r) throw std::invalid_argument("Matrix must be full column rank");
+    try{
+        Matrix<T> tmp = this->t() * *this;
+        T det = tmp.det();
+        if(abs(det) < Matrix<T>::epsilon) {
+            std::cout << "Matrix is bad conditioned, det = " << det << "; this may result in bad numerical result" << std::endl;
+        }
+        return tmp.inv() * this->t();
+    }
+    catch(const std::runtime_error& rte){
+        std::cerr << rte.what() << '\n';
+        throw std::runtime_error("Matrix (m.t * m) not invertible");
+    }
+    catch(const std::exception& e){
+        std::cerr << e.what() << '\n';
+        throw std::runtime_error("Unknown error occured");
+    }
+}
 
-// Matrix Matrix<T>::pinv_right() const{
-//     if(_r > _c) throw std::invalid_argument("Matrix must be full row rank");
-//     try{
-//         Matrix tmp = (*this * this->t());
-//         double det = tmp.det();
-//         if(abs(det) < Matrix<T>::epsilon) {
-//             std::cout << "Matrix is bad conditioned, det = " << det << "; this may result in bad numerical result" << std::endl;
-//         }
-//         return this->t() * tmp.inv();
-//     }
-//     catch(const std::runtime_error& rte){
-//         std::cerr << rte.what() << '\n';
-//         throw std::runtime_error("Matrix (m.t * m) not invertible");
-//     }
-//     catch(const std::exception& e){
-//         std::cerr << e.what() << '\n';
-//         throw std::runtime_error("Unknown error occured");
-//     }
-// }
+template<typename T>
+Matrix<T> Matrix<T>::pinv_right() const{
+    if(_r > _c) throw std::invalid_argument("Matrix must be full row rank");
+    try{
+        Matrix<T> tmp = (*this * this->t());
+        T det = tmp.det();
+        if(abs(det) < Matrix<T>::epsilon) {
+            std::cout << "Matrix is bad conditioned, det = " << det << "; this may result in bad numerical result" << std::endl;
+        }
+        return this->t() * tmp.inv();
+    }
+    catch(const std::runtime_error& rte){
+        std::cerr << rte.what() << '\n';
+        throw std::runtime_error("Matrix (m.t * m) not invertible");
+    }
+    catch(const std::exception& e){
+        std::cerr << e.what() << '\n';
+        throw std::runtime_error("Unknown error occured");
+    }
+}
 
 #pragma endregion matrix_operations
 
@@ -903,8 +906,8 @@ Matrix<V> forward_sub(Matrix<T> const & L, Matrix<U> const & B){
     return res;
 }
 
-template<typename T>
-Matrix<T> matrix_l_divide(Matrix<T> const & A, Matrix<T> const & B){
+template<typename T, typename U, typename V>
+Matrix<V> matrix_l_divide(Matrix<T> const & A, Matrix<U> const & B){
     if(A.r() != B.r()){
         throw std::invalid_argument("Rows of B (currently " + std::to_string(B.r()) + ")" +
         "must be equal the rows of A (currently " + std::to_string(A.r()) + ")");
@@ -912,43 +915,44 @@ Matrix<T> matrix_l_divide(Matrix<T> const & A, Matrix<T> const & B){
 
     if(A.c() == A.r()){ //square A
         // printf("matrix A is square, using LU decomposition\n");
-        Matrix<T> L, U, res_tmp;
+        Matrix<T> L, u;
         Matrix<double> P;
+        Matrix<V> res;
 
-        A.lup_dec(L, U, P);
-        res_tmp = forward_sub(L, P*B);
-        return backward_sub(U, res_tmp);
+        A.lup_dec(L, u, P);
+        res = forward_sub(L, P*B);
+        return backward_sub(u, res);
     }
     else{
         // printf("matrix A is not square, using QR decomposition\n");
         if(A.r() < A.c()) throw std::invalid_argument("System is underdetermined");
-        Matrix<T> Q, R, res;
+        Matrix<T> Q, R;
         Matrix<double> P;
+        Matrix<V> res;
 
         A.qrp_dec(Q,R,P);
         res = P * backward_sub(R({0, R.c()-1}, ALL), (Q.t() * B)({0, R.c()-1}, ALL));
         return res;
     }
-
 }
 
-template<typename T>
-Matrix<T> solve_ls(Matrix<T> const & A, Matrix<T> const & B){
+template<typename T, typename U, typename V>
+Matrix<V> solve_ls(Matrix<T> const & A, Matrix<U> const & B){
     return matrix_l_divide(A,B);
 }
 
-template<typename T>
-Matrix<T> matrix_r_divide(Matrix<T> const & B, Matrix<T> const & A){
+template<typename T, typename U, typename V>
+Matrix<V> matrix_r_divide(Matrix<T> const & B, Matrix<U> const & A){
     if(A.c() != B.c()){
         throw std::invalid_argument("Columns of B (currently " + std::to_string(B.c()) + ") " +
         "must be equal the Columns of A (currently " + std::to_string(A.c()) + ")");
     }
-    return matrix_l_divide(A.t(), B.t()).t();
+    return matrix_l_divide(A.no_conj_t(), B.no_conj_t()).no_conj_t();
 }
 
 #pragma endregion ls_solution
 
-
+// todo
 #pragma region eigen
 
 // void Matrix<T>::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
@@ -1148,9 +1152,9 @@ Matrix<double> IdMat(const uint & dim){
     return ret;
 }
 
-// Matrix<double> Ones(const uint & r, const uint & c){
-//     return Matrix(r,c)+1;
-// }
+Matrix<double> Ones(const uint & r, const uint & c){
+    return Matrix(r,c)+1;
+}
 
 template<typename T>
 Matrix<T> RandMat(const uint & r, const uint & c){

@@ -28,8 +28,9 @@ namespace MA
 typedef unsigned int uint;
 typedef std::pair<uint,uint> uu_pair;
 typedef std::complex<double> c_double;
-
 #define ALL uu_pair{}
+
+#pragma region helper_structs
 
 // Define a type trait to check if a type is std::complex
 template <typename T>
@@ -57,6 +58,7 @@ struct enable_if_not_comp2d :
 template <typename T, typename U>
 using enable_if_not_comp2d_t = typename enable_if_not_comp2d<T, U>::type;
 
+#pragma endregion helper_structs
 
 template<typename T = double>
 class Matrix {
@@ -502,14 +504,22 @@ public:
     template<typename U, typename V>
     friend Matrix<RetType_t<U,V>> operator*(const Matrix<U>& m1, const Matrix<V>& m2);
 #pragma endregion multiply_operator
-// todo
+
 #pragma region divide_operator
-    Matrix<T>& operator/=(const double & k);
-//     Matrix& operator/=(const Matrix & m);
-    template<typename U>
-    friend Matrix<U> operator/(const Matrix<U>& m, const double& k);
-//     friend Matrix operator/(const double& k, const Matrix& m);
-//     friend Matrix operator/(const Matrix& m1, const Matrix& m2);
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
+    Matrix<T>& operator/=(const V & k);
+
+    template <typename U = T, typename V, typename = enable_if_not_comp2d_t<U,V>>
+    Matrix<T>& operator/=(const Matrix<V> & m);
+
+    template<typename U, typename V>
+    friend Matrix<RetType_t<U,V>> operator/(const Matrix<U>& m, const V& k);
+    
+    template<typename U, typename V>
+    friend Matrix<RetType_t<U,V>> operator/(const U& k, const Matrix<V>& m);
+
+    template<typename U, typename V>
+    friend Matrix<RetType_t<U,V>> operator/(const Matrix<U>& m1, const Matrix<V>& m2);
 #pragma endregion divide_operator
 
 #pragma region output_operator
@@ -635,13 +645,21 @@ public:
      */
     bool is_lower_hessenberg() const;
 #pragma endregion checks
-// todo
+
 #pragma region matrix_operations
     /**
-     * @brief compute transpose
+     * @brief compute transpose, if the matrix is complex
+     *  it computes the conjugate transpose
      * @return Matrix: transpose
      */
     Matrix<T> t() const;
+
+    /**
+     * @brief compute simple transpose, even if the matrix is complex
+     *  (does not conjugate the entries)
+     * @return Matrix: transpose
+     */
+    Matrix<T> no_conj_t() const;
 
     /**
      * @brief compute submatrix matrix obtained by deleting
@@ -693,26 +711,26 @@ public:
      */
     Matrix<T> adj() const;
 
-//     /**
-//      * @brief compute inverse of the matrix using adjoint/det method
-//      * 
-//      * @return Matrix: inerse
-//      */
-//     Matrix inv() const;
+    /**
+     * @brief compute inverse of the matrix using adjoint/det method
+     * 
+     * @return Matrix: inverse
+     */
+    Matrix<T> inv() const;
 
-//     /**
-//      * @brief compute left pseudo-inverse of the matrix
-//      * 
-//      * @return Matrix: left pseudo-inverse
-//      */
-//     Matrix pinv_left() const;
+    /**
+     * @brief compute left pseudo-inverse of the matrix
+     * 
+     * @return Matrix: left pseudo-inverse
+     */
+    Matrix<T> pinv_left() const;
 
-//     /**
-//      * @brief compute right pseudo-inverse of the matrix
-//      * 
-//      * @return Matrix: right pseudo-inverse
-//      */
-//     Matrix pinv_right() const;
+    /**
+     * @brief compute right pseudo-inverse of the matrix
+     * 
+     * @return Matrix: right pseudo-inverse
+     */
+    Matrix<T> pinv_right() const;
 #pragma endregion matrix_operations
 
 #pragma region decomposition_methods
@@ -809,7 +827,6 @@ public:
 
 };
 
-// todo
 #pragma region ls_solution
     /**
      * @brief Solve the system U*x=B using a backward substitution algorithm.
@@ -859,8 +876,8 @@ public:
      * @return Matrix: result of the division
      * @throw invalid_argument if rows don't match
      */
-    template<typename T>
-    Matrix<T> matrix_l_divide(Matrix<T> const & A, Matrix<T> const & B);
+    template<typename T, typename U, typename V = RetType_t<T,U>>
+    Matrix<V> matrix_l_divide(Matrix<T> const & A, Matrix<U> const & B);
 
     /**
      * @brief solves the linear system A*x=B. 
@@ -870,8 +887,8 @@ public:
      * @return Matrix: x (dimensions A.rows x B.cols)
      * @throw invalid_argument if rows don't match
      */
-    template<typename T>
-    Matrix<T> solve_ls(Matrix<T> const & A, Matrix<T> const & B);
+    template<typename T, typename U, typename V = RetType_t<T,U>>
+    Matrix<V> solve_ls(Matrix<T> const & A, Matrix<U> const & B);
 
     /**
      * @brief computes the right division B/A translating it in a left 
@@ -886,8 +903,8 @@ public:
      * @return Matrix: result of the division
      * @throw invalid_argument if columns don't match
      */
-    template<typename T>
-    Matrix<T> matrix_r_divide(Matrix<T> const & B, Matrix<T> const & A);
+    template<typename T, typename U, typename V = RetType_t<T,U>>
+    Matrix<V> matrix_r_divide(Matrix<T> const & B, Matrix<U> const & A);
 
 #pragma endregion ls_solution
 

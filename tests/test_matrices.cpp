@@ -1632,67 +1632,101 @@ TEST(Matrix, adj){
         else EXPECT_TRUE(abs(m4c(i,j)) < 1e-10);
     }
 }
-// todo
+
 TEST(Matrix, inv){
-//     // not square
-//     Matrix m1(3,4,
-//         {10,11,12,13,
-//          14,15,16,17,
-//          18,19,20,21}
-//     );
-//     EXPECT_THROW(m1.inv(), invalid_argument);
+    // not square
+    Matrix m1(3,4,
+        {10,11,12,13,
+         14,15,16,17,
+         18,19,20,21}
+    );
+    EXPECT_THROW(m1.inv(), invalid_argument);
 
-//     // singular
-//     m1 = Matrix (4,4,
-//         {1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2,
-//          0,0,0,0}
-//     );
-//     EXPECT_THROW(m1.inv(), runtime_error);
-//     m1 = Matrix (4,4,
-//         {1,3, 4, 0,
-//          0,2, 1, 0,
-//          2,1,-3, 0,
-//          7,0, 2, 0}
-//     );
-//     EXPECT_THROW(m1.inv(), runtime_error);
+    // singular
+    Matrix<c_double> m1c(4,4,
+        {1.0-1i,3,4,2,
+         0,2.0-1i,1,-2.0+1i,
+         2,1.0+1i,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(m1c.inv(), runtime_error);
+    m1 = Matrix (4,4,
+        {1,3, 4, 0,
+         0,2, 1, 0,
+         2,1,-3, 0,
+         7,0, 2, 0}
+    );
+    EXPECT_THROW(m1.inv(), runtime_error);
 
-//     m1 = Matrix(4,4,
-//         {1,3,5,9,
-//          1,3,1,7,
-//          4,3,9,7,
-//          5,2,0,9}
-//     );
-//     Matrix res(4,4, 
-//         {-104,  16,  56,  48,
-//          -235, 329,  94, -94,
-//            39, -53,  26, -18,
-//           110, -82, -52,  36}
-//     );
-//     EXPECT_EQ(m1.inv(), res/376);
-//     EXPECT_EQ(m1*m1.inv(), IdMat(4));
+    m1 = Matrix(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    Matrix<double>::set_double_precision(15);
+    EXPECT_EQ(m1*m1.inv(), IdMat(4));
+    Matrix<double>::set_double_precision();
+
+
+    // -- complex matrix -- //
+
+    m1c = Matrix<c_double>(4,4,
+        {1.0+1i,3,5.0-1i,9,
+         1,3.0-1i,1,7,
+         4,3,9.0+1i,7,
+         5.0+1i,2,0,9.0-1i}
+    );
+    Matrix<c_double>::set_double_precision(13);
+    EXPECT_EQ(m1c*m1c.inv(), IdMat(4));
+    Matrix<c_double>::set_double_precision();
 }
-// todo
+
 TEST(Matrix, pinv){
-//     Matrix m1(4,3,
-//         {1,3,4,
-//          2,0,2,
-//          1,-2,2,
-//          1,-3,2}
-//     );
-//     Matrix m2;
+    Matrix m1(4,3,
+        {1,3,4,
+         2,0,2,
+         1,-2,2,
+         1,-3,2}
+    );
+    Matrix m2;
 
-//     EXPECT_NO_THROW(m2 = m1.pinv_left());
-//     EXPECT_EQ(m2*m1, IdMat(3));
+    Matrix<double>::set_double_precision(15);
+    EXPECT_NO_THROW(m2 = m1.pinv_left());
+    EXPECT_EQ(m2*m1, IdMat(3));
 
-//     m1 = Matrix(3,4,
-//         {1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2});
+    m1 = Matrix(3,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2});
 
-//     EXPECT_NO_THROW(m2 = m1.pinv_right());
-//     EXPECT_EQ(m1*m2, IdMat(3));
+    EXPECT_NO_THROW(m2 = m1.pinv_right());
+    EXPECT_EQ(m1*m2, IdMat(3));
+    Matrix<double>::set_double_precision();
+
+
+    // -- complex matrix -- // 
+
+    Matrix<c_double> m1c(4,3,
+        {1.0-1i,3,4,
+         2,0.0+1i,2.0-1i,
+         1.0+1i,-2,2,
+         1,-3.0+1i,2}
+    );
+    Matrix<c_double> m2c;
+
+    Matrix<c_double>::set_double_precision(13);
+    EXPECT_NO_THROW(m2c = m1c.pinv_left());
+    EXPECT_EQ(m2c*m1c, IdMat(3));
+
+    m1c = Matrix<c_double>(3,4,
+        {1.0-1i,3,4,2.0+1i,
+         0,2,1.0+1i,-2,
+         2,1.0+1i,-3,2.0-1i});
+
+    EXPECT_NO_THROW(m2c = m1c.pinv_right());
+    EXPECT_EQ(m1c*m2c, IdMat(3));
+    Matrix<c_double>::set_double_precision();
 }
 
 
@@ -2229,7 +2263,7 @@ TEST(Matrix, forward_sub){
 
     Matrix<c_double>::set_double_precision();
 }
-// todo
+
 TEST(Matrix, matrix_l_divide){
     Matrix A,b,C;
     Matrix<c_double> Ac,bc,Cc;
@@ -2251,7 +2285,7 @@ TEST(Matrix, matrix_l_divide){
          2.0+1i,1.0+1i,-3,2,
          0,0,0,0}
     );
-    // EXPECT_THROW(matrix_l_divide(Cc, b), runtime_error);
+    EXPECT_THROW(matrix_l_divide(Cc, b), runtime_error);
     C = Matrix (4,4,
         {1,3, 4, 0,
          0,2, 1, 0,
@@ -2275,38 +2309,224 @@ TEST(Matrix, matrix_l_divide){
          -2,5,1,4});
     b = Matrix(6,1,{2,4,1,3,-3,5});
     EXPECT_NO_THROW(C = matrix_l_divide(A, b));
-    EXPECT_EQ(C, Matrix(4,1,{0.34582912, 1.42291125, -0.110443, -0.456683}));
+    EXPECT_EQ(C, Matrix(4,1,
+        {0.34582912, 
+         1.42291125, 
+          -0.110443, 
+          -0.456683}
+    )); // computed with numpy
     Matrix<double>::set_double_precision();
 
 
     // -- complex matrix -- //
 
-    // // solution
-    // Ac = Matrix<c_double> (4,4,
-    //     {1.0+1i,3,4,2,
-    //      0,2.0-1i,1.0+1i,-2,
-    //      2,1.0+1i,-3,2,
-    //      0.0+1i,2,1,-1.0-1i}
-    // );
-    // bc = Matrix<c_double>(4,1, {2,4.0+1i,1.0-1i,3});
+    // solution
+    Ac = Matrix<c_double> (4,4,
+        {1.0+1i,3,4,2,
+         0,2.0-1i,1.0+1i,-2,
+         2,1.0+1i,-3,2,
+         0.0+1i,2,1,-1.0-1i}
+    );
+    bc = Matrix<c_double>(4,1, {2,4.0+1i,1.0-1i,3});
 
-    // Matrix<double>::set_double_precision(8);
+    Matrix<c_double>::set_double_precision(13);
+    EXPECT_NO_THROW(Cc = matrix_l_divide(Ac,bc));
+    EXPECT_EQ(Ac*Cc, bc);
 
-    // EXPECT_NO_THROW(C = matrix_l_divide(A,b));
-    // EXPECT_EQ(A*C, b);
+    // overdetermined
+    Ac = Matrix<c_double>(6,4,
+        {-1.0+1i,3,4,2,
+         0.0-1i,2,1,-2,
+         2.0-1i,1,-3.0+1i,2,
+         0,2.0-1i,1,-1,
+         7,-3.0+1i,0,3.0-1i,
+         -2,5,1,4.0+1i});
+    bc = Matrix<c_double>(6,1,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
 
-    // // overdetermined
-    // A = Matrix(6,4,
-    //     {-1,3,4,2,
-    //      0,2,1,-2,
-    //      2,1,-3,2,
-    //      0,2,1,-1,
-    //      7,-3,0,3,
-    //      -2,5,1,4});
-    // b = Matrix(6,1,{2,4,1,3,-3,5});
-    // EXPECT_NO_THROW(C = matrix_l_divide(A, b));
-    // EXPECT_EQ(C, Matrix(4,1,{0.34582912, 1.42291125, -0.110443, -0.456683}));
-    // Matrix<double>::set_double_precision();
+    Matrix<c_double>::set_double_precision(8);
+    EXPECT_NO_THROW(Cc = matrix_l_divide(Ac, bc));
+    EXPECT_EQ(Cc, Matrix<c_double>(4,1,
+        { 0.35833002+0.03083223i,
+          1.31384349+0.39449758i,
+         -0.07673036-0.03475009i,
+         -0.37961168-0.29254325i}
+    )); // computed with numpy
+    Matrix<c_double>::set_double_precision();
+}
+
+TEST(Matrix, solve_ls){
+    Matrix A,b,C;
+    Matrix<c_double> Ac,bc,Cc;
+    A = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1}
+    );
+    b = Matrix(4,1, {2,4,1,3});
+
+    // shape doesn't match
+    EXPECT_THROW(solve_ls(A, b({1,3},0)), invalid_argument);
+    
+    // underdetermined
+    Cc = Matrix<c_double> (4,4,
+        {1,3.0+1i,4,2,
+         0,2,1,-2.0+1i,
+         2.0+1i,1.0+1i,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(solve_ls(Cc, b), runtime_error);
+    C = Matrix (4,4,
+        {1,3, 4, 0,
+         0,2, 1, 0,
+         2,1,-3, 0,
+         7,0, 2, 0}
+    );
+    EXPECT_THROW(solve_ls(C, b), runtime_error);
+
+    // solution
+    Matrix<double>::set_double_precision(15);
+    EXPECT_NO_THROW(C = solve_ls(A,b));
+    EXPECT_EQ(A*C, b);
+    // overdetermined
+    Matrix<double>::set_double_precision(8);
+    A = Matrix(6,4,
+        {-1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1,
+         7,-3,0,3,
+         -2,5,1,4});
+    b = Matrix(6,1,{2,4,1,3,-3,5});
+    EXPECT_NO_THROW(C = solve_ls(A, b));
+    EXPECT_EQ(C, Matrix(4,1,
+        {0.34582912, 
+         1.42291125, 
+          -0.110443, 
+          -0.456683}
+    )); // computed with numpy
+    Matrix<double>::set_double_precision();
+
+
+    // -- complex matrix -- //
+
+    // solution
+    Ac = Matrix<c_double> (4,4,
+        {1.0+1i,3,4,2,
+         0,2.0-1i,1.0+1i,-2,
+         2,1.0+1i,-3,2,
+         0.0+1i,2,1,-1.0-1i}
+    );
+    bc = Matrix<c_double>(4,1, {2,4.0+1i,1.0-1i,3});
+
+    Matrix<c_double>::set_double_precision(13);
+    EXPECT_NO_THROW(Cc = solve_ls(Ac,bc));
+    EXPECT_EQ(Ac*Cc, bc);
+
+    // overdetermined
+    Ac = Matrix<c_double>(6,4,
+        {-1.0+1i,3,4,2,
+         0.0-1i,2,1,-2,
+         2.0-1i,1,-3.0+1i,2,
+         0,2.0-1i,1,-1,
+         7,-3.0+1i,0,3.0-1i,
+         -2,5,1,4.0+1i});
+    bc = Matrix<c_double>(6,1,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
+
+    Matrix<c_double>::set_double_precision(8);
+    EXPECT_NO_THROW(Cc = solve_ls(Ac, bc));
+    EXPECT_EQ(Cc, Matrix<c_double>(4,1,
+        { 0.35833002+0.03083223i,
+          1.31384349+0.39449758i,
+         -0.07673036-0.03475009i,
+         -0.37961168-0.29254325i}
+    )); // computed with numpy
+    Matrix<c_double>::set_double_precision();
+}
+
+TEST(Matrix, matrix_r_divide){
+    Matrix A,b,C;
+    Matrix<c_double> Ac,bc,Cc;
+
+    A = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1}
+    );
+    b = Matrix(1,4, {2,4,1,3});
+
+    // shape doesn't match
+    EXPECT_THROW(matrix_r_divide(b(0,{1,3}), A), invalid_argument);
+    // underdetermined
+    C = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(matrix_r_divide(b, C), runtime_error);
+    
+    // solution
+    Matrix<double>::set_double_precision(15);
+    EXPECT_NO_THROW(C = matrix_r_divide(b, A));
+    EXPECT_EQ(C*A, b);
+
+    // overdetermined
+    A = Matrix (6,4,
+        {-1,3,4,2,
+        0,2,1,-2,
+        2,1,-3,2,
+        0,2,1,-1,
+        7,-3,0,3,
+        -2,5,1,4}
+    ).t();
+    b = Matrix(1,6, {2,4,1,3,-3,5});
+    EXPECT_NO_THROW(C = matrix_r_divide(b,A));
+    Matrix<double>::set_double_precision(8);
+    EXPECT_EQ(C, 
+        Matrix(1,4,{0.34582912, 
+                    1.42291125, 
+                    -0.110443, 
+                    -0.456683})
+    );
+    Matrix<double>::set_double_precision();
+
+
+    // -- complex matrix -- //
+
+    // solution
+    Ac = Matrix<c_double> (4,4,
+        {1.0+1i,3,4,2,
+         0,2.0-1i,1.0+1i,-2,
+         2,1.0+1i,-3,2,
+         0.0+1i,2,1,-1.0-1i}
+    );
+    bc = Matrix<c_double>(1,4, {2,4.0+1i,1.0-1i,3});
+
+    Matrix<c_double>::set_double_precision(13);
+    EXPECT_NO_THROW(Cc = matrix_r_divide(bc,Ac));
+    EXPECT_EQ(Cc*Ac, bc);
+
+    // overdetermined
+    Ac = Matrix<c_double>(6,4,
+        {-1.0+1i,3,4,2,
+         0.0-1i,2,1,-2,
+         2.0-1i,1,-3.0+1i,2,
+         0,2.0-1i,1,-1,
+         7,-3.0+1i,0,3.0-1i,
+         -2,5,1,4.0+1i}).no_conj_t();
+    bc = Matrix<c_double>(1,6,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
+
+    Matrix<c_double>::set_double_precision(8);
+    EXPECT_NO_THROW(Cc = matrix_r_divide(bc,Ac));
+    EXPECT_EQ(Cc, Matrix<c_double>(1,4,
+        { 0.35833002+0.03083223i,
+          1.31384349+0.39449758i,
+         -0.07673036-0.03475009i,
+         -0.37961168-0.29254325i}
+    )); // computed with numpy
+    Matrix<c_double>::set_double_precision();
 }
 // todo
 TEST(Matrix, divide_operator){
@@ -2376,99 +2596,6 @@ TEST(Matrix, divide_operator){
 //     EXPECT_NO_THROW(C = 2.5/A({1,3}, ALL));
 //     EXPECT_EQ(A({1,3}, ALL)*C, 2.5*IdMat(3));
 }
-// todo
-TEST(Matrix, solve_ls){
-//     Matrix A,b,C;
-//     A = Matrix (4,4,
-//         {1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2,
-//          0,2,1,-1}
-//     );
-//     b = Matrix(4,1, {2,4,1,3});
-
-//     // shape doesn't match
-//     EXPECT_THROW(Matrix<T>::solve_ls(A, b({1,3},0)), invalid_argument);
-//     // underdetermined
-//     C = Matrix (4,4,
-//         {1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2,
-//          0,0,0,0}
-//     );
-//     EXPECT_THROW(Matrix<T>::solve_ls(C, b), runtime_error);
-
-//     // solution
-//     EXPECT_NO_THROW(C = Matrix<T>::solve_ls(A,b));
-//     EXPECT_EQ(A * C, b);
-
-//     // overdetermined
-//     A = Matrix (6,4,
-//         {-1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2,
-//          0,2,1,-1,
-//          7,-3,0,3,
-//          -2,5,1,4}
-//     );
-//     b = Matrix(6,1, {2,4,1,3,-3,5});
-//     EXPECT_NO_THROW(C = Matrix<T>::solve_ls(A,b));
-//     Matrix<T>::set_double_precision(8);
-//     EXPECT_EQ(C, 
-//         Matrix(4,1,{0.34582912, 
-//                     1.42291125, 
-//                     -0.110443, 
-//                     -0.456683})
-//     );
-//     Matrix<T>::set_double_precision();
-}
-// todo
-TEST(Matrix, matrix_r_divide){
-//     Matrix A,b,C;
-//     A = Matrix (4,4,
-//         {1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2,
-//          0,2,1,-1}
-//     );
-//     b = Matrix(1,4, {2,4,1,3});
-
-//     // shape doesn't match
-//     EXPECT_THROW(Matrix<T>::matrix_r_divide(b(0,{1,3}), A), invalid_argument);
-//     // underdetermined
-//     C = Matrix (4,4,
-//         {1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2,
-//          0,0,0,0}
-//     );
-//     EXPECT_THROW(Matrix<T>::matrix_r_divide(b, C), runtime_error);
-    
-//     // solution
-//     EXPECT_NO_THROW(C = Matrix<T>::matrix_r_divide(b, A));
-//     EXPECT_EQ(C*A, b);
-
-//     // overdetermined
-//     A = Matrix (6,4,
-//         {-1,3,4,2,
-//         0,2,1,-2,
-//         2,1,-3,2,
-//         0,2,1,-1,
-//         7,-3,0,3,
-//         -2,5,1,4}
-//     ).t();
-//     b = Matrix(1,6, {2,4,1,3,-3,5});
-//     EXPECT_NO_THROW(C = Matrix<T>::matrix_r_divide(b,A));
-//     Matrix<T>::set_double_precision(8);
-//     EXPECT_EQ(C, 
-//         Matrix(1,4,{0.34582912, 
-//                     1.42291125, 
-//                     -0.110443, 
-//                     -0.456683})
-//     );
-//     Matrix<T>::set_double_precision();
-}
-
 
 // todo
 TEST(Matrix, eigenvalues){

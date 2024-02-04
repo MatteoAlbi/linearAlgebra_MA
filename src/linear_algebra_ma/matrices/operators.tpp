@@ -336,11 +336,12 @@ Matrix<RetType_t<U,V>> operator*(const Matrix<U>& m1, const Matrix<V>& m2){
 
 #pragma endregion multiply
 
-// todo
+
 #pragma region divide
 
 template<typename T>
-Matrix<T>& Matrix<T>::operator/=(const double & k){
+template<typename U, typename V, typename>
+Matrix<T>& Matrix<T>::operator/=(const V & k){
     for(uint i=0; i<this->_r; ++i){
         for(uint j=0; j<this->_c; ++j){
             this->operator()(i,j) /= k;
@@ -349,28 +350,32 @@ Matrix<T>& Matrix<T>::operator/=(const double & k){
     return *this;
 }
 
-// Matrix& Matrix<T>::operator/=(const Matrix & m){
-//    this->operator=((*this) / m);
-//    return *this;
-// }
-
 template<typename T>
-Matrix<T> operator/(const Matrix<T>& m, const double& k){
-    Matrix<T> ret(m);
+template<typename U, typename V, typename>
+Matrix<T>& Matrix<T>::operator/=(const Matrix<V> & m){
+   this->operator=((*this) / m);
+   return *this;
+}
+
+template<typename U, typename V>
+Matrix<RetType_t<U,V>> operator/(const Matrix<U>& m, const V& k){
+    Matrix<RetType_t<U,V>> ret(m);
     ret/=k;
 
     return ret;
 }
 
-// Matrix operator/(const double& k, const Matrix& m){
-//     if(m.r() == m.c()) return m.inv() * k;
-//     else if(m.r() > m.c()) return m.pinv_left() * k;
-//     else return m.pinv_right() * k;
-// }
+template<typename U, typename V>
+Matrix<RetType_t<U,V>> operator/(const U& k, const Matrix<V>& m){
+    if(m.r() == m.c()) return m.inv() * k;
+    else if(m.r() > m.c()) return m.pinv_left() * k;
+    else return m.pinv_right() * k;
+}
 
-// Matrix operator/(const Matrix& m1, const Matrix& m2){
-//     return Matrix<T>::matrix_r_divide(m1,m2);
-// }
+template<typename U, typename V>
+Matrix<RetType_t<U,V>> operator/(const Matrix<U>& m1, const Matrix<V>& m2){
+    return matrix_r_divide(m1,m2);
+}
 
 #pragma endregion divide
 

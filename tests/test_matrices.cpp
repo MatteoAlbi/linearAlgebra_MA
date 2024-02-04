@@ -1777,6 +1777,26 @@ TEST(Matrix, is_upper_triang){
     );
     EXPECT_TRUE(m2.is_upper_triang());
 
+    m1 = Matrix(6,4,
+        {1,3,5,9,
+         0,3,1,7,
+         0,0,0,7,
+         0,0,0,9,
+         0,0,0,1,
+         0,0,0,1}
+    );
+    EXPECT_FALSE(m1.is_upper_triang());
+
+    m1 = Matrix(6,4,
+        {1,3,5,9,
+         0,3,1,7,
+         0,0,0,7,
+         0,0,0,9,
+         0,0,0,0,
+         0,0,0,0}
+    );
+    EXPECT_TRUE(m1.is_upper_triang());
+
     m2 = Matrix<c_double>(4,4,
         {1,3,5,9,
          0,3,1,7,
@@ -1802,6 +1822,22 @@ TEST(Matrix, is_lower_triang){
          5,2,0,9}
     );
     EXPECT_TRUE(m2.is_lower_triang());
+
+    m1 = Matrix(4,6,
+        {1,0,0,0,0,0,
+         1,3,0,0,0,0,
+         4,3,9,0,0,0,
+         5,2,0,9,1,0}
+    );
+    EXPECT_FALSE(m1.is_lower_triang());
+
+    m1 = Matrix(4,6,
+        {1,0,0,0,0,0,
+         1,3,0,0,0,0,
+         4,3,9,0,0,0,
+         5,2,0,9,0,0}
+    );
+    EXPECT_TRUE(m1.is_lower_triang());
 
     m2 = Matrix<c_double>(4,4,
         {1,0,0,0,
@@ -1881,13 +1917,14 @@ TEST(Matrix, qr_dec){
     EXPECT_TRUE(R.is_upper_triang());
     EXPECT_EQ(A, Q*R);
 
-    A = Matrix(4,6,{ 14,   4, -16, -20, -3,  -4,
+    A = Matrix(6,4,{ 14,   4, -16, -20, -3,  -4,
                      17,  17, -16,   5,  6, -13,
                      -2,  12,  -7,  15, -1,  -3,
                      19,   4,  -3,   5, 16,  -9});
     EXPECT_NO_THROW(A.qr_dec(Q,R));
-    EXPECT_EQ(Q.t()*Q, IdMat(4));
+    EXPECT_EQ(Q.t()*Q, IdMat(6));
     EXPECT_TRUE(R.is_upper_triang());
+    cout << Q << endl << R << endl;
     EXPECT_EQ(A, Q*R);
 
 
@@ -2095,101 +2132,157 @@ TEST(Matrix, hessenberg_dec){
 }
 
 
-// todo
+
 TEST(Matrix, backward_sub){
-//     Matrix U,b;
-//     U = Matrix(4,4,
-//         {1,3,5,9,
-//          0,1,1,7,
-//          0,0,2,7,
-//          0,0,0,3}
-//     );
-//     b = Matrix(4,1, {2,6,1,3});
+    Matrix U,b;
+    Matrix<c_double> Uc,bc;
 
-//     // U not square
-//     EXPECT_THROW(Matrix<T>::backward_sub(U({0,3},{1,3}), b), invalid_argument);
-//     // b.rows != U.cols
-//     EXPECT_THROW(Matrix<T>::backward_sub(U, b({1,3},0)), invalid_argument);
-//     // underdetermined
-//     U(2,2) = 0;
-//     EXPECT_THROW(Matrix<T>::backward_sub(U, b), runtime_error);
-//     U(2,2) = 2;
-    
-//     // solve
-//     // cout << Matrix<T>::backward_sub(U, b) << endl;
-//     EXPECT_EQ(Matrix<T>::backward_sub(U, b), 
-//         Matrix(4,1, {2,2,-3,1})
-//     );
+    U = Matrix(4,4,
+        {1,3,5,9,
+         0,1,1,7,
+         0,0,2,7,
+         0,0,0,3}
+    );
+    b = Matrix(4,1, {2,6,1,3});
+
+    // U not square
+    EXPECT_THROW(backward_sub(U(ALL,{1,3}), b), invalid_argument);
+    // b.rows != U.cols
+    EXPECT_THROW(backward_sub(U, b({1,3},0)), invalid_argument);
+    // underdetermined
+    U(2,2) = 0;
+    EXPECT_THROW(backward_sub(U, b), runtime_error);
+    U(2,2) = 2;
+    // solve
+    EXPECT_EQ(U * backward_sub(U, b), b);
+
+
+    // -- complex matrix -- //
+    Matrix<c_double>::set_double_precision(15);
+
+    Uc = Matrix<c_double>(4,4,
+        {1,3.0+1i,5,9,
+         0,1.0+1i,1,7.0-2i,
+         0,0,2,7,
+         0,0,0,3.0-1i}
+    );
+    bc = Matrix<c_double>(4,1, {2,6.0+1i,1.0-1i,3});
+
+    // U not square
+    EXPECT_THROW(backward_sub(Uc(ALL,{1,3}), bc), invalid_argument);
+    // b.rows != U.cols
+    EXPECT_THROW(backward_sub(Uc, bc({1,3},0)), invalid_argument);
+    // underdetermined
+    Uc(2,2) = 0.0;
+    EXPECT_THROW(backward_sub(Uc, bc), runtime_error);
+    Uc(2,2) = 2.0;
+    // solve
+    EXPECT_EQ(Uc * backward_sub(Uc, bc), bc);
+
+    Matrix<c_double>::set_double_precision();
 }
-// todo
-TEST(Matrix, forward_sub){
-//     Matrix L,b;
-//     L = Matrix(4,4,
-//         {1,3,5,9,
-//          0,1,1,7,
-//          0,0,2,7,
-//          0,0,0,3}
-//     ).t();
-//     b = Matrix(4,1, {2,6,1,3});
 
-//     // L not square
-//     EXPECT_THROW(Matrix<T>::forward_sub(L({0,3},{1,3}), b), invalid_argument);
-//     // b.rows != L.cols
-//     EXPECT_THROW(Matrix<T>::forward_sub(L, b({1,3},0)), invalid_argument);
-//     // underdetermined
-//     L(2,2) = 0;
-//     EXPECT_THROW(Matrix<T>::forward_sub(L, b), runtime_error);
-//     L(2,2) = 2;
-    
-//     // solve
-//     // cout << Matrix<T>::forward_sub(L, b) << endl;
-//     EXPECT_EQ(Matrix<T>::forward_sub(L, b), 
-//         Matrix(4,1, {2,0,-4.5,5.5})
-//     );
+TEST(Matrix, forward_sub){
+    Matrix L,b;
+    Matrix<c_double> Lc,bc;
+
+    L = Matrix(4,4,
+        {1,3,5,9,
+         0,1,1,7,
+         0,0,2,7,
+         0,0,0,3}
+    ).t();
+    b = Matrix(4,1, {2,6,1,3});
+
+    // L not square
+    EXPECT_THROW(forward_sub(L({0,3},{1,3}), b), invalid_argument);
+    // b.rows != L.cols
+    EXPECT_THROW(forward_sub(L, b({1,3},0)), invalid_argument);
+    // underdetermined
+    L(2,2) = 0;
+    EXPECT_THROW(forward_sub(L, b), runtime_error);
+    L(2,2) = 2;
+    // solve
+    EXPECT_EQ(L * forward_sub(L, b), b);
+
+
+    // -- complex matrix -- //
+    Matrix<c_double>::set_double_precision(15);
+
+    Lc = Matrix<c_double>(4,4,
+        {1,3.0+1i,5,9,
+         0,1.0+1i,1,7.0-2i,
+         0,0,2,7,
+         0,0,0,3.0-1i}
+    ).t();
+    bc = Matrix<c_double>(4,1, {2,6.0+1i,1.0-1i,3});
+
+    // L not square
+    EXPECT_THROW(forward_sub(Lc({0,3},{1,3}), bc), invalid_argument);
+    // b.rows != L.cols
+    EXPECT_THROW(forward_sub(Lc, bc({1,3},0)), invalid_argument);
+    // underdetermined
+    Lc(2,2) = 0;
+    EXPECT_THROW(forward_sub(Lc, bc), runtime_error);
+    Lc(2,2) = 2;
+    // solve
+    EXPECT_EQ(Lc * forward_sub(Lc, bc), bc);
+
+    Matrix<c_double>::set_double_precision();
 }
 // todo
 TEST(Matrix, matrix_l_divide){
-//     Matrix A,b,C;
-//     A = Matrix (4,4,
-//         {1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2,
-//          0,2,1,-1}
-//     );
-//     b = Matrix(4,1, {2,4,1,3});
+    Matrix A,b,C;
+    A = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1}
+    );
+    b = Matrix(4,1, {2,4,1,3});
 
-//     // shape doesn't match
-//     EXPECT_THROW(Matrix<T>::matrix_l_divide(A, b({1,3},0)), invalid_argument);
+    // shape doesn't match
+    EXPECT_THROW(matrix_l_divide(A, b({1,3},0)), invalid_argument);
     
-//     // underdetermined
-//     C = Matrix (4,4,
-//         {1,3,4,2,
-//          0,2,1,-2,
-//          2,1,-3,2,
-//          0,0,0,0}
-//     );
-//     EXPECT_THROW(Matrix<T>::matrix_l_divide(C, b), runtime_error);
-//     C = Matrix (4,4,
-//         {1,3, 4, 0,
-//          0,2, 1, 0,
-//          2,1,-3, 0,
-//          7,0, 2, 0}
-//     );
-//     EXPECT_THROW(Matrix<T>::matrix_l_divide(C, b), runtime_error);
+    // underdetermined
+    C = Matrix (4,4,
+        {1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(matrix_l_divide(C, b), runtime_error);
+    C = Matrix (4,4,
+        {1,3, 4, 0,
+         0,2, 1, 0,
+         2,1,-3, 0,
+         7,0, 2, 0}
+    );
+    EXPECT_THROW(matrix_l_divide(C, b), runtime_error);
 
-//     // solution
-//     EXPECT_NO_THROW(C = Matrix<T>::matrix_l_divide(A,b));
-//     EXPECT_EQ(A*C, b);
+    // solution
+    Matrix<double>::set_double_precision(12);
 
-//     // overdetermined
-//     Matrix<T>::set_double_precision(8);
-//     EXPECT_NO_THROW(C = Matrix<T>::matrix_l_divide(A(ALL,{1,3}), b));
-//     EXPECT_EQ(C, 
-//         Matrix(3,1,{1.42860766, 
-//                     -0.26654831, 
-//                     -0.62490489})
-//     );
-//     Matrix<T>::set_double_precision();
+    EXPECT_NO_THROW(C = matrix_l_divide(A,b));
+    EXPECT_EQ(A*C, b);
+
+    // overdetermined
+    A = Matrix(6,4,
+        {-1,3,4,2,
+         0,2,1,-2,
+         2,1,-3,2,
+         0,2,1,-1,
+         7,-3,0,3,
+         -2,5,1,4});
+    b = Matrix(6,1,{2,4,1,3,-3,5});
+    EXPECT_NO_THROW(C = matrix_l_divide(A, b));
+    EXPECT_EQ(C, Matrix(4,1,{0.34582912, 1.42291125, -0.110443, -0.456683}));
+    Matrix<double>::set_double_precision();
+
+    Matrix Q,R,P;
+    A.qrp_dec(Q,R,P);
+    cout << Q << endl << R << endl;
+    cout << A*C-b << endl;
 }
 // todo
 TEST(Matrix, divide_operator){

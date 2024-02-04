@@ -1030,78 +1030,83 @@ public:
 
 // todo
 #pragma region ls_solution
-    // /**
-    //  * @brief Solve the system U*x=B using a backward substitution algorithm.
-    //  *        U must be an upper triangular square matrix (n*n) and B is the 
-    //  *        known terms matrix with number of rows equalt to U -> B is (n*c_b)
-    //  * 
-    //  * @param U     upper triangular matrix (n*n)
-    //  * @param B     known terms matrix (n*c_b)
-    //  */
-    // static Matrix backward_sub(Matrix const & U, Matrix const & B);
+    /**
+     * @brief Solve the system U*x=B using a backward substitution algorithm.
+     *        U must be an upper triangular square matrix (n*n) and B is the 
+     *        known terms matrix with number of rows equalt to U -> B is (n*c_b)
+     * 
+     * @param U     upper triangular matrix (n*n)
+     * @param B     known terms matrix (n*c_b)
+     */
+    template<typename T>
+    Matrix<T> backward_sub(Matrix<T> const & U, Matrix<T> const & B);
 
-    // /**
-    //  * @brief Solve the system L*x=B using a forward substitution algorithm.
-    //  *        L must be a lower triangular square matrix (n*n) and B is the 
-    //  *        known terms matrix with number of rows equalt to L -> B is (n*c_b)
-    //  * 
-    //  * @param L     lower triangular matrix (n*n)
-    //  * @param B     known terms matrix (n*c_b)
-    //  */
-    // static Matrix forward_sub(Matrix const & L, Matrix const & B);
+    /**
+     * @brief Solve the system L*x=B using a forward substitution algorithm.
+     *        L must be a lower triangular square matrix (n*n) and B is the 
+     *        known terms matrix with number of rows equalt to L -> B is (n*c_b)
+     * 
+     * @param L     lower triangular matrix (n*n)
+     * @param B     known terms matrix (n*c_b)
+     */
+    template<typename T>
+    Matrix<T> forward_sub(Matrix<T> const & L, Matrix<T> const & B);
 
-    // /**
-    //  * @brief computes the left division A\B, which corresponds to solve the 
-    //  *        linear equation system Ax=B or performing the operation (A^-1)*b.
-    //  *        The rows of A must be equal the rows of B. The result has dimensions (r_a*c_b)
-    //  *        The functions solves the problem depending on the dimensions of the 
-    //  *        given matrices: 
-    //  *        
-    //  *        - A is a square matrix (r_a*c_r_common): A is decomposed using
-    //  *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
-    //  *          subsequentially solving the two systems:
-    //  *              - L*(U*x) = PB, thus solving it using forward substitution the system 
-    //  *                L*y=PB equal to y=L\PB
-    //  *              - U*x=y, thus solving it using backward substitution the system 
-    //  *                U*x=y equal to x=U\y
-    //  *        - A is rectangular and represent an overconstrained problem (rows > cols): A
-    //  *          is decomposed using QRP decomposition (AP = QR) and performing the operation
-    //  *          X = P*(R\(Q'*b)). Notably, using the householder projectiob for the QRP
-    //  *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
-    //  *          the diagonal are zero. Such rows are discared along with the corresponding 
-    //  *          rows of b. R\(Q'*b) is solved using backward substitution.
-    //  * 
-    //  * @param A             left hand division term
-    //  * @param B             right hand division term
-    //  * @return Matrix: result of the division
-    //  * @throw invalid_argument if rows don't match
-    //  */
-    // static Matrix matrix_l_divide(Matrix const & A, Matrix const & B);
+    /**
+     * @brief computes the left division A\B, which corresponds to solve the 
+     *        linear equation system Ax=B or performing the operation (A^-1)*b.
+     *        The rows of A must be equal the rows of B. The result has dimensions (r_a*c_b)
+     *        The functions solves the problem depending on the dimensions of the 
+     *        given matrices: 
+     *        
+     *        - A is a square matrix (r_a*c_r_common): A is decomposed using
+     *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
+     *          subsequentially solving the two systems:
+     *              - L*(U*x) = PB, thus solving it using forward substitution the system 
+     *                L*y=PB equal to y=L\PB
+     *              - U*x=y, thus solving it using backward substitution the system 
+     *                U*x=y equal to x=U\y
+     *        - A is rectangular and represent an overconstrained problem (rows > cols): A
+     *          is decomposed using QRP decomposition (AP = QR) and performing the operation
+     *          X = P*(R\(Q'*b)). Notably, using the householder projectiob for the QRP
+     *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
+     *          the diagonal are zero. Such rows are discared along with the corresponding 
+     *          rows of b. R\(Q'*b) is solved using backward substitution.
+     * 
+     * @param A             left hand division term
+     * @param B             right hand division term
+     * @return Matrix: result of the division
+     * @throw invalid_argument if rows don't match
+     */
+    template<typename T>
+    Matrix<T> matrix_l_divide(Matrix<T> const & A, Matrix<T> const & B);
 
-    // /**
-    //  * @brief solves the linear system A*x=B. 
-    //  *        Calls matrix_l_divide.
-    //  * @param A coefficient matrix (must be square nxn)
-    //  * @param B known terms matrix (B.rows == A.cols)
-    //  * @return Matrix: x (dimensions A.rows x B.cols)
-    //  * @throw invalid_argument if rows don't match
-    //  */
-    // static Matrix solve_ls(Matrix const & A, Matrix const & B);
+    /**
+     * @brief solves the linear system A*x=B. 
+     *        Calls matrix_l_divide.
+     * @param A coefficient matrix (must be square nxn)
+     * @param B known terms matrix (B.rows == A.cols)
+     * @return Matrix: x (dimensions A.rows x B.cols)
+     * @throw invalid_argument if rows don't match
+     */
+    template<typename T>
+    Matrix<T> solve_ls(Matrix<T> const & A, Matrix<T> const & B);
 
-    // /**
-    //  * @brief computes the right division B/A translating it in a left 
-    //  *        division problem following the equality B/A = (A.t\B.t).t
-    //  *        where .t stands for transpose. 
-    //  *        The columns of A must be equal the columns of B.
-    //  *        The functions solves the problem depending on the dimensions of the 
-    //  *        given matrices, as described in  matrix_l_divide.
-    //  * 
-    //  * @param B             left hand division term 
-    //  * @param A             right hand division term
-    //  * @return Matrix: result of the division
-    //  * @throw invalid_argument if columns don't match
-    //  */
-    // static Matrix matrix_r_divide(Matrix const & B, Matrix const & A);
+    /**
+     * @brief computes the right division B/A translating it in a left 
+     *        division problem following the equality B/A = (A.t\B.t).t
+     *        where .t stands for transpose. 
+     *        The columns of A must be equal the columns of B.
+     *        The functions solves the problem depending on the dimensions of the 
+     *        given matrices, as described in  matrix_l_divide.
+     * 
+     * @param B             left hand division term 
+     * @param A             right hand division term
+     * @return Matrix: result of the division
+     * @throw invalid_argument if columns don't match
+     */
+    template<typename T>
+    Matrix<T> matrix_r_divide(Matrix<T> const & B, Matrix<T> const & A);
 
 #pragma endregion ls_solution
 

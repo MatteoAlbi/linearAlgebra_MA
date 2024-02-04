@@ -512,9 +512,8 @@ bool Matrix<T>::is_sing() const{
 
 template<typename T>
 bool Matrix<T>::is_upper_triang() const{
-    uint n = std::min(_r, _c);
-    for(uint i=1; i<n; ++i){
-        for(uint j=0; j<i; ++j){
+    for(uint i=1; i<_r; ++i){
+        for(uint j=0; j<std::min<uint>(i, _c); ++j){
             if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
@@ -524,9 +523,8 @@ bool Matrix<T>::is_upper_triang() const{
     
 template<typename T>
 bool Matrix<T>::is_lower_triang() const{
-    uint n = std::min(_r, _c);
-    for(uint j=1; j<n; ++j){
-        for(uint i=0; i<j; ++i){
+    for(uint j=1; j<_c; ++j){
+        for(uint i=0; i<std::min<uint>(j, _r); ++i){
             if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
@@ -735,7 +733,6 @@ Matrix<T> Matrix<T>::adj() const{
 #pragma region decomposition_methods
 
 template<typename T>
-
 Matrix<T> Matrix<T>::householder_v() const{
     if(!this->is_vec()) throw std::invalid_argument("The object must be a vector");
 
@@ -920,102 +917,109 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
 
 #pragma region ls_solution
 
-// Matrix Matrix<T>::backward_sub(Matrix const & U, Matrix const & B){
-//     if(U.c() != U.r()) throw std::invalid_argument("Coefficient matrix U must be square");
-//     if(B.r() != U.c()) throw std::invalid_argument("Rows of B must be equal to the columns of U");
-//     // check all U diagonal elements are different from zero
-//     for(uint i=0; i<U.c(); ++i) if(U(i,i) == 0){
-//         throw std::runtime_error("System of equation is underdetermined");
-//     }
+template<typename T>
+Matrix<T> backward_sub(Matrix<T> const & U, Matrix<T> const & B){
+    if(U.c() != U.r()) throw std::invalid_argument("Coefficient matrix U must be square");
+    if(B.r() != U.c()) throw std::invalid_argument("Rows of B must be equal to the columns of U");
+    // check all U diagonal elements are different from zero
+    for(uint i=0; i<U.c(); ++i) if(U(i,i) == 0.0){
+        throw std::runtime_error("System of equation is underdetermined");
+    }
 
-//     Matrix res(U.r(), B.c());
+    Matrix<T> res(U.r(), B.c());
 
-//     double tmp;
-//     // printf("start i loop\n");
-//     for(uint i=0; i<B.c(); ++i){ //col of res == col of B
-//         // printf("start j loop with i:%d\n", i);
-//         for(int j=U.r()-1; j>=0; j--){ //row of res == row of U == row of B
-//             tmp = 0;
-//             // printf("start k loop with i:%d, j:%d\n", i, j);
-//             for(int k=U.r()-1; k>j; k--){ //col of U = row of res
-//                 tmp += U(j,k) * res(k,i);
-//                 // printf("i:%d j:%d k:%d\n",i,j,k);
-//             }
+    T tmp;
+    // printf("start i loop\n");
+    for(uint i=0; i<B.c(); ++i){ //col of res == col of B
+        // printf("start j loop with i:%d\n", i);
+        for(int j=U.r()-1; j>=0; --j){ //row of res == row of U == row of B
+            tmp = 0.0;
+            // printf("start k loop with i:%d, j:%d\n", i, j);
+            for(int k=U.r()-1; k>j; --k){ //col of U = row of res
+                tmp += U(j,k) * res(k,i);
+                // printf("i:%d j:%d k:%d\n",i,j,k);
+            }
             
-//             res(j, i) = (B(j,i) - tmp) / U(j,j);
-//             // printf("%f\t%f\n",tmp,res[j*B.c() + i]);
-//         }
-//         // printf("\n");
-//     }
+            res(j, i) = (B(j,i) - tmp) / U(j,j);
+            // printf("%f\t%f\n",tmp,res[j*B.c() + i]);
+        }
+        // printf("\n");
+    }
     
-//     return res;
-// }
+    return res;
+}
 
-// Matrix Matrix<T>::forward_sub(Matrix const & L, Matrix const & B){
-//     if(L.c() != L.r()) throw std::invalid_argument("Coefficient matrix L must be square");
-//     if(B.r() != L.c()) throw std::invalid_argument("Rows of B must be equal to the columns of L");
-//     // check all L diagonal elements are different from zero
-//     for(uint i=0; i<L.c(); ++i) if(L(i,i) == 0){
-//         throw std::runtime_error("System of equation is underdetermined");
-//     }
+template<typename T>
+Matrix<T> forward_sub(Matrix<T> const & L, Matrix<T> const & B){
+    if(L.c() != L.r()) throw std::invalid_argument("Coefficient matrix L must be square");
+    if(B.r() != L.c()) throw std::invalid_argument("Rows of B must be equal to the columns of L");
+    // check all L diagonal elements are different from zero
+    for(uint i=0; i<L.c(); ++i) if(L(i,i) == 0.0){
+        throw std::runtime_error("System of equation is underdetermined");
+    }
 
-//     Matrix res(L.r(), B.c());
+    Matrix<T> res(L.r(), B.c());
     
-//     double tmp;
-//     for(uint j=0; j<L.r(); ++j){ //row of res == row of L == row of B
-//         // printf("j: %d\n", j);
-//         for(uint i=0; i<B.c(); ++i){ //col of res == col of B
-//             // printf("i: %d\n", i);
-//             tmp = 0;
-//             for(uint k=0; k<j; ++k){ //col of L = row of res
-//                 // printf("k: %d\n", k);
-//                 tmp += L(j,k) * res(k,i);
-//             }
-//             // printf("%f\n", tmp);
-//             res(j,i) = (B(j,i) - tmp) / L(j,j);
-//         }
-//     }
+    T tmp;
+    for(uint j=0; j<L.r(); ++j){ //row of res == row of L == row of B
+        // printf("j: %d\n", j);
+        for(uint i=0; i<B.c(); ++i){ //col of res == col of B
+            // printf("i: %d\n", i);
+            tmp = 0.0;
+            for(uint k=0; k<j; ++k){ //col of L = row of res
+                // printf("k: %d\n", k);
+                tmp += L(j,k) * res(k,i);
+            }
+            // printf("%f\n", tmp);
+            res(j,i) = (B(j,i) - tmp) / L(j,j);
+        }
+    }
     
-//     return res;
-// }
+    return res;
+}
 
-// Matrix Matrix<T>::matrix_l_divide(Matrix const & A, Matrix const & B){
-//     if(A.r() != B.r()){
-//         throw std::invalid_argument("Rows of B (currently " + std::to_string(B.r()) + ")" +
-//         "must be equal the rows of A (currently " + std::to_string(A.r()) + ")");
-//     }
+template<typename T>
+Matrix<T> matrix_l_divide(Matrix<T> const & A, Matrix<T> const & B){
+    if(A.r() != B.r()){
+        throw std::invalid_argument("Rows of B (currently " + std::to_string(B.r()) + ")" +
+        "must be equal the rows of A (currently " + std::to_string(A.r()) + ")");
+    }
 
-//     if(A.c() == A.r()){ //square A
-//         // printf("matrix A is square, using LU decomposition\n");
-//         Matrix L, U, P, res_tmp;
+    if(A.c() == A.r()){ //square A
+        // printf("matrix A is square, using LU decomposition\n");
+        Matrix<T> L, U, res_tmp;
+        Matrix<double> P;
 
-//         A.lup_dec(L, U, P);
-//         res_tmp = forward_sub(L, P*B);
-//         return backward_sub(U, res_tmp);
-//     }
-//     else{
-//         // printf("matrix A is not square, using QR decomposition\n");
-//         if(A.r() < A.c()) throw std::invalid_argument("System is underdetermined");
-//         Matrix Q,R,P, res;
+        A.lup_dec(L, U, P);
+        res_tmp = forward_sub(L, P*B);
+        return backward_sub(U, res_tmp);
+    }
+    else{
+        // printf("matrix A is not square, using QR decomposition\n");
+        if(A.r() < A.c()) throw std::invalid_argument("System is underdetermined");
+        Matrix<T> Q, R, res;
+        Matrix<double> P;
 
-//         A.qrp_dec(Q,R,P);
-//         res = P * backward_sub(R({0, R.c()-1}, ALL), (Q.t() * B)({0, R.c()-1}, ALL));
-//         return res;
-//     }
+        A.qrp_dec(Q,R,P);
+        res = P * backward_sub(R({0, R.c()-1}, ALL), (Q.t() * B)({0, R.c()-1}, ALL));
+        return res;
+    }
 
-// }
+}
 
-// Matrix Matrix<T>::solve_ls(Matrix const & A, Matrix const & B){
-//     return Matrix<T>::matrix_l_divide(A,B);
-// }
+template<typename T>
+Matrix<T> solve_ls(Matrix<T> const & A, Matrix<T> const & B){
+    return matrix_l_divide(A,B);
+}
 
-// Matrix Matrix<T>::matrix_r_divide(Matrix const & B, Matrix const & A){
-//     if(A.c() != B.c()){
-//         throw std::invalid_argument("Columns of B (currently " + std::to_string(B.c()) + ") " +
-//         "must be equal the Columns of A (currently " + std::to_string(A.c()) + ")");
-//     }
-//     return matrix_l_divide(A.t(), B.t()).t();
-// }
+template<typename T>
+Matrix<T> matrix_r_divide(Matrix<T> const & B, Matrix<T> const & A){
+    if(A.c() != B.c()){
+        throw std::invalid_argument("Columns of B (currently " + std::to_string(B.c()) + ") " +
+        "must be equal the Columns of A (currently " + std::to_string(A.c()) + ")");
+    }
+    return matrix_l_divide(A.t(), B.t()).t();
+}
 
 #pragma endregion ls_solution
 

@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <cmath>
+#include <climits> 
 #include <complex>
 #include <stdexcept>
 #include <exception>
@@ -28,6 +29,7 @@ namespace MA
 typedef unsigned int uint;
 typedef std::pair<uint,uint> uu_pair;
 typedef std::complex<double> c_double;
+// #define ALL uu_pair{0, UINT_MAX}
 #define ALL uu_pair{}
 
 #pragma region helper_structs
@@ -751,13 +753,12 @@ public:
 
 #pragma region decomposition_methods
     /**
-     * @brief computes the vector v associated to the 
-     * Householder matrix:
+     * @brief computes the reflector of the given vector
      * https://en.wikipedia.org/wiki/QR_decomposition
      * 
-     * @return transformation vector
+     * @return reflector vector
     */
-    Matrix<T> householder_v() const;
+    Matrix<T> reflector() const;
 
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 
@@ -808,37 +809,27 @@ public:
     void hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const;
 
 #pragma endregion decomposition_methods
-// todo
+
 #pragma region eigen
-
-//     /**
-//      * @brief solution of the eigendecomposition porblem based on the QR algorithm.
-//      *      To assert the convergence, the algorithm check if during iteration
-//      *      the matrix is approaching an upper triangular matrix.
-//      * @param D matrix where the eigenvalues are saved as a vector
-//      * @param V matrix of the eigenvectors, saved as column vectors. The eigenvector on
-//      *      the i-th column is associated to the i-th eigenvalue of D
-//      * @param max_iterations maximum number of iterations of the algorithm
-//      * @param tolerance parameter to define the convergence criteria (elements of the matrix
-//      *      lower than tolerance are considered to be zero)
-//     */
-//     void eigen_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-16) const;
     
-//     /**
-//      * @brief solution of the eigendecomposition porblem based on the double shift
-//      *      implicit QR algorithm with deflation.
-//      *      To assert the convergence, the algorithm check if during iteration
-//      *      the matrix is approaching an upper triangular matrix.
-//      * @param D matrix where the eigenvalues are saved as a vector
-//      * @param V matrix of the eigenvectors, saved as column vectors. The eigenvector on
-//      *      the i-th column is associated to the i-th eigenvalue of D
-//      * @param max_iterations maximum number of iterations of the algorithm
-//      * @param tolerance parameter to define the convergence criteria (elements of the matrix
-//      *      lower than tolerance are considered to be zero)
-//     */
-//     void eigen_implicit_QR(Matrix & D, Matrix & V, uint max_iterations = 1000, double tolerance = 1e-16) const;
-
     Matrix<T> implicit_double_QR_step() const;
+
+    Matrix<c_double> get_eigenvalues(uint max_iterations = 1000, double tolerance = 1e-16) const;
+
+    /**
+     * @brief solution of the eigendecomposition porblem based on the double shift
+     *      implicit QR algorithm with deflation.
+     *      To assert the convergence, the algorithm check if during iteration
+     *      the matrix is approaching an upper triangular matrix.
+     * @param D matrix where the eigenvalues are saved as a vector
+     * @param V matrix of the eigenvectors, saved as column vectors. The eigenvector on
+     *      the i-th column is associated to the i-th eigenvalue of D
+     * @param max_iterations maximum number of iterations of the algorithm
+     * @param tolerance parameter to define the convergence criteria (elements of the matrix
+     *      lower than tolerance are considered to be zero)
+    */
+    void eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_iterations = 1000, double tolerance = 1e-16) const;
+
 #pragma endregion eigen
 
 };
@@ -882,7 +873,7 @@ public:
      *                U*x=y equal to x=U\y
      *        - A is rectangular and represent an overconstrained problem (rows > cols): A
      *          is decomposed using QRP decomposition (AP = QR) and performing the operation
-     *          X = P*(R\(Q'*b)). Notably, using the householder projectiob for the QRP
+     *          X = P*(R\(Q'*b)). Notably, using the householder projection for the QRP
      *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
      *          the diagonal are zero. Such rows are discared along with the corresponding 
      *          rows of b. R\(Q'*b) is solved using backward substitution.

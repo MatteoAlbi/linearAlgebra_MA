@@ -702,7 +702,7 @@ Matrix<T> Matrix<T>::pinv_right() const{
 #pragma region decomposition_methods
 
 template<typename T>
-Matrix<T> Matrix<T>::householder_v() const{
+Matrix<T> Matrix<T>::reflector() const{
     if(!this->is_vec()) throw std::invalid_argument("The object must be a vector");
 
     using namespace std::complex_literals;
@@ -725,7 +725,7 @@ void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
     
     for(uint i=0; i<n; ++i){
         //compute vk
-        Matrix<T> v = R({i, _r-1}, i).householder_v();
+        Matrix<T> v = R({i, _r-1}, i).reflector();
         Matrix<T> v_t = v.t();
 
         // Update R: HR = R - 2v * (v' * R)
@@ -771,7 +771,7 @@ void Matrix<T>::qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const{
         P.swap_cols(i, index);
 
         //compute vk
-        Matrix<T> v = R({i, _r-1}, i).householder_v();
+        Matrix<T> v = R({i, _r-1}, i).reflector();
         Matrix<T> v_t = v.t();
 
         // Update R: HR = R - 2v * (v' * R)
@@ -852,7 +852,7 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
 
     for (uint i=1; i<_r-1; ++i){
         // compute vk
-        Matrix<T> v = H({i, _r-1}, i-1).householder_v();
+        Matrix<T> v = H({i, _r-1}, i-1).reflector();
         Matrix<T> v_t = v.t();
         
         // compute U matrix
@@ -993,60 +993,18 @@ Matrix<V> matrix_r_divide(Matrix<T> const & B, Matrix<U> const & A){
 
 #pragma endregion ls_solution
 
-// todo
+
 #pragma region eigen
-
-// void Matrix<T>::eigen_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
-//     if(_c != _r) throw std::invalid_argument("Matrix must be square");
-
-//     Matrix Q, R, P;
-//     uint k;
-//     double sum;
-//     this->hessenberg_dec(Q,D);
-
-//     for(k=0; k<max_iterations; ++k){
-//         Matrix tmp = D.diag();
-//         // D.qrp_dec(Q,R,P);
-//         // D = R*Q;
-//         D.qr_dec(Q,R);
-//         D = R*Q;
-
-//         // check for convergence
-//         // double max_variation = -1;
-//         // tmp = tmp - D.diag();
-//         // for(uint i=0; i<_r; ++i){
-//         //     max_variation = std::max(max_variation, abs(tmp(i) / D(i)));
-//         // }
-//         sum = 0;
-//         for(uint i=1; i<_r; ++i){
-//             for(uint j=0; j<i; ++j){
-//                 sum += abs(D(i,j));
-//             }
-//         }
-//         if(sum < tolerance) break;
-//     }
-
-//     // std::cout << "QR algorithm steps: " << k << ", residuals: " << sum << std::endl;
-//     // std::cout << D << std::endl;
-//     D = D.diag();
-
-//     V = Matrix(_r, _r);
-//     for(uint i=0; i<_r; ++i){
-//         Matrix M = *this - D(i) * IdMat(_r);
-//         Matrix eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
-//         V.set(ALL, i, eigen_vec.normalize());
-//     }
-
-// }
 
 template<typename T>
 Matrix<T> Matrix<T>::implicit_double_QR_step() const{
     // for easier notation
     uint n =  this->_r;
-    Matrix A = *this;
+    Matrix<T> A = *this;
 
-    Matrix y,u,v;
-    double tau, tmp;
+    Matrix<T> y,u,v;
+    T tmp, tau;
+    (void)tau;
 
     // -- compute and apply Q1
     // compute first column of B
@@ -1061,17 +1019,19 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
     });
     // compute reflector
     tau = copysign(y.norm2(), y(0));
-    u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau) });
+    u = Matrix<T>(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau) });
     v = (y(0) / tau + 1) * u;
+    // u = y.reflector();
+    // v = 2*u;
     // apply reflection B -> QB = B - v * (u.t * B)
     for(uint j=0; j<n; j++){
-        tmp = 0;
+        tmp = 0.0;
         for(uint k=0; k<3; k++) tmp += u(k) * A(k, j);
         for(uint k=0; k<3; k++) A(k, j) -= tmp * v(k);
     }
     // apply reflection C -> CQ = C - (C * u) * v.t
     for(uint j=0; j<n; j++){
-        tmp = 0;
+        tmp = 0.0;
         for(uint k=0; k<3; k++) tmp += v(k) * A(j, k);
         for(uint k=0; k<3; k++) A(j, k) -= tmp * u(k);
     }
@@ -1086,15 +1046,17 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
         tau = copysign(y.norm2(), y(0));
         u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau)});
         v = (y(0) / tau + 1) * u;
+        // u = y.reflector();
+        // v = 2*u;
         // apply reflection B -> QB = B - v * (u.t * B)
         for(uint j=0; j<n; j++){
-            tmp = 0;
+            tmp = 0.0;
             for(uint k=0; k<3; k++) tmp += u(k) * A(i+k, j);
             for(uint k=0; k<3; k++) A(i+k, j) -= tmp * v(k);
         }
         // apply reflection C -> CQ = C - (C * u) * v.t
         for(uint j=0; j<n; j++){
-            tmp = 0;
+            tmp = 0.0;
             for(uint k=0; k<3; k++) tmp += v(k) * A(j, i+k);
             for(uint k=0; k<3; k++) A(j, i+k) -= tmp * u(k);
         }
@@ -1105,18 +1067,21 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
     // std::cout << "last iteration" << std::endl;
     // -- implement step for n-1 with only 2 last rows
     y = A({n-2, n-1}, n-3);
+    // compute reflector
     tau = copysign(y.norm2(), y(0));
     u = Matrix(2,1,{1, y(1) / (y(0) + tau)});
     v = (y(0) / tau + 1) * u;
+    // u = y.reflector();
+    // v = 2*u;
     // apply reflection B -> QB = B - v * (u.t * B)
     for(uint j=0; j<n; j++){
-        tmp = 0;
+        tmp = 0.0;
         for(uint k=0; k<2; k++) tmp += u(k) * A(n-2+k, j);
         for(uint k=0; k<2; k++) A(n-2+k, j) -= tmp * v(k);
     }
     // apply reflection C -> CQ = C - (C * u) * v.t
     for(uint j=0; j<n; j++){
-        tmp = 0;
+        tmp = 0.0;
         for(uint k=0; k<2; k++) tmp += v(k) * A(j, n-2+k);
         for(uint k=0; k<2; k++) A(j, n-2+k) -= tmp * u(k);
     }
@@ -1125,60 +1090,103 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
     return A;
 }
 
-// void Matrix<T>::eigen_implicit_QR(Matrix & D, Matrix & V, uint max_iterations, double tolerance) const{
-//     if(_c != _r) throw std::invalid_argument("Matrix must be square");
+template<typename T>
+Matrix<c_double> Matrix<T>::get_eigenvalues(uint max_iterations, double tolerance) const{
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
-//     Matrix Q, R, P;
-//     // obtain an hessenberg matrix
-//     this->hessenberg_dec(Q,D);
+    using namespace std;
+    using namespace std::complex_literals;
+    std::vector<c_double> eigenvalues;
 
-//     // init shift
-//     double mu = D(_r-1);
-//     uint k;
-//     double sum;
-
-//     for(k=0; k<max_iterations; ++k){
-//         // implicit double QR step
+    cout << "get_eigenvalues input matrix: " << endl << *this << endl;
+    
+    // if(_r == 0) throw std::invalid_argument("Matrix is empty");
+    if(_r <= 1) return *this;
+    else if(_r == 2){
+        T b = -this->operator()(0,0) - this->operator()(1,1);
+        T c = this->operator()(0,0) * this->operator()(1,1) - this->operator()(0,1) * this->operator()(1,0);
+        T alpha = b*b - 4.0*c;
         
+        if constexpr (is_complex<T>::value){
+            T tmp = sqrt(alpha);
+            return Matrix<c_double>(2,1, std::vector<c_double>{
+                (- b + tmp) / 2.0,
+                (- b - tmp) / 2.0
+            });
+        }
+        else{
+            T tmp = sqrt(abs(alpha));
+            if(alpha >= 0.0){
+                return Matrix<c_double>(2,1, std::vector<c_double>{
+                    (- b + tmp) / 2.0,
+                    (- b - tmp) / 2.0
+                });
+            }
+            else{
+                return Matrix<c_double>(2,1, std::vector<c_double>{
+                    (- b + tmp*1i) / 2.0,
+                    (- b - tmp*1i) / 2.0
+                });
+            }
+        }
+    }
+    else{
+        // start implicit double QR step
+        Matrix<T> Q, H;
+        // obtain an hessenberg matrix
+        this->hessenberg_dec(Q,H);
+
+        // start running the steps
+        for(uint k=0; k<max_iterations; ++k){
+            // implicit double QR step
+            H = H.implicit_double_QR_step();
+
+            // check for convergence
+            for(int i=_c-2; i>=0; --i){
+                if(abs(H(i+1,i)) < tolerance){
+                    // deflation
+                    cout << "matrix to deflate in position " << i << ": " << endl << H << endl << endl;
+                    Matrix<c_double> m1 = H(uu_pair{0,i},uu_pair{0,i}).get_eigenvalues(max_iterations, tolerance);
+                    Matrix<c_double> m2 = H(uu_pair{i+1,_r-1},uu_pair{i+1,_r-1}).get_eigenvalues(max_iterations, tolerance);
+                    return m1 | m2;
+                }
+            }
+        }
+
+        std::cout << "eigenvalue extraction failed to converge" << std::endl
+                  << H << std::endl;
+        return H.diag();
+    }
+}
 
 
-//         Matrix tmp = D.diag();
-        
-//         // apply shift
-//         (D - mu * IdMat(_r)).qr_dec(Q,R);
-//         // shift backward
-//         D = R*Q + mu * IdMat(_r);
-//         // update mu
-//         Matrix v = Q(ALL, _c-1);
-//         mu = (v.t() * D * v).operator()(0) / (v.t() * v).operator()(0);
+template<typename T>
+void Matrix<T>::eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_iterations, double tolerance) const{
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
-//         // check for convergence
-//         // double max_variation = -1;
-//         // tmp = tmp - D.diag();
-//         // for(uint i=0; i<_r; ++i){
-//         //     max_variation = std::max(max_variation, abs(tmp(i) / D(i)));
-//         // }
-//         sum = 0;
-//         for(uint i=1; i<_r; ++i){
-//             for(uint j=0; j<i; ++j){
-//                 sum += abs(D(i,j));
-//             }
-//         }
-//         if(sum < tolerance) break;
-//     }
+    Matrix<T> Q, H;
+    // queue to store the matrices to 
+    std::vector<Matrix<T>> queue;
 
-//     std::cout << "QR with shift algorithm steps: " << k << ", residuals: " << sum << std::endl;
-//     std::cout << D << std::endl;
-//     D = D.diag();
+    // obtain an hessenberg matrix
+    this->hessenberg_dec(Q,H);
 
-//     V = Matrix(_r, _r);
-//     for(uint i=0; i<_r; ++i){
-//         Matrix M = *this - D(i) * IdMat(_r);
-//         Matrix eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
-//         V.set(ALL, i, eigen_vec.normalize());
-//     }
+    for(uint k=0; k<max_iterations; ++k){
+        // implicit double QR step
+        H.implicit_double_QR_step();
+    }
 
-// }
+    std::cout << D << std::endl;
+    D = D.diag();
+
+    V = Matrix(_r, _r);
+    for(uint i=0; i<_r; ++i){
+        Matrix M = *this - D(i) * IdMat(_r);
+        Matrix eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
+        V.set(ALL, i, eigen_vec.normalize());
+    }
+
+}
 
 #pragma endregion eigen
 

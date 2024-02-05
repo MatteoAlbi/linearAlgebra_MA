@@ -13,6 +13,9 @@ TEST(Matrix, constructor_getter) {
     std::vector<double> v{1,2,3,4,5,6};
     std::vector<c_double> v_comp{1.0+1i,2.0+1i,3.0+1i,4.0+1i,5.0+1i,6.0+1i};
 
+    // check uint(-1) is equal UINT_MAX
+    EXPECT_EQ(uint(-1), UINT_MAX);
+
     // empty constructor
     EXPECT_NO_THROW(Matrix());
     Matrix empty{};
@@ -2666,7 +2669,7 @@ TEST(Matrix, matrix_r_divide){
     )); // computed with numpy
     Matrix<c_double>::set_double_precision();
 }
-// todo
+
 TEST(Matrix, divide_operator){
     std::vector<double> v1 =  {1,3,5,9,1,3,1,7,4,3,9,7};
     std::vector<double> v2;
@@ -2874,17 +2877,18 @@ TEST(Matrix, eigenvalues){
 
 //     Matrix<T>::set_double_precision();
 }
-// todo
-TEST(Matrix, implicit_double_QR_step){
-//     Matrix m1 = RandMat(6,6);
-//     Matrix Q,A;
-//     m1.hessenberg_dec(Q,A);
 
-//     for(uint i=0; i<5; i++){
-//         cout << "step n# " << i << endl;
-//         cout << "starting mat: " << A << endl;
-//         A = A.implicit_double_QR_step();
-//     }
-//     cout << "result: " << A << endl;
+TEST(Matrix, implicit_double_QR_step){
+    // Matrix m1 = RandMat(6,6);
+    Matrix m1(6,6,
+        {0.289316, 0.514435,  0.414028, 0.876566,  0.729748, 0.715642,
+         0.706535, 0.0190924, 0.524987, 0.0651939, 0.488943, 0.682049,
+         0.916634, 0.890019,  0.139195, 0.989362,  0.446023, 0.514659,
+         0.439726, 0.80665,   0.211519, 0.153604,  0.61635,  0.000878999,
+         0.727335, 0.417724,  0.680562, 0.83642,   0.828708, 0.0817376,
+         0.629572, 0.213547,  0.388823, 0.947545,  0.269215, 0.284035}
+    );
+    
+    // cout << m1.get_eigenvalues() << endl;
     
 } 

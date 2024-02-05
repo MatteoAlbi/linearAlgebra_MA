@@ -129,8 +129,7 @@ Matrix<T>& Matrix<T>::operator=(Matrix<T> m){
 #pragma region comparators
 
 template<typename U, typename V>
-std::enable_if_t<!is_complex<U>::value && !is_complex<V>::value, bool>
-operator==(const Matrix<U> & m1, const Matrix<V> & m2) {
+bool operator==(const Matrix<U> & m1, const Matrix<V> & m2) {
     // check shape
     if(m1.r() != m2.r()) return false;
     if(m1.c() != m2.c()) return false;
@@ -138,30 +137,6 @@ operator==(const Matrix<U> & m1, const Matrix<V> & m2) {
     for(uint i=0; i<m1.r(); ++i) for(uint j=0; j<m1.c(); ++j){
         double err = abs(m1(i,j) - m2(i,j));
         if( err > Matrix<U>::get_epsilon()) return false;
-    }
-    return true;
-}
-
-template<typename U, typename V>
-std::enable_if_t<is_complex<U>::value || is_complex<V>::value, bool>
-operator==(const Matrix<U> & m1, const Matrix<V> & m2) {
-    // check shape
-    if(m1.r() != m2.r()) return false;
-    if(m1.c() != m2.c()) return false;
-    // check values
-    for(uint i=0; i<m1.r(); ++i) for(uint j=0; j<m1.c(); ++j){
-        std::complex<double> tmp1 = m1(i,j);
-        std::complex<double> tmp2 = m2(i,j);
-        double err_real = abs(tmp1.real() - tmp2.real());
-        double err_imag = abs(tmp1.imag() - tmp2.imag());
-        if( err_real > Matrix<U>::get_epsilon() || err_imag > Matrix<U>::get_epsilon()){ 
-            using namespace std;
-            cout << "values in " << uu_pair{i,j} << " are different: " << endl
-                 << "m1: " << m1(i,j) 
-                 << ", m2: " << m2(i,j) 
-                 << ", diff: (" << err_real << ", " << err_imag << ")" << endl;
-            return false;
-        }
     }
     return true;
 }

@@ -457,12 +457,7 @@ public:
 #pragma region comparison_operators
 
     template <typename U, typename V>
-    friend std::enable_if_t<!is_complex<U>::value && !is_complex<V>::value, bool>
-    operator==(const Matrix<U> & m1, const Matrix<V> & m2);
-
-    template <typename U, typename V>
-    friend std::enable_if_t<is_complex<U>::value || is_complex<V>::value, bool>
-    operator==(const Matrix<U> & m1, const Matrix<V> & m2);
+    friend bool operator==(const Matrix<U> & m1, const Matrix<V> & m2);
 
     template<typename U, typename V>
     friend bool operator!=(const Matrix<U> & m1, const Matrix<V> & m2);

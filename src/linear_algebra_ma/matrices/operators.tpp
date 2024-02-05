@@ -9,59 +9,80 @@ namespace MA
 #pragma region access
 
 template<typename T>
-T& Matrix<T>::operator()(const uint & r, const uint & c){
+T& Matrix<T>::operator()(uint r, uint c){
+    // allow to use -1 to indicate end of row/column
+    if(r == UINT_MAX) r = this->_r-1;
+    if(c == UINT_MAX) c = this->_c-1;
+
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
     return this->_v[r * this->_c + c];
 }
 
 template<typename T>
-const T& Matrix<T>::operator()(const uint & r, const uint & c) const{
+const T& Matrix<T>::operator()(uint r, uint c) const{
+    // allow to use -1 to indicate end of row/column
+    if(r == UINT_MAX) r = this->_r-1;
+    if(c == UINT_MAX) c = this->_c-1;
+
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
     return this->_v[r * this->_c + c];
 }
 
 template<typename T>
-T& Matrix<T>::operator()(const uint & i){
+T& Matrix<T>::operator()(uint i){
     if(this->_c == 1){
+        // allow to use -1 to indicate end of row/column
+        if(i == UINT_MAX) i = this->_r-1;
         if(i >= this->_r) throw std::out_of_range("Index out of range");
         return this->operator()(i,0);
     } 
     else if(this->_r == 1){
+        // allow to use -1 to indicate end of row/column
+        if(i == UINT_MAX) i = this->_c-1;
         if(i >= this->_c) throw std::out_of_range("Index out of range");
         return this->operator()(0,i);
     }
     else{
+        // allow to use -1 to indicate end of row/column
+        if(i == UINT_MAX) i = std::min(this->_r-1, this->_c-1);
         if(i >= this->_r || i >= this->_c) throw std::out_of_range("Index out of range");
         return this->operator()(i,i);
     }
 }
 
 template<typename T>
-const T& Matrix<T>::operator()(const uint & i) const{
+const T& Matrix<T>::operator()(uint i) const{
     if(this->_c == 1){
+        // allow to use -1 to indicate end of row/column
+        if(i == UINT_MAX) i = this->_r-1;
         if(i >= this->_r) throw std::out_of_range("Index out of range");
         return this->operator()(i,0);
     } 
     else if(this->_r == 1){
+        // allow to use -1 to indicate end of row/column
+        if(i == UINT_MAX) i = this->_c-1;
         if(i >= this->_c) throw std::out_of_range("Index out of range");
         return this->operator()(0,i);
     }
     else{
+        // allow to use -1 to indicate end of row/column
+        if(i == UINT_MAX) i = std::min(this->_r-1, this->_c-1);
         if(i >= this->_r || i >= this->_c) throw std::out_of_range("Index out of range");
         return this->operator()(i,i);
     }
 }
 
 template<typename T>
-Matrix<T> Matrix<T>::operator()(uu_pair rs, const uint & c) const{
+Matrix<T> Matrix<T>::operator()(uu_pair rs, uint c) const{
+    // allow to use -1 to indicate end of row/column
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    if(c == UINT_MAX) c = this->_c-1;
+
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
-
-    // allow to use {} for full row selection
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
 
     Matrix ret = Matrix(rs.second - rs.first + 1, 1);
 
@@ -73,13 +94,14 @@ Matrix<T> Matrix<T>::operator()(uu_pair rs, const uint & c) const{
 }
 
 template<typename T>
-Matrix<T> Matrix<T>::operator()(const uint & r, uu_pair cs) const{
+Matrix<T> Matrix<T>::operator()(uint r, uu_pair cs) const{
+    // allow to use -1 to indicate end of row/column
+    if(r == UINT_MAX) r = this->_r-1;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    // allow to use {} for full col selection
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     Matrix ret = Matrix(1, cs.second - cs.first + 1);
 
@@ -92,14 +114,14 @@ Matrix<T> Matrix<T>::operator()(const uint & r, uu_pair cs) const{
 
 template<typename T>
 Matrix<T> Matrix<T>::operator()(uu_pair rs, uu_pair cs) const{
+    // allow to use -1 to indicate end of row/column
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    // allow to use {} for full row/col selection
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     Matrix ret = Matrix(rs.second - rs.first + 1, cs.second - cs.first + 1);
 

@@ -30,14 +30,14 @@ Matrix<T>::Matrix(){
 }
 
 template<typename T>
-Matrix<T>::Matrix(const uint & r, const uint & c) {
+Matrix<T>::Matrix(uint r, uint c) {
     this->_r = r;
     this->_c = c;
     this->_v = new T[this->size()]();
 }
 
 template<typename T>
-Matrix<T>::Matrix(const uint & r, const uint & c, std::vector<T> v){
+Matrix<T>::Matrix(uint r, uint c, std::vector<T> v){
     this->_r = r;
     this->_c = c;
     this->_v = new T[this->size()];
@@ -45,13 +45,8 @@ Matrix<T>::Matrix(const uint & r, const uint & c, std::vector<T> v){
 }
 
 template<typename T>
-template<typename U,
-    typename std::enable_if<
-        !is_complex<U>::value ||
-        (is_complex<T>::value && is_complex<U>::value), int
-    >::type
->
-Matrix<T>::Matrix(const uint & r, const uint & c, std::vector<U> v) {
+template<typename U, typename>
+Matrix<T>::Matrix(uint r, uint c, std::vector<U> v) {
     this->_r = r;
     this->_c = c;
     this->_v = new T[this->size()];
@@ -167,13 +162,14 @@ Matrix<T>& Matrix<T>::set(std::vector<U> v){
 
 template<typename T>
 Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<T> v){
+    // allow to use -1 to indicate end of row/column
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     uint nRows = rs.second - rs.first + 1;
     uint nCols = cs.second - cs.first + 1;
@@ -188,13 +184,14 @@ Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<T> v){
 template<typename T>
 template<typename U, typename>
 Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
+    // allow to use -1 to indicate end of row/column
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     uint nRows = rs.second - rs.first + 1;
     uint nCols = cs.second - cs.first + 1;
@@ -211,6 +208,10 @@ Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
 template<typename T>
 template<typename U, typename>
 Matrix<T>& Matrix<T>::set(uint r, uint c, U x){
+    // allow to use -1 to indicate end of row/column
+    if(r == UINT_MAX) r = this->_r-1;
+    if(c == UINT_MAX) c = this->_c-1;
+
     this->operator()(r,c) = x;
     return *this;
 }
@@ -218,12 +219,13 @@ Matrix<T>& Matrix<T>::set(uint r, uint c, U x){
 template<typename T>
 template<typename U, typename>
 Matrix<T>& Matrix<T>::set(uu_pair rs, uint c, Matrix<U> m){
+    // allow to use -1 to indicate end of row/column
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    if(c == UINT_MAX) c = this->_c-1;
+
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
-
-    // allow to use {} for full row selection
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
 
     if(m.shape() != uu_pair{rs.second - rs.first + 1, 1}) throw std::invalid_argument("Given matrix's shape does not match");
 
@@ -235,12 +237,13 @@ Matrix<T>& Matrix<T>::set(uu_pair rs, uint c, Matrix<U> m){
 
 template<typename T>
 Matrix<T>& Matrix<T>::set(uint r, uu_pair cs, Matrix<T> m){
+    // allow to use -1 to indicate end of row/column
+    if(r == UINT_MAX) r = this->_r-1;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    // allow to use {} for full col selection
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     if(m.shape() != uu_pair{1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");
 
@@ -253,12 +256,13 @@ Matrix<T>& Matrix<T>::set(uint r, uu_pair cs, Matrix<T> m){
 template<typename T>
 template<typename U, typename>
 Matrix<T>& Matrix<T>::set(uint r, uu_pair cs, Matrix<U> m){
+    // allow to use -1 to indicate end of row/column
+    if(r == UINT_MAX) r = this->_r-1;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    // allow to use {} for full col selection
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     if(m.shape() != uu_pair{1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");
 
@@ -270,14 +274,14 @@ Matrix<T>& Matrix<T>::set(uint r, uu_pair cs, Matrix<U> m){
 
 template<typename T>
 Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<T> m){
+    // allow to use -1 to indicate end of row/column
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    // allow to use {} for full row/col selection
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     if(m.shape() != uu_pair{rs.second - rs.first + 1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");;
 
@@ -290,14 +294,14 @@ Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<T> m){
 template<typename T>
 template<typename U, typename>
 Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<U> m){
+    // allow to use -1 to indicate end of row/column
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    // allow to use {} for full row/col selection
-    if(rs.first == 0 && rs.second == 0) rs.second = this->_r-1;
-    if(cs.first == 0 && cs.second == 0) cs.second = this->_c-1;
 
     if(m.shape() != uu_pair{rs.second - rs.first + 1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");;
 
@@ -310,7 +314,7 @@ Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<U> m){
 }
 
 template<typename T>
-Matrix<T> Matrix<T>::reshape(const uint & r, const uint & c) const{
+Matrix<T> Matrix<T>::reshape(uint r, uint c) const{
     if(this->size() == 0) throw std::runtime_error("Matrix size is null");
     if(r*c != this->size()) throw std::invalid_argument("New matrix size must match the current one");
 
@@ -320,7 +324,7 @@ Matrix<T> Matrix<T>::reshape(const uint & r, const uint & c) const{
 }
 
 template<typename T>
-Matrix<T>& Matrix<T>::reshape_self(const uint & r, const uint & c){
+Matrix<T>& Matrix<T>::reshape_self(uint r, uint c){
     if(this->size() == 0) throw std::runtime_error("Matrix size is null");
     if(r*c != this->size()) throw std::invalid_argument("New matrix size must match the current one");
 
@@ -363,7 +367,11 @@ void swap(Matrix<T> & m1, Matrix<T> & m2){
 }
 
 template<typename T>
-Matrix<T>& Matrix<T>::swap_rows(const uint & r1, const uint & r2){
+Matrix<T>& Matrix<T>::swap_rows(uint r1, uint r2){
+    // allow to use -1 to indicate end of row/column
+    if(r1 == UINT_MAX) r1 = this->_r-1;
+    if(r2 == UINT_MAX) r2 = this->_r-1;
+
     if(r1 >= _r || r2 >= _r) throw std::out_of_range("Given parameters exceed the matrix rows indeces");
 
     // swap not necessary
@@ -379,7 +387,11 @@ Matrix<T>& Matrix<T>::swap_rows(const uint & r1, const uint & r2){
 }
 
 template<typename T>
-Matrix<T>& Matrix<T>::swap_cols(const uint & c1, const uint & c2){
+Matrix<T>& Matrix<T>::swap_cols(uint c1, uint c2){
+    // allow to use -1 to indicate end of row/column
+    if(c1 == UINT_MAX) c1 = this->_c-1;
+    if(c2 == UINT_MAX) c2 = this->_c-1;
+
     if(c1 >= _c || c2 >= _c) throw std::out_of_range("Given parameters exceed the matrix columns indeces");
 
     // swap not necessary
@@ -1201,12 +1213,12 @@ Matrix<double> IdMat(const uint & dim){
     return ret;
 }
 
-Matrix<double> Ones(const uint & r, const uint & c){
+Matrix<double> Ones(uint r, uint c){
     return Matrix(r,c)+1;
 }
 
 template<typename T>
-Matrix<T> RandMat(const uint & r, const uint & c){
+Matrix<T> RandMat(uint r, uint c){
     Matrix<T> ret(r,c);
     for(uint i=0; i<r; ++i){
         for(uint j=0; j<c; ++j){

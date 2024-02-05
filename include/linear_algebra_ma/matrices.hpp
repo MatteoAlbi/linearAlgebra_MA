@@ -29,8 +29,8 @@ namespace MA
 typedef unsigned int uint;
 typedef std::pair<uint,uint> uu_pair;
 typedef std::complex<double> c_double;
-// #define ALL uu_pair{0, UINT_MAX}
-#define ALL uu_pair{}
+#define ALL uu_pair{0, UINT_MAX}
+// #define ALL uu_pair{}
 
 #pragma region helper_structs
 
@@ -54,7 +54,7 @@ template <typename T, typename U, typename = void>
 struct enable_if_not_comp2d : 
     std::enable_if<
         !is_complex<U>::value || 
-        (is_complex<T>::value && is_complex<U>::value),
+        is_complex<T>::value,
     int> 
 {};
 template <typename T, typename U>
@@ -119,7 +119,7 @@ public:
      * @param r number of rows
      * @param c number of columns
     */
-    Matrix(const uint & r, const uint & c);
+    Matrix(uint r, uint c);
 
     /**
      * @brief construct a r x c matrix using v to initialize
@@ -128,7 +128,7 @@ public:
      * @param c number of columns
      * @param v vector used to init the matrix
      */
-    Matrix(const uint & r, const uint & c, std::vector<T> v);
+    Matrix(uint r, uint c, std::vector<T> v);
 
     /**
      * @brief construct a r x c matrix using v to initialize
@@ -137,13 +137,8 @@ public:
      * @param c number of columns
      * @param v vector used to init the matrix
      */
-    template<typename U,
-        typename std::enable_if<
-            !is_complex<U>::value ||
-            (is_complex<T>::value && is_complex<U>::value), int
-        >::type = 0
-    >
-    Matrix(const uint & r, const uint & c, std::vector<U> v);
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
+    Matrix(uint r, uint c, std::vector<U> v);
 
     /**
      * @brief copy constructor
@@ -155,9 +150,7 @@ public:
      * @brief copy constructor
      * @param m matrix to copy
     */
-    template<typename U,
-        typename = enable_if_not_comp2d_t<T,U>
-    >
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
     Matrix(const Matrix<U> & m);
 
     /**
@@ -179,7 +172,7 @@ public:
      * @param c columns index
      * @return T& element in position (r,c)
      */
-    T& operator()(const uint & r, const uint & c);
+    T& operator()(uint r, uint c);
 
     /**
      * @brief const get operator using ()
@@ -187,7 +180,7 @@ public:
      * @param c columns index
      * @return const T& element in position (r,c)
      */
-    const T& operator()(const uint & r, const uint & c) const;
+    const T& operator()(uint r, uint c) const;
 
     /**
      * @brief if the object is a vector, access the i-th element,
@@ -196,7 +189,7 @@ public:
      * @param i index of access
      * @return element of the object
     */
-    T& operator()(const uint & i);
+    T& operator()(uint i);
 
     /**
      * @brief if the object is a vector, access the i-th element,
@@ -205,7 +198,7 @@ public:
      * @param i index of access
      * @return element of the object
     */
-    const T& operator()(const uint & i) const;
+    const T& operator()(uint i) const;
 
     /**
      * @brief extract the elements on rows rs and column c.
@@ -213,7 +206,7 @@ public:
      * @param c column index
      * @return submatrix of rows rs and column c
     */
-    Matrix<T> operator()(uu_pair rs, const uint & c) const;
+    Matrix<T> operator()(uu_pair rs, uint c) const;
 
     /**
      * @brief extract the elements on row r and columns cs.
@@ -221,7 +214,7 @@ public:
      * @param cs columns index pair (both extremes included)
      * @return submatrix of rows r and column cs
     */
-    Matrix<T> operator()(const uint & r, uu_pair cs) const;
+    Matrix<T> operator()(uint r, uu_pair cs) const;
 
     /**
      * @brief extract the elements on rows rs and columns cs.
@@ -401,7 +394,7 @@ public:
      * @param c cols of new matrix
      * @return Matrix: matrix with same data and specified shape
      */
-    Matrix<T> reshape(const uint & r, const uint & c) const;
+    Matrix<T> reshape(uint r, uint c) const;
 
     /**
      * @brief Modifies the shape of this matrix. Size must be the same
@@ -409,7 +402,7 @@ public:
      * @param c cols of new matrix
      * @return ref to this matrix
      */
-    Matrix<T>& reshape_self(const uint & r, const uint & c);
+    Matrix<T>& reshape_self(uint r, uint c);
 
     /**
      * @brief swap as friend function to allow ADL
@@ -425,7 +418,7 @@ public:
      * @param r2 second row to swap
      * @throw invalid argument if r1 or r2 exceeds the matric row indeces
      */
-    Matrix<T>& swap_rows(const uint & r1, const uint & r2);
+    Matrix<T>& swap_rows(uint r1, uint r2);
 
     /**
      * @brief swap the given columns of the matrix
@@ -433,7 +426,7 @@ public:
      * @param c2 second column to swap
      * @throw invalid argument if c1 or c2 exceeds the matric column indeces
      */
-    Matrix<T>& swap_cols(const uint & c1, const uint & c2);
+    Matrix<T>& swap_cols(uint c1, uint c2);
     
     /**
      * @brief set diagonal elements of this matrix using given vector
@@ -926,7 +919,7 @@ Matrix<double> IdMat(const uint & dim);
  * @param c columns
  * @return Matrix 
  */
-Matrix<double> Ones(const uint & r, const uint & c);
+Matrix<double> Ones(uint r, uint c);
 
 /**
  * @brief create matrix with random values of shapre r*c
@@ -936,7 +929,7 @@ Matrix<double> Ones(const uint & r, const uint & c);
  * @return Matrix 
 */
 template<typename T = double>
-Matrix<T> RandMat(const uint & r, const uint & c);
+Matrix<T> RandMat(uint r, uint c);
 
 /**
  * @brief given a vector of N elements, creates a NxN matrix

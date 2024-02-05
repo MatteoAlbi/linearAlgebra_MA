@@ -2697,7 +2697,7 @@ TEST(Matrix, divide_operator){
     // complex
     EXPECT_NO_THROW(Matrix(3,0)/(2.5+1i));
     v2c = v1c;
-    for(uint i=0; i<v2c.size(); ++i) v2c[i] = c_double(v1[i])/=(2.5+1i);
+    for(uint i=0; i<v2c.size(); ++i) v2c[i] = c_double(v1[i])/(2.5+1i);
     EXPECT_EQ(Matrix(3,4,v1)/(2.5+1i), Matrix(3,4, v2c));
     // EXPECT_ANY_THROW(Matrix(0,3)/=(2.5+1i));
     // -> no operator "/=" matches these operands
@@ -2711,19 +2711,7 @@ TEST(Matrix, divide_operator){
     );
     b = Matrix(1,4, {2,4,1,3});
     // shape doesn't match
-    EXPECT_THROW((b(0,{1,3}) / A), invalid_argument);
-    // underdetermined
-    C = Matrix(4,4,
-        {1,3,4,2,
-         0,2,1,-2,
-         2,1,-3,2,
-         0,0,0,0}
-    );
-    EXPECT_THROW(b / C, runtime_error);
-    // solution
-    EXPECT_NO_THROW(C = b/A);
-    EXPECT_EQ(C*A, b);
-    // shape doesn't match
+    EXPECT_THROW((b(0,{1,3})/A), invalid_argument);
     EXPECT_THROW((b(0,{1,3})/=A), invalid_argument);
     // underdetermined
     C = Matrix(4,4,
@@ -2732,8 +2720,11 @@ TEST(Matrix, divide_operator){
          2,1,-3,2,
          0,0,0,0}
     );
+    EXPECT_THROW(b/C, runtime_error);
     EXPECT_THROW(b/=C, runtime_error);
     // solution
+    EXPECT_NO_THROW(C = b/A);
+    EXPECT_EQ(C*A, b);
     C = b;
     EXPECT_NO_THROW(C /= A);
     EXPECT_EQ(C*A, b);
@@ -2756,7 +2747,81 @@ TEST(Matrix, divide_operator){
 
 
     // -- complex matrix -- //
-    
+
+    // int
+    EXPECT_NO_THROW(Matrix<c_double>(0,3)/=2);
+    EXPECT_NO_THROW(Matrix<c_double>(3,0)/2);
+    v2c = v1c;
+    for(uint i=0; i<v2c.size(); ++i) v2c[i]/=2;
+    EXPECT_EQ(Matrix(3,4,v1c)/2, Matrix(3,4, v2c));
+    EXPECT_EQ(Matrix(3,4,v1c)/=2, Matrix(3,4, v2c));
+
+    // double
+    EXPECT_NO_THROW(Matrix<c_double>(0,3)/=2.5);
+    EXPECT_NO_THROW(Matrix<c_double>(3,0)/2.5);
+    v2c = v1c;
+    for(uint i=0; i<v2c.size(); ++i) v2c[i]/=2.5;
+    EXPECT_EQ(Matrix(3,4,v1c)/2.5, Matrix(3,4, v2c));
+    EXPECT_EQ(Matrix(3,4,v1c)/=2.5, Matrix(3,4, v2c));
+
+    // complex
+    EXPECT_NO_THROW(Matrix<c_double>(3,0)/(2.5+1i));
+    EXPECT_NO_THROW(Matrix<c_double>(3,0)/=(2.5+1i));
+    v2c = v1c;
+    for(uint i=0; i<v2c.size(); ++i) v2c[i] /= (2.5+1i);
+    EXPECT_EQ(Matrix(3,4,v1c)/(2.5+1i), Matrix(3,4, v2c));
+    EXPECT_EQ(Matrix(3,4,v1c)/=(2.5+1i), Matrix(3,4, v2c));
+
+    // matrices
+    Ac = Matrix<c_double>(4,4,
+        {1.5-1i,3,4,2,
+         0.5+1i,2,1,-2.5-1i,
+         2,1.5+1i,-3,2,
+         0,2.5-1i,1.5+1i,-1}
+    );
+    bc = Matrix<c_double>(1,4, {2.5+1i,4,1.5+1i,3.5-1i});
+    // shape doesn't match
+    EXPECT_THROW((bc(0,{1,3})/Ac), invalid_argument);
+    EXPECT_THROW((bc(0,{1,3})/=Ac), invalid_argument);
+    // underdetermined
+    Cc = Matrix<c_double>(4,4,
+        {1.5-1i,3,4,2,
+         0.5+1i,2,1,-2.5-1i,
+         2,1.5+1i,-3,2,
+         0,0,0,0}
+    );
+    EXPECT_THROW(bc/Cc, runtime_error);
+    EXPECT_THROW(bc/=Cc, runtime_error);
+
+    // solution
+    EXPECT_NO_THROW(Cc = bc/Ac);
+    EXPECT_EQ(Cc*Ac, bc);
+    Cc = bc;
+    EXPECT_NO_THROW(Cc /= Ac);
+    EXPECT_EQ(Cc*Ac, bc);
+    EXPECT_NO_THROW(Cc = b/Ac);
+    EXPECT_EQ(Cc*Ac, b);
+    EXPECT_NO_THROW(Cc = bc/A);
+    EXPECT_EQ(Cc*A, bc);
+    Cc = bc;
+    EXPECT_NO_THROW(Cc /= A);
+    EXPECT_EQ(Cc*A, bc);
+
+    // division double by matrix
+    EXPECT_NO_THROW(Cc = 2.5/Ac);
+    EXPECT_EQ(Cc*Ac, 2.5*IdMat(4));
+    EXPECT_NO_THROW(Cc = 2.5/Ac(ALL, {1,3}));
+    EXPECT_EQ(Cc*Ac(ALL, {1,3}), 2.5*IdMat(3));
+    EXPECT_NO_THROW(Cc = 2.5/Ac({1,3}, ALL));
+    EXPECT_EQ(Ac({1,3}, ALL)*Cc, 2.5*IdMat(3));
+
+    // division complex by matrix
+    EXPECT_NO_THROW(Cc = (2.5+1i)/Ac);
+    EXPECT_EQ(Cc*Ac, (2.5+1i)*IdMat(4));
+    EXPECT_NO_THROW(Cc = (2.5+1i)/Ac(ALL, {1,3}));
+    EXPECT_EQ(Cc*Ac(ALL, {1,3}), (2.5+1i)*IdMat(3));
+    EXPECT_NO_THROW(Cc = (2.5+1i)/Ac({1,3}, ALL));
+    EXPECT_EQ(Ac({1,3}, ALL)*Cc, (2.5+1i)*IdMat(3));
 
     Matrix<double>::set_double_precision();
     Matrix<c_double>::set_double_precision();

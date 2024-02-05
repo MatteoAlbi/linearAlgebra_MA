@@ -323,6 +323,43 @@ TEST(Matrix, access_operator){
     EXPECT_EQ(m1c({1,2},{0,3}), Matrix<c_double>(2,4,{14.0+1i,15.0+1i,16.0+1i,17.0+1i,18.0+1i,19.0+1i,20.0+1i,21.0+1i}));
 }
 
+TEST(Matrix, get_diag){
+    Matrix m1(4,4,
+        {1,3,5,9,
+         1,3,1,7,
+         4,3,9,7,
+         5,2,0,9}
+    );
+    EXPECT_EQ(m1.diag(), Matrix(4,1,{1,3,9,9}));
+
+    Matrix<c_double> m2(4,4,
+        {1,3,5,9,
+         0,3.0+1i,1,7,
+         0.0+0i,0,9,7,
+         0,0.0+0i,0.0+0i,9.0+1i}
+    );
+    EXPECT_EQ(m2.diag(), Matrix<c_double>(4,1,{1,3.0+1i,9,9.0+1i}));
+
+    m1 = Matrix(6,4,
+        {1,3,5,9,
+         0,3,1,7,
+         0,0,0,7,
+         0,0,0,9,
+         0,0,0,1,
+         0,0,0,1}
+    );
+    EXPECT_EQ(m1.diag(), Matrix(4,1,{1,3,0,9}));
+
+    m1 = Matrix(4,6,
+        {1,3,5,9,0,3,
+         1,7,0,3,0,7,
+         0,3,2,9,0,5,
+         6,4,8,0,7,1}
+    );
+    EXPECT_EQ(m1.diag(), Matrix(4,1,{1,7,2,0}));
+
+}
+
 TEST(Matrix, setter) {
     Matrix m1(4,4,
         {10,11,12,13,
@@ -600,6 +637,8 @@ TEST(Matrix, reshape){
     EXPECT_THROW(Matrix().reshape(0,0), runtime_error);
     EXPECT_THROW(m1.reshape(3,5), invalid_argument);
     EXPECT_EQ(m1.reshape(2,8), m2);
+    EXPECT_NO_THROW(m1.reshape_self(2,8));
+    EXPECT_EQ(m1, m2);
 
     // -- complex matrix -- //
     Matrix<c_double> m1c(4,4,
@@ -616,7 +655,64 @@ TEST(Matrix, reshape){
     EXPECT_THROW(Matrix().reshape(0,0), runtime_error);
     EXPECT_THROW(m1c.reshape(3,5), invalid_argument);
     EXPECT_EQ(m1c.reshape(2,8), m2c);
+    EXPECT_NO_THROW(m1c.reshape_self(2,8));
+    EXPECT_EQ(m1c, m2c);
     
+}
+
+TEST(Matrix, set_diag){
+    Matrix m1(4,6,
+        {1,3,5,9,0,3,
+         1,7,0,3,0,7,
+         0,3,2,9,0,5,
+         6,4,8,0,7,1}
+    );
+    Matrix m2(4,6,
+        {0,3,5,9,0,3,
+         1,0,0,3,0,7,
+         0,3,0,9,0,5,
+         6,4,8,0,7,1}
+    );
+    EXPECT_THROW(m1.diag(vector<double>{1,1,1,1,1,1}), invalid_argument);
+    EXPECT_THROW(m1.diag(Matrix(2,2)), invalid_argument);
+    EXPECT_THROW(m1.diag(Matrix(6,1)), invalid_argument);
+    Matrix m3 = m1;
+    EXPECT_EQ(m3.diag(vector<double>{0,0,0,0}), m2);
+    m3 = m1;
+    EXPECT_EQ(m3.diag(Matrix(4,1)), m2);
+    // EXPECT_THROW(m1.diag(vector<c_double>{1,1,1,1,1,1}), invalid_argument);
+    // EXPECT_THROW(m1.diag(Matrix<c_double>(4,1)), invalid_argument);
+    // -> no instance of overloaded function "MA::Matrix<T>::diag [with T=double]" matches the argument list
+
+
+    // -- complex matrix -- //
+    Matrix<c_double> m1c(4,6,
+        {1.0+1i,3,5,9.0+1i,0,3,
+         1,7.0+1i,0,3,0.0+1i,7,
+         0,3.0+1i,2.0+1i,9,0,5,
+         6,4.0+1i,8,0.0+1i,7,1.0+1i}
+    );
+    Matrix<c_double> m2c(4,6,
+        {0,3,5,9.0+1i,0,3,
+         1,0,0,3,0.0+1i,7,
+         0,3.0+1i,0,9,0,5,
+         6,4.0+1i,8,0,7,1.0+1i}
+    );
+    EXPECT_THROW(m1c.diag(vector<double>{1,1,1,1,1,1}), invalid_argument);
+    EXPECT_THROW(m1c.diag(vector<c_double>{1,1,1,1,1,1}), invalid_argument);
+    EXPECT_THROW(m1c.diag(Matrix(2,2)), invalid_argument);
+    EXPECT_THROW(m1c.diag(Matrix<c_double>(2,2)), invalid_argument);
+    EXPECT_THROW(m1c.diag(Matrix(6,1)), invalid_argument);
+    EXPECT_THROW(m1c.diag(Matrix<c_double>(6,1)), invalid_argument);
+    Matrix m3c = m1c;
+    EXPECT_EQ(m3c.diag(vector<double>{0,0,0,0}), m2c);
+    m3c = m1c;
+    EXPECT_EQ(m3c.diag(vector<c_double>{0,0,0,0}), m2c);
+    m3c = m1c;
+    EXPECT_EQ(m3c.diag(Matrix(4,1)), m2c);
+    m3c = m1c;
+    EXPECT_EQ(m3c.diag(Matrix<c_double>(4,1)), m2c);
+
 }
 
 TEST(Matrix, swap){

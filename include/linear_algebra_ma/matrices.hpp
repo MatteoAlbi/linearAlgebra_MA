@@ -259,9 +259,21 @@ public:
      */
     T const * v() const;
 
+    /**
+     * @brief extract diagonal of the matrix
+     * @return vector (matrix with dim n,1) containing the diagonal elements
+    */
+    Matrix<T> diag() const;
+
+    /**
+     * @brief return matrix containing real part of the complex matrix
+    */
     template <typename U = T, typename std::enable_if<is_complex<U>::value, int>::type = 0>
     Matrix<double> real() const;
 
+    /**
+     * @brief return matrix containing imaginary part of the complex matrix
+    */
     template <typename U = T, typename std::enable_if<is_complex<U>::value, int>::type = 0>
     Matrix<double> imag() const;
 
@@ -275,7 +287,7 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < this.size
      */
-    void set(std::vector<T> v);
+    Matrix<T>& set(std::vector<T> v);
 
     /**
      * @brief uses the vector to fill in the elements of the matrix
@@ -283,7 +295,7 @@ public:
      * @throw out_of_range if v.size < this.size
      */
     template<typename U, typename = enable_if_not_comp2d_t<T,U>>
-    void set(std::vector<U> v);
+    Matrix<T>& set(std::vector<U> v);
 
     /**
      * @brief uses the vector to fill in the elements of submatrix
@@ -293,7 +305,7 @@ public:
      * @param v used vector
      * @throw out_of_range if v.size < submatrix size
      */
-    void set(uu_pair rs, uu_pair cs, std::vector<T> v);
+    Matrix<T>& set(uu_pair rs, uu_pair cs, std::vector<T> v);
 
     /**
      * @brief uses the vector to fill in the elements of submatrix
@@ -304,7 +316,7 @@ public:
      * @throw out_of_range if v.size < submatrix size
      */
     template<typename U, typename = enable_if_not_comp2d_t<T,U>>
-    void set(uu_pair rs, uu_pair cs, std::vector<U> v);
+    Matrix<T>& set(uu_pair rs, uu_pair cs, std::vector<U> v);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -315,7 +327,7 @@ public:
      * @throw out_of_range if r or c are out of range
      */
     template<typename U, typename = enable_if_not_comp2d_t<T,U>>
-    void set(uint r, uint c, U x);
+    Matrix<T>& set(uint r, uint c, U x);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -328,7 +340,7 @@ public:
      * submatrix
      */
     template<typename U, typename = enable_if_not_comp2d_t<T,U>>
-    void set(uu_pair rs, uint c, Matrix<U> m);
+    Matrix<T>& set(uu_pair rs, uint c, Matrix<U> m);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -340,7 +352,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void set(uint r, uu_pair cs, Matrix<T> m);
+    Matrix<T>& set(uint r, uu_pair cs, Matrix<T> m);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -353,7 +365,7 @@ public:
      * submatrix
      */
     template<typename U, typename = enable_if_not_comp2d_t<T,U>>
-    void set(uint r, uu_pair cs, Matrix<U> m);
+    Matrix<T>& set(uint r, uu_pair cs, Matrix<U> m);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -365,7 +377,7 @@ public:
      * @throw out_of_range if m has not enough rows or columns to fill in the 
      * submatrix
      */
-    void set(uu_pair rs, uu_pair cs, Matrix<T> m);
+    Matrix<T>& set(uu_pair rs, uu_pair cs, Matrix<T> m);
 
     /**
      * @brief uses the given matrix to fill in the elements of submatrix
@@ -378,7 +390,7 @@ public:
      * submatrix
      */
     template<typename U, typename = enable_if_not_comp2d_t<T,U>>
-    void set(uu_pair rs, uu_pair cs, Matrix<U> m);
+    Matrix<T>& set(uu_pair rs, uu_pair cs, Matrix<U> m);
 
     /**
      * @brief returns a matrix with the same underlaying
@@ -390,10 +402,12 @@ public:
     Matrix<T> reshape(const uint & r, const uint & c) const;
 
     /**
-     * @brief extract diagonal of the matrix
-     * @return vector (matrix with dim n,1) containing the diagonal elements
-    */
-    Matrix<T> diag() const;
+     * @brief Modifies the shape of this matrix. Size must be the same
+     * @param r rows of new matrix
+     * @param c cols of new matrix
+     * @return ref to this matrix
+     */
+    Matrix<T>& reshape_self(const uint & r, const uint & c);
 
     /**
      * @brief swap as friend function to allow ADL
@@ -409,7 +423,7 @@ public:
      * @param r2 second row to swap
      * @throw invalid argument if r1 or r2 exceeds the matric row indeces
      */
-    void swap_rows(const uint & r1, const uint & r2);
+    Matrix<T>& swap_rows(const uint & r1, const uint & r2);
 
     /**
      * @brief swap the given columns of the matrix
@@ -417,7 +431,25 @@ public:
      * @param c2 second column to swap
      * @throw invalid argument if c1 or c2 exceeds the matric column indeces
      */
-    void swap_cols(const uint & c1, const uint & c2);
+    Matrix<T>& swap_cols(const uint & c1, const uint & c2);
+    
+    /**
+     * @brief set diagonal elements of this matrix using given vector
+     * @param v vector used to set the diagonal
+     * @return ref to this matrix
+     * @throw if dim of v does not match the dim of the diagonal of the matrix
+    */
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
+    Matrix<T>& diag(std::vector<U> v);
+
+    /**
+     * @brief set diagonal elements of this matrix using given matrix
+     * @param m matrix used to set the diagonal, must have a vector shape
+     * @return ref to this matrix
+     * @throw if dim of m does not match the dim of the diagonal of the matrix
+    */
+    template<typename U, typename = enable_if_not_comp2d_t<T,U>>
+    Matrix<T>& diag(Matrix<U> m);
 #pragma endregion set
 
 #pragma region comparison_operators

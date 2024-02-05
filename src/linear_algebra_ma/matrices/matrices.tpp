@@ -147,24 +147,26 @@ Matrix<double> Matrix<T>::imag() const{
 #pragma region setter
 
 template<typename T>
-void Matrix<T>::set(std::vector<T> v){
+Matrix<T>& Matrix<T>::set(std::vector<T> v){
     if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
 
     std::copy(v.begin(), v.begin() + this->size(), this->_v);
+    return *this;
 }
 
 template<typename T>
 template<typename U, typename>
-void Matrix<T>::set(std::vector<U> v){
+Matrix<T>& Matrix<T>::set(std::vector<U> v){
     if(v.size() < this->size()) throw std::out_of_range("Not enough values in v to init the matrix");
 
     for(uint i=0; i<this->size(); ++i){
         this->_v[i] = v[i];
     }
+    return *this;
 }
 
 template<typename T>
-void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<T> v){
+Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<T> v){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -180,11 +182,12 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<T> v){
     for (uint i = 0; i < nRows; ++i){
         std::copy(v.begin() + i * nCols, v.begin() + (i+1) * nCols, this->_v + (rs.first + i) * _c + cs.first);
     }
+    return *this;
 }
 
 template<typename T>
 template<typename U, typename>
-void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
+Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -202,17 +205,19 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
             this->operator()(i + rs.first, j + cs.first) = v[i * nCols + j];
         }
     }
+    return *this;
 }
 
 template<typename T>
 template<typename U, typename>
-void Matrix<T>::set(uint r, uint c, U x){
+Matrix<T>& Matrix<T>::set(uint r, uint c, U x){
     this->operator()(r,c) = x;
+    return *this;
 }
 
 template<typename T>
 template<typename U, typename>
-void Matrix<T>::set(uu_pair rs, uint c, Matrix<U> m){
+Matrix<T>& Matrix<T>::set(uu_pair rs, uint c, Matrix<U> m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index out of range");
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
@@ -225,10 +230,11 @@ void Matrix<T>::set(uu_pair rs, uint c, Matrix<U> m){
     for(uint i=0; i<m._r; ++i){
         this->operator()(i + rs.first, c) = m(i,0);
     }
+    return *this;
 }
 
 template<typename T>
-void Matrix<T>::set(uint r, uu_pair cs, Matrix<T> m){
+Matrix<T>& Matrix<T>::set(uint r, uu_pair cs, Matrix<T> m){
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
@@ -241,11 +247,12 @@ void Matrix<T>::set(uint r, uu_pair cs, Matrix<T> m){
     for(uint j=0; j<m._c; ++j){
         std::copy(m._v, m._v + m.size(), this->_v + _c*r + cs.first);
     }
+    return *this;
 }
 
 template<typename T>
 template<typename U, typename>
-void Matrix<T>::set(uint r, uu_pair cs, Matrix<U> m){
+Matrix<T>& Matrix<T>::set(uint r, uu_pair cs, Matrix<U> m){
     if(r >= this->_r) throw std::out_of_range("Row index out of range");
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
@@ -258,10 +265,11 @@ void Matrix<T>::set(uint r, uu_pair cs, Matrix<U> m){
     for(uint j=0; j<m.c(); ++j){
         this->operator()(r, j + cs.first) = m(r,j);
     }
+    return *this;
 }
 
 template<typename T>
-void Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<T> m){
+Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<T> m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -276,11 +284,12 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<T> m){
     for (uint i = 0; i < m.r(); ++i){
         std::copy(m._v + i * m.c(), m._v + (i+1) * m.c(), this->_v + (rs.first + i) * _c + cs.first);
     }
+    return *this;
 }
 
 template<typename T>
 template<typename U, typename>
-void Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<U> m){
+Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<U> m){
     if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
     if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
@@ -297,6 +306,7 @@ void Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<U> m){
             this->operator()(i + rs.first, j + cs.first) = m(i,j);
         }
     }
+    return *this;
 }
 
 template<typename T>
@@ -307,6 +317,35 @@ Matrix<T> Matrix<T>::reshape(const uint & r, const uint & c) const{
     Matrix ret(r,c);
     std::copy(_v, _v + this->size(), ret._v);
     return ret;
+}
+
+template<typename T>
+Matrix<T>& Matrix<T>::reshape_self(const uint & r, const uint & c){
+    if(this->size() == 0) throw std::runtime_error("Matrix size is null");
+    if(r*c != this->size()) throw std::invalid_argument("New matrix size must match the current one");
+
+    this->_r = r;
+    this->_c = c;
+    return *this;
+}
+
+template<typename T>
+template<typename U, typename>
+Matrix<T>& Matrix<T>::diag(std::vector<U> v){
+    if(std::min(_r,_c) != v.size()) throw std::invalid_argument("Size of v must match the size of the matrix diagonal");
+
+    for(uint i=0; i<v.size(); ++i) this->operator()(i) = v[i];
+    return *this;
+}
+
+template<typename T>
+template<typename U, typename>
+Matrix<T>& Matrix<T>::diag(Matrix<U> m){
+    if(!m.is_vec()) throw std::invalid_argument("Input matrix must be vector-shaped");
+    if(std::min(_r,_c) != m.size()) throw std::invalid_argument("Size of m must match the size of the matrix diagonal");
+
+    for(uint i=0; i<m.size(); ++i) this->operator()(i) = m(i);
+    return *this;
 }
 
 #pragma endregion setter
@@ -324,11 +363,11 @@ void swap(Matrix<T> & m1, Matrix<T> & m2){
 }
 
 template<typename T>
-void Matrix<T>::swap_rows(const uint & r1, const uint & r2){
+Matrix<T>& Matrix<T>::swap_rows(const uint & r1, const uint & r2){
     if(r1 >= _r || r2 >= _r) throw std::out_of_range("Given parameters exceed the matrix rows indeces");
 
     // swap not necessary
-    if(r1 == r2) return;
+    if(r1 == r2) return *this;
 
     // extract r1
     Matrix tmp = this->operator()(r1, ALL);
@@ -336,14 +375,15 @@ void Matrix<T>::swap_rows(const uint & r1, const uint & r2){
     this->set(r1, ALL, this->operator()(r2, ALL));
     // substitute r1 into r2
     this->set(r2, ALL, tmp);
+    return *this;
 }
 
 template<typename T>
-void Matrix<T>::swap_cols(const uint & c1, const uint & c2){
+Matrix<T>& Matrix<T>::swap_cols(const uint & c1, const uint & c2){
     if(c1 >= _c || c2 >= _c) throw std::out_of_range("Given parameters exceed the matrix columns indeces");
 
     // swap not necessary
-    if(c1 == c2) return;
+    if(c1 == c2) return *this;
 
     // extract c1
     Matrix tmp = this->operator()(ALL, c1);
@@ -351,6 +391,7 @@ void Matrix<T>::swap_cols(const uint & c1, const uint & c2){
     this->set(ALL, c1, this->operator()(ALL, c2));
     // substitute c1 into c2
     this->set(ALL, c2, tmp);
+    return *this;
 }
 
 #pragma endregion swap

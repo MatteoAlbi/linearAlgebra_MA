@@ -1170,25 +1170,11 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
     }
 }
 
-
 template<typename T>
 void Matrix<T>::eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
-    Matrix<T> Q, H;
-    // queue to store the matrices to 
-    std::vector<Matrix<T>> queue;
-
-    // obtain an hessenberg matrix
-    this->hessenberg_dec(Q,H);
-
-    for(uint k=0; k<max_iterations; ++k){
-        // implicit double QR step
-        H.implicit_double_QR_step();
-    }
-
-    std::cout << D << std::endl;
-    D = D.diag();
+    D = this->eigenvalues(max_iterations, tolerance);
 
     V = Matrix(_r, _r);
     for(uint i=0; i<_r; ++i){

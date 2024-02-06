@@ -84,7 +84,7 @@ Matrix<T> Matrix<T>::operator()(uu_pair rs, uint c) const{
     if(c >= this->_c) throw std::out_of_range("Col index out of range");
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
 
-    Matrix ret = Matrix(rs.second - rs.first + 1, 1);
+    Matrix<T> ret(rs.second - rs.first + 1, 1);
 
     for(uint i=0; i<ret._r; ++i){
         ret(i,0) = this->operator()(i + rs.first, c);
@@ -103,7 +103,7 @@ Matrix<T> Matrix<T>::operator()(uint r, uu_pair cs) const{
     if(cs.second >= this->_c) throw std::out_of_range("Col index out of range");
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
 
-    Matrix ret = Matrix(1, cs.second - cs.first + 1);
+    Matrix<T> ret(1, cs.second - cs.first + 1);
 
     for(uint j=0; j<ret._c; ++j){
         ret(0,j) = this->operator()(r, j + cs.first);
@@ -123,7 +123,7 @@ Matrix<T> Matrix<T>::operator()(uu_pair rs, uu_pair cs) const{
     if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second"); 
     if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
 
-    Matrix ret = Matrix(rs.second - rs.first + 1, cs.second - cs.first + 1);
+    Matrix<T> ret(rs.second - rs.first + 1, cs.second - cs.first + 1);
 
     for(uint i=0; i<ret._r; ++i){
         for(uint j=0; j<ret._c; ++j){

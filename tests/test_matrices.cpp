@@ -2845,6 +2845,8 @@ TEST(Matrix, eigenvalues){
          0.629572, 0.213547,  0.388823, 0.947545,  0.269215, 0.284035}
     );
 
+    EXPECT_THROW(m1(ALL, {0,4}).eigenvalues(), invalid_argument);
+    EXPECT_NO_THROW(Matrix().eigenvalues());
     EXPECT_EQ(m1.eigenvalues(), Matrix<c_double>(6,1,
         {3.06484856+0i, -0.43274903+0.5936662i, -0.43274903-0.5936662i,
         -0.42845434+0i, 0.20374645+0i, -0.26069222+0i}
@@ -2859,6 +2861,8 @@ TEST(Matrix, eigenvalues){
          0.157731  + 0.176838i, 0.101637 + 0.257169i, 0.794771 + 0.634717i, 0.633439 + 0.752948i, 0.318778 + 0.598217i, 0.526123 + 0.117437i}
     );
 
+    EXPECT_THROW(m2(ALL, {0,4}).eigenvalues(), invalid_argument);
+    EXPECT_NO_THROW(Matrix<c_double>().eigenvalues());
     EXPECT_EQ(m2.eigenvalues(), Matrix<c_double>(6,1,
         {3.17117652+2.94167887i, 0.299358  +0.82044159i, 0.69038181-0.09100735i,
          -0.00851327-0.62277115i,0.51258838-0.69008745i,-0.34551444+0.02982849i}

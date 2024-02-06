@@ -1014,7 +1014,6 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
     T tmp;
 
     for(uint i=0; i<n-1; ++i){
-        // std::cout << "acting on column # " << i << std::endl;
         if(i == 0){
             // compute first column of B
             y = Matrix(3,1,{
@@ -1030,7 +1029,6 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
         else {
             // extract column to transform in [x 0 0]
             y = A({i, std::min(i+2, n-1)}, i-1);
-            // std::cout << "vector to zero:" << std::endl << y << std::endl;
         }
         // compute reflector
         v = y.reflector();
@@ -1047,10 +1045,7 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
             for(uint k=0; k<v.size(); k++) tmp += v(k) * A(j, i+k);
             for(uint k=0; k<v_t.size(); k++) A(j, i+k) -= tmp * v_t(k);
         }
-        // std::cout << "result of the step: " << A << std::endl << std::endl;
-
     }
-    // std::cout << "end of QR step: " << A << std::endl << std::endl;
 
     return A;
 }
@@ -1062,8 +1057,6 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
     using namespace std;
     using namespace std::complex_literals;
 
-    // cout << "get_eigenvalues input matrix: " << endl << *this << endl;
-    
     // if(_r == 0) throw std::invalid_argument("Matrix is empty");
     if(_r <= 1) return *this;
     else if(_r == 2){
@@ -1100,19 +1093,15 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
         // obtain an hessenberg matrix
         this->hessenberg_dec(Q,H);
 
-        // cout << "Starting matrix H:" << endl << H << endl;
-
         // start running the steps
         for(uint k=0; k<max_iterations; ++k){
             // implicit double QR step
             H = H.implicit_double_QR_step();
-            // cout << "QR step #" << k << ":" << endl << H << endl;
 
             // check for convergence
             for(int i=_c-2; i>=0; --i){
                 if(abs(H(i+1,i)) < tolerance){
                     // deflation
-                    // cout << "matrix to deflate in position " << i << ": " << endl << H << endl << endl;
                     Matrix<c_double> m1 = H(uu_pair{0,i},uu_pair{0,i}).eigenvalues(max_iterations, tolerance);
                     Matrix<c_double> m2 = H(uu_pair{i+1,_r-1},uu_pair{i+1,_r-1}).eigenvalues(max_iterations, tolerance);
                     return m1 | m2;

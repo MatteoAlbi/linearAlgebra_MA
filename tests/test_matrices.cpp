@@ -2830,55 +2830,9 @@ TEST(Matrix, divide_operator){
     Matrix<c_double>::set_double_precision();
 }
 
-// todo
+
+
 TEST(Matrix, eigenvalues){
-//     Matrix m1, D, V;
-
-//     m1 = Matrix (4,4,
-//         {7.5231e-01,   8.7419e-01,   3.6122e-01,   4.6593e-01,
-//          6.4349e-01,   2.9453e-01,   4.3203e-01,   8.8371e-03,
-//          1.4175e-01,   8.3325e-01,   6.4892e-01,   8.3927e-02,
-//          8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
-//     );
-
-//     // matrix not square
-//     EXPECT_THROW(m1({1, m1.r()-1}, ALL).eigen_QR(D, V), invalid_argument);
-
-//     // eigen problem solution
-//     EXPECT_NO_THROW(m1.eigen_QR(D, V));
-
-//     Matrix<T>::set_double_precision(6);
-//     EXPECT_EQ( D,
-//         Matrix(4, 1, {1.90595741, -0.44608142,  0.35662657, -0.01767256}));
-//     EXPECT_EQ( V,
-//         -Matrix(4, 4, {-0.61559328, -0.4662597 , -0.5442746 , -0.13613666,
-//                        -0.33941002,  0.68239286, -0.20427391, -0.46868028,
-//                        -0.33624531, -0.48129845,  0.77632961,  0.52722921,
-//                        -0.62672549,  0.29205081,  0.24361787,  0.69558246}));
-//     EXPECT_EQ( V * diag(D) * V.inv(), m1);
-
-//     /*
-
-//     // testing for complex eigenvalues
-//     m1 = RandMat(4,4);
-//     cout << m1 << endl;
-
-//     EXPECT_NO_THROW(m1.eigen_QR(D, V, 100000));
-//     cout << "QR without shift:" << endl;
-//     cout << D << endl;
-//     cout << V << endl;
-
-//     EXPECT_NO_THROW(m1.eigen_QR_shift(D, V, 100000));
-//     cout << "QR with shift:" << endl;
-//     cout << D << endl;
-//     cout << V << endl;
-
-//     */
-
-//     Matrix<T>::set_double_precision();
-}
-
-TEST(Matrix, implicit_double_QR_step){
     Matrix<double>::set_double_precision(8);
     Matrix<c_double>::set_double_precision(8);
 
@@ -2890,7 +2844,7 @@ TEST(Matrix, implicit_double_QR_step){
          0.727335, 0.417724,  0.680562, 0.83642,   0.828708, 0.0817376,
          0.629572, 0.213547,  0.388823, 0.947545,  0.269215, 0.284035}
     );
-    
+
     EXPECT_EQ(m1.eigenvalues(), Matrix<c_double>(6,1,
         {3.06484856+0i, -0.43274903+0.5936662i, -0.43274903-0.5936662i,
         -0.42845434+0i, 0.20374645+0i, -0.26069222+0i}
@@ -2915,3 +2869,46 @@ TEST(Matrix, implicit_double_QR_step){
     Matrix<double>::set_double_precision();
     Matrix<c_double>::set_double_precision();
 } 
+
+TEST(Matrix, eigen_dec){
+    Matrix<c_double> D, V;
+
+    Matrix m1(6,6,
+        {0.289316, 0.514435,  0.414028, 0.876566,  0.729748, 0.715642,
+         0.706535, 0.0190924, 0.524987, 0.0651939, 0.488943, 0.682049,
+         0.916634, 0.890019,  0.139195, 0.989362,  0.446023, 0.514659,
+         0.439726, 0.80665,   0.211519, 0.153604,  0.61635,  0.000878999,
+         0.727335, 0.417724,  0.680562, 0.83642,   0.828708, 0.0817376,
+         0.629572, 0.213547,  0.388823, 0.947545,  0.269215, 0.284035}
+    );
+
+    // matrix not square
+    EXPECT_THROW(m1({1, m1.r()-1}, ALL).eigen_dec(D, V), invalid_argument);
+
+
+    Matrix<double>::set_double_precision(8);
+    Matrix<c_double>::set_double_precision(8);
+
+    EXPECT_NO_THROW(m1.eigen_dec(D, V));
+    EXPECT_EQ(D, Matrix<c_double>(6,1,
+        {3.06484856+0i, -0.43274903+0.5936662i, -0.43274903-0.5936662i,
+        -0.42845434+0i, 0.20374645+0i, -0.26069222+0i}
+    )); //  computed using numpy
+    cout << V << endl;
+    // EXPECT_EQ( V, Matrix(6, 6, 
+    //     {0.44820316,  0.10515559+0.15884329i,  0.10515559-0.15884329i,  0.74890417,  0.03795603,  0.47877402,
+    //      0.34866671,             0.56597124,              0.56597124,  -0.21542993, -0.40336694, -0.26421685,
+    //      0.48305211, -0.2593295 -0.2565831i,  -0.2593295 +0.2565831i,  -0.59421563, -0.53279817, -0.78476402,
+    //      0.3018656 , -0.15260781-0.47296062i, -0.15260781+0.47296062i, -0.07216637,  0.10827044, -0.02518877,
+    //      0.4834715 , -0.12575102+0.27714998i, -0.12575102-0.27714998i,  0.01998703,  0.6928325 ,  0.29045166,
+    //      0.34545418, -0.17952752+0.37210824i, -0.17952752-0.37210824i, -0.18447982, -0.24544083,  0.01066194 }
+    // ));
+    
+    Matrix<double>::set_double_precision(13);
+    Matrix<c_double>::set_double_precision(13);
+    EXPECT_EQ( V * diag(D) * V.inv(), m1);
+
+    Matrix<double>::set_double_precision();
+    Matrix<c_double>::set_double_precision();
+}
+

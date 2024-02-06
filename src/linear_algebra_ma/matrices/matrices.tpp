@@ -1178,8 +1178,8 @@ void Matrix<T>::eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_i
 
     V = Matrix(_r, _r);
     for(uint i=0; i<_r; ++i){
-        Matrix M = *this - D(i) * IdMat(_r);
-        Matrix eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
+        Matrix<c_double> M = *this - D(i) * IdMat(_r);
+        Matrix<c_double> eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
         V.set(ALL, i, eigen_vec.normalize());
     }
 

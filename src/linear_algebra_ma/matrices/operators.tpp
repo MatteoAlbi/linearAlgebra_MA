@@ -433,11 +433,53 @@ Matrix<RetType_t<U,V>> operator|(const Matrix<U>& m1, const Matrix<V>& m2){
 template<typename U>
 std::ostream& operator<<(std::ostream& os, const Matrix<U>& m){
     os << "Matrix(" << m.r() << "x" << m.c() << ")" << std::endl;
-    for(uint i=0; i<m.r(); ++i){
-        if(i>0) os << std::endl;
-        for(uint j=0; j<m.c(); ++j){
-            if(j>0) os << " ";
-            os << m(i,j);
+    
+    // precision
+    int p = 4;
+
+    // Calculate the maximum width needed for each column considering the real and imaginary parts separately
+    std::vector<int> max_width_real(m.c(), 0);
+    std::vector<int> max_width_imag(m.c(), 0);
+    for(uint i = 0; i < m.r(); ++i){
+        for(uint j = 0; j < m.c(); ++j){
+            std::ostringstream oss_real, oss_imag;
+            if constexpr (std::is_same_v<U, std::complex<double>>) {
+                if(m(i, j).real() == 0) oss_real << 0;
+                else oss_real << std::scientific << std::setprecision(p) << m(i, j).real();
+                if(m(i, j).imag() == 0) oss_imag << 0;
+                else oss_imag << std::scientific << std::setprecision(p) << std::abs(m(i, j).imag());
+            } 
+            else {
+                if (m(i, j) == 0) oss_real << 0;
+                else oss_real << std::scientific << std::setprecision(p) << m(i, j);
+            }
+            max_width_real[j] = std::max(max_width_real[j], static_cast<int>(oss_real.str().size()));
+            max_width_imag[j] = std::max(max_width_imag[j], static_cast<int>(oss_imag.str().size()));
+        }
+    }
+
+    // Print the matrix with aligned columns and scientific notation
+    for(uint i = 0; i < m.r(); ++i){
+        if(i > 0) os << std::endl;
+        for(uint j = 0; j < m.c(); ++j){
+            if(j > 0) os << "  ";
+            std::ostringstream oss;
+            if constexpr (std::is_same_v<U, std::complex<double>>) {
+                if (m(i, j).real() == 0) oss << 0;
+                else oss << std::scientific << std::setprecision(p) << m(i, j).real();
+                os << std::setw(max_width_real[j]) << oss.str();
+
+                if (m(i, j).imag() < 0) os << "-";
+                else os << "+";
+                oss.str("");
+
+                if (m(i, j).imag() == 0) oss << 0;
+                else oss << std::scientific << std::setprecision(p) << std::abs(m(i, j).imag());
+                os << std::setw(max_width_imag[j]) << oss.str() << "i";
+            } 
+            else {
+                os << std::setw(max_width_real[j]) << std::scientific << std::setprecision(p) << m(i, j);
+            }
         }
     }
     

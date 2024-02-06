@@ -16,6 +16,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include <string>
 
 #include <utility>
@@ -40,6 +41,9 @@ struct is_complex : std::false_type {};
 
 template <typename T>
 struct is_complex<std::complex<T>> : std::true_type {};
+
+template <typename T>
+using is_complex_t = is_complex<T>::value;
 
 // Helper type to conditionally determine the type of V
 template <typename T, typename U>

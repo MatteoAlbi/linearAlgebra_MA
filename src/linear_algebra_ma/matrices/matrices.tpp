@@ -1030,11 +1030,11 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
         A(2,1)
     });
     // compute reflector
-    tau = copysign(y.norm2(), y(0));
-    u = Matrix<T>(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau) });
-    v = (y(0) / tau + 1) * u;
-    // u = y.reflector();
-    // v = 2*u;
+    // tau = copysign(y.norm2(), y(0));
+    // u = Matrix<T>(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau) });
+    // v = (y(0) / tau + 1) * u;
+    u = y.reflector();
+    v = 2*u;
     // apply reflection B -> QB = B - v * (u.t * B)
     for(uint j=0; j<n; j++){
         tmp = 0.0;
@@ -1055,11 +1055,11 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
         // extract column to transform in  [x 0 0]
         y = A({i, i+2}, i-1);
         // compute reflector
-        tau = copysign(y.norm2(), y(0));
-        u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau)});
-        v = (y(0) / tau + 1) * u;
-        // u = y.reflector();
-        // v = 2*u;
+        // tau = copysign(y.norm2(), y(0));
+        // u = Matrix(3,1,{1, y(1) / (y(0) + tau), y(2) / (y(0) + tau)});
+        // v = (y(0) / tau + 1) * u;
+        u = y.reflector();
+        v = 2*u;
         // apply reflection B -> QB = B - v * (u.t * B)
         for(uint j=0; j<n; j++){
             tmp = 0.0;
@@ -1080,11 +1080,11 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
     // -- implement step for n-1 with only 2 last rows
     y = A({n-2, n-1}, n-3);
     // compute reflector
-    tau = copysign(y.norm2(), y(0));
-    u = Matrix(2,1,{1, y(1) / (y(0) + tau)});
-    v = (y(0) / tau + 1) * u;
-    // u = y.reflector();
-    // v = 2*u;
+    // tau = copysign(y.norm2(), y(0));
+    // u = Matrix(2,1,{1, y(1) / (y(0) + tau)});
+    // v = (y(0) / tau + 1) * u;
+    u = y.reflector();
+    v = 2*u;
     // apply reflection B -> QB = B - v * (u.t * B)
     for(uint j=0; j<n; j++){
         tmp = 0.0;
@@ -1103,14 +1103,13 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
 }
 
 template<typename T>
-Matrix<c_double> Matrix<T>::get_eigenvalues(uint max_iterations, double tolerance) const{
+Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
     using namespace std;
     using namespace std::complex_literals;
-    std::vector<c_double> eigenvalues;
 
-    cout << "get_eigenvalues input matrix: " << endl << *this << endl;
+    // cout << "get_eigenvalues input matrix: " << endl << *this << endl;
     
     // if(_r == 0) throw std::invalid_argument("Matrix is empty");
     if(_r <= 1) return *this;
@@ -1157,9 +1156,9 @@ Matrix<c_double> Matrix<T>::get_eigenvalues(uint max_iterations, double toleranc
             for(int i=_c-2; i>=0; --i){
                 if(abs(H(i+1,i)) < tolerance){
                     // deflation
-                    cout << "matrix to deflate in position " << i << ": " << endl << H << endl << endl;
-                    Matrix<c_double> m1 = H(uu_pair{0,i},uu_pair{0,i}).get_eigenvalues(max_iterations, tolerance);
-                    Matrix<c_double> m2 = H(uu_pair{i+1,_r-1},uu_pair{i+1,_r-1}).get_eigenvalues(max_iterations, tolerance);
+                    // cout << "matrix to deflate in position " << i << ": " << endl << H << endl << endl;
+                    Matrix<c_double> m1 = H(uu_pair{0,i},uu_pair{0,i}).eigenvalues(max_iterations, tolerance);
+                    Matrix<c_double> m2 = H(uu_pair{i+1,_r-1},uu_pair{i+1,_r-1}).eigenvalues(max_iterations, tolerance);
                     return m1 | m2;
                 }
             }

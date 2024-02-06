@@ -802,7 +802,7 @@ public:
     
     Matrix<T> implicit_double_QR_step() const;
 
-    Matrix<c_double> get_eigenvalues(uint max_iterations = 1000, double tolerance = 1e-16) const;
+    Matrix<c_double> eigenvalues(uint max_iterations = 1000, double tolerance = 1e-16) const;
 
     /**
      * @brief solution of the eigendecomposition porblem based on the double shift

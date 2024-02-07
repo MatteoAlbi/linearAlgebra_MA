@@ -449,17 +449,14 @@ Matrix<RetType_t<U,V>> cross(const Matrix<U> & v1, const Matrix<V> & v2){
 
 template<typename T>
 double Matrix<T>::norm2() const{
-    if(this->_r == 1 || this->_c == 1){
-        double ret = 0;
-        for(uint i=0; i< this->_r+this->_c-1; ++i){
-            double tmp = abs(_v[i]);
-            ret += tmp * tmp;
-        }
-        return sqrt(ret);
+    if(!this->is_vec()) throw std::invalid_argument("Norm only appliable to row/column vectors");
+
+    double ret = 0;
+    for(uint i=0; i< this->_r+this->_c-1; ++i){
+        double tmp = abs(_v[i]);
+        ret += tmp * tmp;
     }
-    else{
-        throw std::invalid_argument("Norm only appliable to row/column vectors");
-    }
+    return sqrt(ret);
 }
 
 template<typename T>
@@ -1006,6 +1003,8 @@ Matrix<V> matrix_r_divide(Matrix<T> const & B, Matrix<U> const & A){
 
 template<typename T>
 Matrix<T> Matrix<T>::implicit_double_QR_step() const{
+    if(!this->is_upper_hessenberg()) throw std::invalid_argument("Input matrix must be upper hessenberg");
+
     // for simpler notation
     uint n =  this->_r;
     Matrix<T> A = *this;
@@ -1054,7 +1053,6 @@ template<typename T>
 Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
-    using namespace std;
     using namespace std::complex_literals;
 
     // if(_r == 0) throw std::invalid_argument("Matrix is empty");
@@ -1088,14 +1086,12 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
         }
     }
     else{
-        // start implicit double QR step
         Matrix<T> Q, H;
         // obtain an hessenberg matrix
         this->hessenberg_dec(Q,H);
 
-        // start running the steps
+        // start running the implicit double QR steps
         for(uint k=0; k<max_iterations; ++k){
-            // implicit double QR step
             H = H.implicit_double_QR_step();
 
             // check for convergence
@@ -1116,16 +1112,57 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
 }
 
 template<typename T>
+Matrix<c_double> Matrix<T>::eigenvector(c_double eigenv, uint max_iterations, double tolerance) const{
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
+
+    /*
+    solving the linear system associated the equation A*v=l*v
+    prooves to be as precise as shifted inverse iteration.
+    However the reasoning is that shifted inverse iteration converges
+    to the eigenvector even if the eigenvalues is subject to small errors
+    */
+    // // extract eigenvector solving the linear system
+    // Matrix<c_double> M = *this - eigenv * IdMat(_r);
+    // Matrix<c_double> eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
+    // // std::cout << (*this * eigen_vec - eigenv * eigen_vec).norm2() << std::endl;
+    // return eigen_vec;
+    
+    // compute LU decomposition of shifted matrix
+    Matrix<c_double> L, U, tmp;
+    Matrix<double> P;
+    (*this - IdMat(_r) * eigenv).lup_dec(L,U,P);
+    uint k;
+    double residual, prev_residual = 1;
+
+    // start inverse iteration
+    Matrix<c_double> q = Ones(_r,1).normalize();
+    // Matrix<c_double> q = RandMat<c_double>(_r,1);
+    for(k=0; k<max_iterations; ++k){
+        tmp = forward_sub(L, P*q);
+        q = backward_sub(U, tmp).normalize();
+        residual = (*this * q - eigenv * q).norm2();
+        // check for convergence
+        if(residual < tolerance) break;
+        // the algorithm should converge very fast
+        if(prev_residual / residual < 10) break;
+
+        prev_residual = residual;
+    }
+    
+    // std::cout << k << "; " << residual << std::endl;
+    return q;
+}
+
+template<typename T>
 void Matrix<T>::eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_iterations, double tolerance) const{
     if(_c != _r) throw std::invalid_argument("Matrix must be square");
 
+    // extract eigenvalues
     D = this->eigenvalues(max_iterations, tolerance);
-
-    V = Matrix(_r, _r);
-    for(uint i=0; i<_r; ++i){
-        Matrix<c_double> M = *this - D(i) * IdMat(_r);
-        Matrix<c_double> eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
-        V.set(ALL, i, eigen_vec.normalize());
+    // extract eigenvectors using shifted inverse iteration
+    V = Matrix<c_double>(_r, _c);
+    for(uint i=0; i<D.size(); ++i){
+        V.set(ALL, i, this->eigenvector(D(i)));
     }
 
 }

@@ -23,6 +23,9 @@
 #include <vector>
 #include <random>
 
+#define PREC 15.0
+#define TOL  pow(10.0,-PREC)
+
 
 namespace MA
 {
@@ -71,9 +74,9 @@ class Matrix {
 protected:
 
     // number of decimals used in double comparison
-    inline static double double_precision = 16.0;
+    inline static double double_precision = PREC;
     // epsilon used in double comparison
-    inline static double epsilon = 1e-16;
+    inline static double epsilon = TOL;
     // random number generator objects
     inline static std::uniform_real_distribution<double> unif{0.0, 1.0};
     inline static std::default_random_engine re;
@@ -89,8 +92,8 @@ public:
      * @brief set the double precision used in comparison
      * @param dp number of digits considered during comparison
      */
-    inline static void set_double_precision(double dp = 16.0){ 
-        if(dp > 16) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
+    inline static void set_double_precision(double dp = PREC){ 
+        if(dp > PREC) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
         Matrix<T>::double_precision = dp; 
         Matrix<T>::epsilon = pow(10.0,-dp);
     }
@@ -804,15 +807,37 @@ public:
 
 #pragma region eigen
     
+    /**
+     * @brief implementation of the implicit double QR algorithm,
+     *  one single step. Works only for upper hessenberg matrices.
+     * @return matrix after one step
+     * @throw invalid_argument if the matrix is not upper hessenberg matrices
+    */
     Matrix<T> implicit_double_QR_step() const;
 
-    Matrix<c_double> eigenvalues(uint max_iterations = 1000, double tolerance = 1e-16) const;
+    /**
+     * @brief extract the eigenvalues of a matrix. Depending on the dimension:
+     *  - 1x1 return the matrix
+     *  - 2x2 solves the characteristic polynomial
+     *  - nxn uses the implicit double QR step with deflation, using recursion
+     * @param max_iterations maximum number of iterations of the implicit double QR step for each function call
+     * @param tolerance values used to check whether any element in the subdiagonal is close to zero
+     * @return column vector containing the eigenvalues
+     * @throw invalid_argument if the matrix is not square
+    */
+    Matrix<c_double> eigenvalues(uint max_iterations = 1000, double tolerance = TOL) const;
+
+    /**
+     * @brief extract eigenvector associated to the given eigenvalue
+     * @param eigenv given eigenvalue
+     * @param max_iterations maximum number of iterations to find the solution
+     * @param tolerance values used to check whether the algorithm converged
+    */
+    Matrix<c_double> eigenvector(c_double eigenv, uint max_iterations = 3, double tolerance = TOL) const;
 
     /**
      * @brief solution of the eigendecomposition porblem based on the double shift
-     *      implicit QR algorithm with deflation.
-     *      To assert the convergence, the algorithm check if during iteration
-     *      the matrix is approaching an upper triangular matrix.
+     *      implicit QR algorithm with deflation and inverse shifted iteration.
      * @param D matrix where the eigenvalues are saved as a vector
      * @param V matrix of the eigenvectors, saved as column vectors. The eigenvector on
      *      the i-th column is associated to the i-th eigenvalue of D
@@ -820,7 +845,7 @@ public:
      * @param tolerance parameter to define the convergence criteria (elements of the matrix
      *      lower than tolerance are considered to be zero)
     */
-    void eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_iterations = 1000, double tolerance = 1e-16) const;
+    void eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_iterations = 1000, double tolerance = TOL) const;
 
 #pragma endregion eigen
 

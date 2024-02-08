@@ -453,8 +453,8 @@ double Matrix<T>::norm2() const{
 
     double ret = 0;
     for(uint i=0; i< this->_r+this->_c-1; ++i){
-        double tmp = abs(_v[i]);
-        ret += tmp * tmp;
+        if constexpr(is_complex<T>::value) ret += _v[i].real() * _v[i].real() + _v[i].imag() * _v[i].imag();
+        else ret += _v[i] * _v[i];
     }
     return sqrt(ret);
 }
@@ -856,8 +856,6 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
 
     H = *this;
     Q = IdMat(_r);
-    
-    using namespace std;
 
     for (uint i=1; i<_r-1; ++i){
         // compute vk
@@ -882,6 +880,54 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
             T tmp = 0.0;
             for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
             for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= v_t(k) * tmp;
+        }
+    }
+}
+
+template<typename T>
+void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt){
+    if(_r < _c) throw std::invalid_argument("Number of rows must be greater or equal to number of columns");
+
+    B = *this;
+    U = IdMat(_r,_r);
+    Vt = IdMat(_c,_c);
+
+    Matrix<T> u, u_t, v, v_t;
+    T tmp;
+
+    for(uint i=0; i<_c; ++i){
+        u = B({i, _r-1}, i).reflector();
+        u_t = 2 * u.t();
+
+        // Update B: UB = B - 2u * (u' * B)
+        for(uint j=i; j<_c; ++j){
+            tmp = 0.0;
+            for(uint k=0; k<u.size(); ++k) tmp += u_t(k) * B(i+k,j);
+            for(uint k=0; k<u.size(); ++k) B(i+k,j) -= u(k) * tmp;
+        }
+        // Update U: UQ = U - (U * v) * 2v'
+        for(uint j=0; j<_r; ++j){
+            tmp = 0.0;
+            for(uint k=0; k<u.size(); ++k) tmp += u(k) * U(j,i+k);
+            for(uint k=0; k<u.size(); ++k) U(j,i+k) -= u_t(k) * tmp;
+        }
+
+        if(i <= _c-2){
+            v = B(i, {i+1, _c-1}).reflector();
+            v_t = 2 * v.t();
+
+            // Update B: BQ = B - (B * v) * 2v'
+            for(uint j=0; j<_r; ++j){
+                tmp = 0.0;
+                for(uint k=0; k<v.size(); ++k) tmp += v(k) * B(j,i+1+k);
+                for(uint k=0; k<v.size(); ++k) B(j,i+1+k) -= v_t(k) * tmp;
+            }
+            // Update Vt: PV = Vt - 2v * (v' * Vt)
+            for(uint j=0; j<_c; ++j){
+                tmp = 0.0;
+                for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * Vt(i+1+k,j);
+                for(uint k=0; k<v.size(); ++k) Vt(i+1+k,j) -= v(k) * tmp;
+            }
         }
     }
 }
@@ -1172,12 +1218,14 @@ void Matrix<T>::eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_i
 
 #pragma region special_constructors
 
-Matrix<double> IdMat(const uint & dim){
-    Matrix ret = Matrix(dim,dim);
-    for(uint i=0; i<dim; ++i){
-        ret(i,i) = 1;
-    }
+Matrix<double> IdMat(uint r, uint c){
+    Matrix ret = Matrix(r,c);
+    for(uint i=0; i<std::min(r,c); ++i) ret(i) = 1;
     return ret;
+}
+
+Matrix<double> IdMat(uint dim){
+    return IdMat(dim, dim);
 }
 
 Matrix<double> Ones(uint r, uint c){

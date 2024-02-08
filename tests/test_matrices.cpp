@@ -2305,6 +2305,37 @@ TEST(Matrix, hessenberg_dec){
     Matrix<double>::set_double_precision  ();
 }
 
+TEST(Matrix, bidiagonal_form){
+    Matrix B,U,Vt;
+    Matrix A(6,4,{ 14,   4, -16, -20, -3,  -4,
+                   17,  17, -16,   5,  6, -13,
+                   -2,  12,  -7,  15, -1,  -3,
+                   19,   4,  -3,   5, 16,  -9});
+
+    EXPECT_THROW(A.reshape(4,6).bidiagonal_form(U,B,Vt), invalid_argument);
+    EXPECT_NO_THROW(A.bidiagonal_form(U,B,Vt));
+    EXPECT_EQ(U*U.t(), IdMat(6));
+    EXPECT_EQ(Vt*Vt.t(), IdMat(4));
+    Matrix<double>::set_double_precision(13);
+    EXPECT_EQ(A, U*B*Vt);
+    Matrix<double>::set_double_precision();
+
+
+    Matrix<c_double> Bc,Uc,Vtc;
+    Matrix<c_double> Ac(6,4,{ 14.0+1i,   4, -16.0-1i, -20, -3,  -4,
+                    17,  17.0+1i, -16,   5,  6.0-1i, -13,
+                    -2,  12,  -7.0-1i,  15, -1,  -3.0+1i,
+                    19.0-1i,   4,  -3,   5, 16.0+1i,  -9});
+
+    EXPECT_THROW(Ac.reshape(4,6).bidiagonal_form(Uc,Bc,Vtc), invalid_argument);
+    EXPECT_NO_THROW(Ac.bidiagonal_form(Uc,Bc,Vtc));
+    EXPECT_EQ(Vtc*Vtc.t(), IdMat(4));
+    Matrix<c_double>::set_double_precision(14);
+    EXPECT_EQ(Uc*Uc.t(), IdMat(6));
+    Matrix<c_double>::set_double_precision(13);
+    EXPECT_EQ(Ac, Uc*Bc*Vtc);
+    Matrix<c_double>::set_double_precision();
+}
 
 
 TEST(Matrix, backward_sub){

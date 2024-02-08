@@ -798,10 +798,18 @@ public:
      *        QHQ* = A
      *      https://en.wikipedia.org/wiki/Hessenberg_matrix
      * 
-     * @param Q unitary matrix
+     * @param Q orthogonal matrix
      * @param H hessenberg matrix
     */
     void hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const;
+
+    /**
+     * @brief given A m*n computes matrices U,B,V such that A = UBV' with
+     * @param U orthogonal matrix m*m
+     * @param B bidiagonal matrix m*n (main and upper diagonal != 0)
+     * @param Vt orthogonal matrix n*n
+    */
+    void bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt);  
 
 #pragma endregion decomposition_methods
 
@@ -934,12 +942,21 @@ public:
 
 #pragma region special_constructors
 /**
- * @brief create identity matrix of shape dim*dim 
+ * @brief create identity matrix of shape r*c 
  * 
- * @param dim 
+ * @param r n of rows
+ * @param c n of columns
  * @return Matrix 
  */
-Matrix<double> IdMat(const uint & dim);
+Matrix<double> IdMat(uint r, uint c);
+
+/**
+ * @brief create identity matrix of shape dim*dim 
+ * 
+ * @param dim
+ * @return Matrix 
+ */
+Matrix<double> IdMat(uint dim);
 
 /**
  * @brief create matrix of only ones of shape r*c

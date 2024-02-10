@@ -2995,6 +2995,17 @@ TEST(Matrix, svd){
                    17,  17, -16,   5,  6, -13,
                    -2,  12,  -7,  15, -1,  -3,
                    19,   4,  -3,   5, 16,  -9});
-    Matrix U,E,V;
-    A.svd(U,E,V);
+    Matrix U,E,Vt;
+    A.svd(U,E,Vt);
+    Matrix<double>::set_double_precision(14);
+    for(uint i=0; i<E.r(); ++i){
+        for(uint j=0; j<E.c(); ++j){
+            if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Matrix<double>::get_epsilon());
+            else continue;
+        }
+    }
+    EXPECT_TRUE(U.is_orthogonal());
+    EXPECT_TRUE(Vt.is_orthogonal());
+    Matrix<double>::set_double_precision(13);
+    EXPECT_EQ(A, U*E*Vt);
 }

@@ -981,8 +981,6 @@ void Matrix<T>::svd_reinsch_step(
     if(dim == 0) dim = E.c();
     uint si = start_index;
     if(start_index + dim > E.c()) throw std::invalid_argument("Given bounds exceed matrix dimensions");
-    // I can stop: we deflated a single value, meaning it converged
-    if(dim == 1) return;
 
     using namespace std;
 
@@ -1033,6 +1031,15 @@ void Matrix<T>::svd_steps_iteration(
 
     using namespace std;
 
+    // cout << "starting index: " << si << ", dim: " << dim << endl
+    //      << "working matrix:" << E({si,si+dim-1},{si,si+dim-1}) << endl;
+
+    // I can stop: we deflated a single value, meaning it converged
+    if(dim == 1){ 
+        // cout << "single value: iteration terminated" << endl;
+        return;
+    }
+
     for(uint steps=0; steps<max_iterations && !converged; ++steps){
         // apply step
         if(steps < zero_shift_iterations) shift = 0;
@@ -1040,12 +1047,17 @@ void Matrix<T>::svd_steps_iteration(
         Matrix<T>::svd_reinsch_step(P, E, Gt, shift, si, dim);
 
         // deflation
-        for(uint i=E.c()-1; i>=1; --i){
+        for(uint i=si+dim-1; i>=si+1; --i){
             if(abs(E(i-1,i)) < tolerance){
-                cout << P * E * Gt << endl;
-                cout << "converged in i=" << i << endl << E << endl;
+                // cout << P * E * Gt << endl;
+                // cout << "converged in i=" << i << endl << E << endl;
                 converged = true;
-
+                // upper part
+                Matrix<T>::svd_steps_iteration(P, E, Gt, si, i-si, max_iterations, tolerance);
+                // lower part
+                Matrix<T>::svd_steps_iteration(P, E, Gt, i, dim-i, max_iterations, tolerance);
+                // exit
+                return;
             }
         }
     }
@@ -1057,7 +1069,7 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
 
     // reduce to bidiagonal form
     this->bidiagonal_form(U,E,Vt);
-    cout << "starting matrix: " << E << endl;
+    // cout << "starting matrix: " << E << endl;
     
     // init matrices
     Matrix<T> P = IdMat(E.r());
@@ -1065,28 +1077,9 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
 
     Matrix<T>::svd_steps_iteration(P,E,Gt, 0, 0, max_iterations, tolerance);
 
-    // for(uint steps=0; steps<max_iterations && !converged; ++steps){
-    //     // -- apply step
-
-    //     // compute shift
-    //     if(steps < zero_shift_iterations) shift = 0;
-    //     else shift = E.svd_shift();
-    //     // cout << "shift: " << shift << endl;
-        
-    //     // run step
-    //     Matrix<T>::svd_reinsch_step(P, E, Gt, shift);
-
-    //     // -- check convergence
-    //     // split
-    //     for(uint i=E.c()-1; i>=1; --i){
-    //         if(abs(E(i-1,i)) < tolerance){
-    //             cout << P * E * Gt << endl;
-    //             cout << "converged in i=" << i << endl << E << endl;
-    //             converged = true;
-
-    //         }
-    //     }
-    // }
+    // update solution incorporating bidiagonal decomposition
+    U = U*P;
+    Vt = Gt*Vt;
 
 }
 

@@ -232,6 +232,64 @@ public:
     Matrix<T> operator()(uu_pair rs, uu_pair cs) const;
 
     /**
+     * @brief get operator using ()
+     * @param r row index
+     * @param c columns index
+     * @return T& element in position (r,c)
+     */
+    T& at(uint r, uint c);
+
+    /**
+     * @brief const get operator using ()
+     * @param r row index
+     * @param c columns index
+     * @return const T& element in position (r,c)
+     */
+    const T& at(uint r, uint c) const;
+
+    /**
+     * @brief if the object is a vector, access the i-th element,
+     * if the object is a matrix, access the i-th element on the diagonal.
+     * The returned value is a modifiable reference.
+     * @param i index of access
+     * @return element of the object
+    */
+    T& at(uint i);
+
+    /**
+     * @brief if the object is a vector, access the i-th element,
+     * if the object is a matrix, access the i-th element on the diagonal.
+     * The returned value is a constant refrence.
+     * @param i index of access
+     * @return element of the object
+    */
+    const T& at(uint i) const;
+
+    /**
+     * @brief extract the elements on rows rs and column c.
+     * @param rs rows index pair (both extremes included)
+     * @param c column index
+     * @return submatrix of rows rs and column c
+    */
+    Matrix<T> at(uu_pair rs, uint c) const;
+
+    /**
+     * @brief extract the elements on row r and columns cs.
+     * @param r row index 
+     * @param cs columns index pair (both extremes included)
+     * @return submatrix of rows r and column cs
+    */
+    Matrix<T> at(uint r, uu_pair cs) const;
+
+    /**
+     * @brief extract the elements on rows rs and columns cs.
+     * @param rs rows index pair (both extremes included)
+     * @param cs columns index pair (both extremes included)
+     * @return submatrix of rows rs and columns cs
+    */
+    Matrix<T> at(uu_pair rs, uu_pair cs) const;
+
+    /**
      * @brief get number of rows
      * @return number of rows
      */
@@ -809,19 +867,20 @@ public:
      * @param B bidiagonal matrix m*n (main and upper diagonal != 0)
      * @param Vt orthogonal matrix n*n
     */
-    void bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt);  
+    void bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt) const;  
+
+    /**
+     * @brief comuptes the singular value decomposition of the matrix m*n 
+     *  such that A = UEV' where:
+     *  - U m*m orthogonal matrix
+     *  - E m*n diagonal matrix, with singular values as diagonal elements
+     *  - V n*n orthogonal matrix
+    */
+    void svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_iterations = 1000, double tolerance = TOL) const;
 
 #pragma endregion decomposition_methods
 
 #pragma region eigen
-    
-    /**
-     * @brief implementation of the implicit double QR algorithm,
-     *  one single step. Works only for upper hessenberg matrices.
-     * @return matrix after one step
-     * @throw invalid_argument if the matrix is not upper hessenberg matrices
-    */
-    Matrix<T> implicit_double_QR_step() const;
 
     /**
      * @brief extract the eigenvalues of a matrix. Depending on the dimension:
@@ -856,6 +915,21 @@ public:
     void eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_iterations = 1000, double tolerance = TOL) const;
 
 #pragma endregion eigen
+
+private:
+    /**
+     * @brief computes the Wilkinson’s shift for the given bidiagonal matrix
+     * @return Wilkinson’s shift
+    */
+    T svd_shift() const;
+
+    /**
+     * @brief implementation of the implicit double QR algorithm,
+     *  one single step. Works only for upper hessenberg matrices.
+     * @return matrix after one step
+     * @throw invalid_argument if the matrix is not upper hessenberg matrices
+    */
+    Matrix<T> implicit_double_QR_step() const;
 
 };
 

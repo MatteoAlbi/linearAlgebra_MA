@@ -79,7 +79,7 @@ private:
     */
     T svd_shift() const;
 
-    static void svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & G, T shift);
+    static void svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & Gt, T shift);
 
     /**
      * @brief implementation of the implicit double QR algorithm,
@@ -733,6 +733,11 @@ public:
      * @brief return true if the matrix is an lower hessenberg matrix
      */
     bool is_lower_hessenberg() const;
+
+    /**
+     * @brief return true if the matrix is orthogonal
+     */
+    bool is_orthogonal() const;
 #pragma endregion checks
 
 #pragma region matrix_operations
@@ -830,6 +835,29 @@ public:
      * @return reflector vector
     */
     Matrix<T> reflector() const;
+
+    /**
+     * @brief given this matrix (A) and reflector v updates A as:
+     *  A -> AQ = A - (A * v) * 2v'
+     * @param v reflector
+     * @param reflector_start_pos starting position of the vector from which the reflector is 
+     *  calulated. Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
+     *  as Q = I-2vv'
+     * @param start_index index from which the product AQ is computed. Can be != in order to exclude
+     *  portions of A which are full zeros
+    */
+    void apply_reflector_right(const Matrix<T> & v, uint reflector_start_pos = 0, uint start_index = 0);
+
+    /**
+     * @brief given this matrix (A) and reflector v, updates A as:
+     *  A -> QA = A - v * (2v' * A)
+     * @param v reflector
+     * @param reflector_start_pos starting position of the vector from which the reflector is 
+     * calulated. Matches the first non-unitary diagonal entry of the reflector matrix computed as I-2vv'
+     * @param start_index index from which the product QA is computed. Can be != in order to exclude
+     *  portions of A which are full zeros
+    */
+    void apply_reflector_left(const Matrix<T> & v, uint reflector_start_pos = 0, uint start_index = 0);
 
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 

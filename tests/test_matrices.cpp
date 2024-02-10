@@ -2088,7 +2088,7 @@ TEST(Matrix, qr_dec){
                    2, 1, 0,
                    1, 2, 0});
     EXPECT_NO_THROW(A.qr_dec(Q,R));
-    EXPECT_EQ(Q.t()*Q, IdMat(3));
+    EXPECT_TRUE(Q.is_orthogonal());
     EXPECT_TRUE(R.is_upper_triang());
     EXPECT_EQ(A, Q*R);
 
@@ -2097,7 +2097,7 @@ TEST(Matrix, qr_dec){
                      -2,  12,  -7,  15, -1,  -3,
                      19,   4,  -3,   5, 16,  -9});
     EXPECT_NO_THROW(A.qr_dec(Q,R));
-    EXPECT_EQ(Q.t()*Q, IdMat(6));
+    EXPECT_TRUE(Q.is_orthogonal());
     EXPECT_TRUE(R.is_upper_triang());
     EXPECT_EQ(A, Q*R);
 
@@ -2109,7 +2109,7 @@ TEST(Matrix, qr_dec){
          6, 167, -68.0+1i,
         -4,  24.0+1i, -41});
     EXPECT_NO_THROW(Ac.qr_dec(Qc,Rc));
-    EXPECT_EQ(Qc.t()*Qc, IdMat(3));
+    EXPECT_TRUE(Qc.is_orthogonal());
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac, Qc*Rc);
 
@@ -2119,7 +2119,7 @@ TEST(Matrix, qr_dec){
         -2, 12.0+1i,  -7,  15.0+1i, -1,  -3,
         19.0+1i,  4,  -3,   5, 16.0+1i,  -9});
     EXPECT_NO_THROW(Ac.qr_dec(Qc,Rc));
-    EXPECT_EQ(Qc.t()*Qc, IdMat(4));
+    EXPECT_TRUE(Qc.is_orthogonal());
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac, Qc*Rc);
 }
@@ -2135,7 +2135,7 @@ TEST(Matrix, qrp_dec){
                    2,  1,  0,
                    1,  2,  0});
     EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
-    EXPECT_EQ(Q.t()*Q, IdMat(3));
+    EXPECT_TRUE(Q.is_orthogonal());
     EXPECT_TRUE(R.is_upper_triang());
     EXPECT_EQ(A*P, Q*R);
 
@@ -2143,7 +2143,7 @@ TEST(Matrix, qrp_dec){
                        6, 167, -68,
                       -4,  24, -41});
     EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
-    EXPECT_EQ(Q.t()*Q, IdMat(3));
+    EXPECT_TRUE(Q.is_orthogonal());
     EXPECT_TRUE(R.is_upper_triang());
     EXPECT_EQ(A*P, Q*R);
 
@@ -2152,7 +2152,7 @@ TEST(Matrix, qrp_dec){
                      -2,  12,  -7,  15, -1,  -3,
                      19,   4,  -3,   5, 16,  -9});
     EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
-    EXPECT_EQ(Q.t()*Q, IdMat(4));
+    EXPECT_TRUE(Q.is_orthogonal());
     EXPECT_TRUE(R.is_upper_triang());
     EXPECT_EQ(A*P, Q*R);
 
@@ -2161,7 +2161,7 @@ TEST(Matrix, qrp_dec){
                      -2,  12,  -7,  15, -1,  -3,
                      19,   4,  -3,   5, 16,  -9});
     EXPECT_NO_THROW(A.qrp_dec(Q,R,P));
-    EXPECT_EQ(Q.t()*Q, IdMat(6));
+    EXPECT_TRUE(Q.is_orthogonal());
     EXPECT_TRUE(R.is_upper_triang());
     EXPECT_EQ(A*P, Q*R);
 
@@ -2173,7 +2173,7 @@ TEST(Matrix, qrp_dec){
          2,  1,  0.0+1i,
          1,  2.0-1i,  0});
     EXPECT_NO_THROW(Ac.qrp_dec(Qc,Rc,P));
-    EXPECT_EQ(Qc.t()*Qc, IdMat(3));
+    EXPECT_TRUE(Qc.is_orthogonal());
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac*P, Qc*Rc);
 
@@ -2182,7 +2182,7 @@ TEST(Matrix, qrp_dec){
           6.0+1i, 167, -68,
          -4,  24.0+1i, -41.0-1i});
     EXPECT_NO_THROW(Ac.qrp_dec(Qc,Rc,P));
-    EXPECT_EQ(Qc.t()*Qc, IdMat(3));
+    EXPECT_TRUE(Qc.is_orthogonal());
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac*P, Qc*Rc);
 
@@ -2192,7 +2192,7 @@ TEST(Matrix, qrp_dec){
           -2,  12,  -7.0+1i,  15, -1.0-1i,  -3,
           19,   4.0-1i,  -3,   5, 16,  -9.0+1i});
     EXPECT_NO_THROW(Ac.qrp_dec(Qc,Rc,P));
-    EXPECT_EQ(Qc.t()*Qc, IdMat(4));
+    EXPECT_TRUE(Qc.is_orthogonal());
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac*P, Qc*Rc);
 
@@ -2202,7 +2202,7 @@ TEST(Matrix, qrp_dec){
           -2,  12.0+1i,  -7,  15, -1.0-1i,  -3,
           19,   4,  -3,   5, 16,  -9.0+1i});
     EXPECT_NO_THROW(Ac.qrp_dec(Qc,Rc,P));
-    EXPECT_EQ(Qc.t()*Qc, IdMat(6));
+    EXPECT_TRUE(Qc.is_orthogonal());
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac*P, Qc*Rc);
 
@@ -2286,7 +2286,7 @@ TEST(Matrix, hessenberg_dec){
          8.1433e-01,   9.5796e-01,   9.0255e-01,   1.0307e-01}
     );
     EXPECT_NO_THROW(m1.hessenberg_dec(Q, H));
-    EXPECT_EQ(Q * Q.t(), IdMat(4));
+    EXPECT_TRUE(Q.is_orthogonal());
     EXPECT_TRUE(H.is_upper_hessenberg());
     EXPECT_EQ(Q * H * Q.t(), m1);
 
@@ -2297,7 +2297,7 @@ TEST(Matrix, hessenberg_dec){
          8.1+1i, 9.5, 9.0, 1.0+1i}
     );
     EXPECT_NO_THROW(m1c.hessenberg_dec(Qc, Hc));
-    EXPECT_EQ(Qc * Qc.t(), IdMat(4));
+    EXPECT_TRUE(Qc.is_orthogonal());
     EXPECT_TRUE(Hc.is_upper_hessenberg());
     EXPECT_EQ(Qc * Hc * Qc.t(), m1c);
 
@@ -2314,24 +2314,37 @@ TEST(Matrix, bidiagonal_form){
 
     EXPECT_THROW(A.reshape(4,6).bidiagonal_form(U,B,Vt), invalid_argument);
     EXPECT_NO_THROW(A.bidiagonal_form(U,B,Vt));
-    EXPECT_EQ(U*U.t(), IdMat(6));
-    EXPECT_EQ(Vt*Vt.t(), IdMat(4));
+    EXPECT_TRUE(U.is_orthogonal());
+    EXPECT_TRUE(Vt.is_orthogonal());
+    Matrix<double>::set_double_precision(14);
+    EXPECT_TRUE(B.is_upper_triang());
+    for(uint i=0; i<B.c()-2; ++i){
+        for(uint j=i+2; j<B.c(); ++j){
+            EXPECT_TRUE(abs(B(i,j)) < Matrix<double>::get_epsilon());
+        }
+    }
     Matrix<double>::set_double_precision(13);
     EXPECT_EQ(A, U*B*Vt);
     Matrix<double>::set_double_precision();
 
 
     Matrix<c_double> Bc,Uc,Vtc;
-    Matrix<c_double> Ac(6,4,{ 14.0+1i,   4, -16.0-1i, -20, -3,  -4,
+    Matrix<c_double> Ac(6,4,{ 14.0+1i,   4.0-1i, -16.0-1i, -20, -3.0-1i,  -4,
                     17,  17.0+1i, -16,   5,  6.0-1i, -13,
                     -2,  12,  -7.0-1i,  15, -1,  -3.0+1i,
                     19.0-1i,   4,  -3,   5, 16.0+1i,  -9});
 
     EXPECT_THROW(Ac.reshape(4,6).bidiagonal_form(Uc,Bc,Vtc), invalid_argument);
     EXPECT_NO_THROW(Ac.bidiagonal_form(Uc,Bc,Vtc));
-    EXPECT_EQ(Vtc*Vtc.t(), IdMat(4));
+    EXPECT_TRUE(Vtc.is_orthogonal());
     Matrix<c_double>::set_double_precision(14);
-    EXPECT_EQ(Uc*Uc.t(), IdMat(6));
+    EXPECT_TRUE(Uc.is_orthogonal());
+    EXPECT_TRUE(Bc.is_upper_triang());
+    for(uint i=0; i<Bc.c()-2; ++i){
+        for(uint j=i+2; j<Bc.c(); ++j){
+            EXPECT_TRUE(abs(Bc(i,j)) < Matrix<c_double>::get_epsilon());
+        }
+    }
     Matrix<c_double>::set_double_precision(13);
     EXPECT_EQ(Ac, Uc*Bc*Vtc);
     Matrix<c_double>::set_double_precision();

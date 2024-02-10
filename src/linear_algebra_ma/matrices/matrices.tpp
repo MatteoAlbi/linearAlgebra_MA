@@ -517,7 +517,7 @@ bool Matrix<T>::is_vec() const{
 template<typename T>
 bool Matrix<T>::is_sing() const{
     if(this->_r != this->_c) throw std::invalid_argument("The matrix must be square");
-    return this->det() == 0.0;
+    return abs(this->det()) < Matrix<T>::epsilon;
 }
 
 template<typename T>
@@ -527,7 +527,6 @@ bool Matrix<T>::is_upper_triang() const{
             if(abs(this->at(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
-
     return true;
 }
     
@@ -538,32 +537,32 @@ bool Matrix<T>::is_lower_triang() const{
             if(abs(this->at(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
-
     return true;
 }
 
 template<typename T>
 bool Matrix<T>::is_upper_hessenberg() const{
-    uint n = std::min(_r, _c);
-    for(uint i=2; i<n; ++i){
+    for(uint i=2; i<std::min(_r, _c); ++i){
         for(uint j=0; j<i-1; ++j){
             if(abs(this->at(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
-
     return true;
 }
 
 template<typename T>
 bool Matrix<T>::is_lower_hessenberg() const{
-    uint n = std::min(_r, _c);
-    for(uint j=2; j<n; ++j){
+    for(uint j=2; j<std::min(_r, _c); ++j){
         for(uint i=0; i<j-1; ++i){
             if(abs(this->at(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
-
     return true;
+}
+
+template<typename T>
+bool Matrix<T>::is_orthogonal() const{
+    return (*this) * this->t() == IdMat(_r);
 }
 
 #pragma endregion checks
@@ -761,6 +760,36 @@ Matrix<T> Matrix<T>::reflector() const{
 }
 
 template<typename T>
+void Matrix<T>::apply_reflector_right(const Matrix<T> & v, uint reflector_start_pos, uint start_index){
+    if(reflector_start_pos + v.size() - 1 >= _c) throw std::invalid_argument("Reflector too big to be applied using given start_index");
+
+    uint i = reflector_start_pos;
+    T tmp;
+    Matrix<T> v_t = 2 * v.t();
+
+    for(uint j=start_index; j<_r; ++j){
+        tmp = 0.0;
+        for(uint k=0; k<v.size(); ++k) tmp += v(k) * this->at(j,i+k);
+        for(uint k=0; k<v.size(); ++k) this->at(j,i+k) -= v_t(k) * tmp;
+    }
+}
+
+template<typename T>
+void Matrix<T>::apply_reflector_left(const Matrix<T> & v, uint reflector_start_pos, uint start_index){
+    if(reflector_start_pos + v.size() - 1 >= _r) throw std::invalid_argument("Reflector too big to be applied using given start_index");
+    
+    uint i = reflector_start_pos;
+    T tmp;
+    Matrix<T> v_t = 2 * v.t();
+
+    for(uint j=start_index; j<_c; ++j){
+        tmp = 0.0;
+        for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * this->at(i+k,j);
+        for(uint k=0; k<v.size(); ++k) this->at(i+k,j) -= v(k) * tmp;
+    }
+}
+
+template<typename T>
 void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
     // init matrices
     uint n = std::min<double>(_r, _c);
@@ -768,22 +797,11 @@ void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
     R = *this;
     
     for(uint i=0; i<n; ++i){
-        //compute vk
-        Matrix<T> v = R({i, _r-1}, i).reflector();
-        Matrix<T> v_t = 2 * v.t();
-
-        // Update R: HR = R - 2v * (v' * R)
-        for(uint j=i; j<_c; ++j){
-            T tmp = 0.0;
-            for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * R(i+k,j);
-            for(uint k=0; k<v.size(); ++k) R(i+k,j) -= v(k) * tmp;
-        }
-        // Update Q: QH = Q - (Q * v) * 2v'
-        for(uint j=0; j<_r; ++j){
-            T tmp = 0.0;
-            for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
-            for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= v_t(k) * tmp;
-        }
+        //compute reflector
+        Matrix<T> v = R({i, _r-1}, i).reflector(); // U
+        // apply reflector
+        R.apply_reflector_left(v, i, i); // UR
+        Q.apply_reflector_right(v, i, 0); // QU
     }
 }
 
@@ -814,22 +832,11 @@ void Matrix<T>::qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const{
         R.swap_cols(i, index);
         P.swap_cols(i, index);
 
-        //compute vk
-        Matrix<T> v = R({i, _r-1}, i).reflector();
-        Matrix<T> v_t = 2 * v.t();
-
-        // Update R: HR = R - 2v * (v' * R)
-        for(uint j=i; j<_c; ++j){
-            T tmp = 0.0;
-            for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * R(i+k,j);
-            for(uint k=0; k<v.size(); ++k) R(i+k,j) -= v(k) * tmp;
-        }
-        // Update Q: QH = Q - (Q * v) * 2v'
-        for(uint j=0; j<_r; ++j){
-            T tmp = 0.0;
-            for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
-            for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= v_t(k) * tmp;
-        }
+        // compute reflector
+        Matrix<T> v = R({i, _r-1}, i).reflector(); // U
+        // apply reflector
+        R.apply_reflector_left(v, i, i); // UR
+        Q.apply_reflector_right(v, i); // QU
     }
 }
 
@@ -893,76 +900,34 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
     Q = IdMat(_r);
 
     for (uint i=1; i<_r-1; ++i){
-        // compute vk
-        Matrix<T> v = H({i, _r-1}, i-1).reflector();
-        Matrix<T> v_t = 2 * v.t();
-
-        // Update H: UH = H - 2v * (v' * H) -> H'
-        for(uint j=i-1; j<_c; ++j){
-            T tmp = 0.0;
-            for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * H(i+k,j);
-            for(uint k=0; k<v.size(); ++k) H(i+k,j) -= v(k) * tmp;
-        }
-        // Update H': H'U = H - (H * v) * 2v'
-        for(uint j=0; j<_r; ++j){
-            T tmp = 0.0;
-            for(uint k=0; k<v.size(); ++k) tmp += v(k) * H(j,i+k);
-            for(uint k=0; k<v.size(); ++k) H(j,i+k) -= v_t(k) * tmp;
-        }
-
-        // Update Q: QU = Q - (Q * v) * 2v'
-        for(uint j=0; j<_r; ++j){
-            T tmp = 0.0;
-            for(uint k=0; k<v.size(); ++k) tmp += v(k) * Q(j,i+k);
-            for(uint k=0; k<v.size(); ++k) Q(j,i+k) -= v_t(k) * tmp;
-        }
+        // compute reflector
+        Matrix<T> v = H({i, _r-1}, i-1).reflector(); // U
+        // apply reflector
+        H.apply_reflector_left(v, i, i-1); // UH
+        H.apply_reflector_right(v, i); // HU
+        Q.apply_reflector_right(v, i); // QU
     }
 }
 
 template<typename T>
 void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt) const{
     if(_r < _c) throw std::invalid_argument("Number of rows must be greater or equal to number of columns");
-
+    using namespace std;
     B = *this;
     U = IdMat(_r,_r);
     Vt = IdMat(_c,_c);
-
-    Matrix<T> u, u_t, v, v_t;
-    T tmp;
+    Matrix<T> v;
 
     for(uint i=0; i<_c; ++i){
-        u = B({i, _r-1}, i).reflector();
-        u_t = 2 * u.t();
-
-        // Update B: UB = B - 2u * (u' * B)
-        for(uint j=i; j<_c; ++j){
-            tmp = 0.0;
-            for(uint k=0; k<u.size(); ++k) tmp += u_t(k) * B(i+k,j);
-            for(uint k=0; k<u.size(); ++k) B(i+k,j) -= u(k) * tmp;
-        }
-        // Update U: UQ = U - (U * v) * 2v'
-        for(uint j=0; j<_r; ++j){
-            tmp = 0.0;
-            for(uint k=0; k<u.size(); ++k) tmp += u(k) * U(j,i+k);
-            for(uint k=0; k<u.size(); ++k) U(j,i+k) -= u_t(k) * tmp;
-        }
-
+        v = B({i, _r-1}, i).reflector(); // Q
+        B.apply_reflector_left(v,i,i); // QB
+        U.apply_reflector_right(v,i); // UQ
         if(i < _c-2){
-            v = B(i, {i+1, _c-1}).reflector();
-            v_t = 2 * v.t();
-
-            // Update B: BQ = B - (B * v) * 2v'
-            for(uint j=0; j<_r; ++j){
-                tmp = 0.0;
-                for(uint k=0; k<v.size(); ++k) tmp += v(k) * B(j,i+1+k);
-                for(uint k=0; k<v.size(); ++k) B(j,i+1+k) -= v_t(k) * tmp;
-            }
-            // Update Vt: PV = Vt - 2v * (v' * Vt)
-            for(uint j=0; j<_c; ++j){
-                tmp = 0.0;
-                for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * Vt(i+1+k,j);
-                for(uint k=0; k<v.size(); ++k) Vt(i+1+k,j) -= v(k) * tmp;
-            }
+            // need to transpose the vector becaue I am taking a row vector 
+            // actually, it is necessary only for complex matrices
+            v = B(i, {i+1, _c-1}).reflector().t(); // Q
+            B.apply_reflector_right(v,i+1); // BQ
+            Vt.apply_reflector_left(v,i+1); // QVt
         }
     }
 }
@@ -992,67 +957,33 @@ T Matrix<T>::svd_shift() const{
 }
 
 template<typename T>
-void Matrix<T>::svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & G, T shift){
+void Matrix<T>::svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & Gt, T shift){
+    if(E.r() < E.c()) throw std::invalid_argument("Matrix must represent an overdetermined problem");
+
     using namespace std;
-    T tmp; 
-    Matrix<T> v, v_t, u, u_t;
 
     // apply shift
     // compute first reflector
-    v = Matrix<T>(2,1,{E(0)*E(0) - shift, E(0)*E(0,1)}).reflector();
-    v_t = 2 * v.t();
-    // apply on right: E -> E*G1 = E - (E * v) * 2v'
-    for(uint j=0; j<E.r(); ++j){
-        tmp = 0.0;
-        for(uint k=0; k<v.size(); ++k) tmp += v(k) * E(j,k);
-        for(uint k=0; k<v.size(); ++k) E(j,k) -= v_t(k) * tmp;
-    }
-    // Update Vt: G1G = G - 2v * (v' * G)
-    for(uint j=0; j<E.c(); ++j){
-        tmp = 0.0;
-        for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * G(k,j);
-        for(uint k=0; k<v.size(); ++k) G(k,j) -= v(k) * tmp;
-    }
+    Matrix<T> v = Matrix<T>(2,1,{E(0)*E(0) - shift, E(0)*E(0,1)}).reflector(); // G1
+    E.apply_reflector_right(v,0,0); // EG1
+    Gt.apply_reflector_left(v,0,0); // G1Gt
 
-    cout << "after shift: " << E << endl;
+    // cout << "after shift: " << E << endl;
     // chase the bulge
     for(uint i=0; i<E.c()-1; ++i){
-        u = E({i, std::min(i+1, E.r()-1)}, i).reflector();
-        u_t = 2 * u.t();
-
-        // Update E: PiE = E - 2u * (u' * E)
-        for(uint j=i; j<E.c(); ++j){
-            tmp = 0.0;
-            for(uint k=0; k<u.size(); ++k) tmp += u_t(k) * E(i+k,j);
-            for(uint k=0; k<u.size(); ++k) E(i+k,j) -= u(k) * tmp;
-        }
-        // Update P: PPi = P - (P * v) * 2v'
-        for(uint j=0; j<E.r(); ++j){
-            tmp = 0.0;
-            for(uint k=0; k<u.size(); ++k) tmp += u(k) * P(j,i+k);
-            for(uint k=0; k<u.size(); ++k) P(j,i+k) -= u_t(k) * tmp;
-        }
-        cout << "after lower bulge: " << E << endl;
+        v = E({i, std::min(i+1, E.r()-1)}, i).reflector(); // Pi
+        E.apply_reflector_left(v,i,i); // PiE
+        P.apply_reflector_right(v,i,0); // PPi
+        // cout << "after lower bulge: " << E << endl;
 
         if(i < E.c()-2){
-            v = E(i, {i+1, i+2}).reflector();
-            v_t = 2 * v.t();
-
-            // Update E: EGi = E - (E * v) * 2v'
-            for(uint j=0; j<E.r(); ++j){
-                tmp = 0.0;
-                for(uint k=0; k<v.size(); ++k) tmp += v(k) * E(j,i+1+k);
-                for(uint k=0; k<v.size(); ++k) E(j,i+1+k) -= v_t(k) * tmp;
-            }
-            // Update G: GiG = G - 2v * (v' * G)
-            for(uint j=0; j<E.c(); ++j){
-                tmp = 0.0;
-                for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * G(i+1+k,j);
-                for(uint k=0; k<v.size(); ++k) G(i+1+k,j) -= v(k) * tmp;
-            }
-            cout << "after upper bulge: " << E << endl;
+            v = E(i, {i+1, i+2}).reflector(); // Gi
+            E.apply_reflector_right(v,i+1,i); // EGi
+            Gt.apply_reflector_left(v,i+1,0); // GiGt
+            // cout << "after upper bulge: " << E << endl;
         }
     }
+
 }
 
 template<typename T>
@@ -1066,24 +997,36 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
     
     // init matrices
     Matrix<T> P = IdMat(E.r());
-    Matrix<T> G = IdMat(E.c());
+    Matrix<T> Gt = IdMat(E.c());
 
     uint zero_shift_iterations = 0;
-    max_iterations = 1;
+    // max_iterations = 1;
     T shift;
+    bool converged = false;
 
-    for(uint steps=0; steps<max_iterations; ++steps){
+    for(uint steps=0; steps<max_iterations && !converged; ++steps){
         // -- apply step
 
         // compute shift
         if(steps < zero_shift_iterations) shift = 0;
         else shift = E.svd_shift();
-        cout << "shift: " << shift << endl;
+        // cout << "shift: " << shift << endl;
         
-        Matrix<T>::svd_reinsch_step(P, E, G, shift);
-            
-    }
+        // run step
+        Matrix<T>::svd_reinsch_step(P, E, Gt, shift);
 
+        cout << "orthogonality:" << P.is_orthogonal() << Gt.is_orthogonal() << endl;
+        cout << P*E*Gt << endl;
+
+        // -- check convergence
+        // split
+        for(uint i=E.c()-1; i>=1; --i){
+            if(abs(E(i-1,i)) < tolerance){
+                cout << "converged in i=" << i << endl << E << endl;
+                converged = true;
+            }
+        }
+    }
 }
 
 #pragma endregion decomposition_methods

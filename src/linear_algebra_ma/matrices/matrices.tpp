@@ -90,6 +90,41 @@ Matrix<T>::~Matrix() {
 #pragma region getter
 
 template<typename T>
+T& Matrix<T>::at(uint r, uint c){
+    return this->operator()(r,c);
+}
+
+template<typename T>
+const T& Matrix<T>::at(uint r, uint c) const{
+    return this->operator()(r,c);
+}
+
+template<typename T>
+T& Matrix<T>::at(uint i){
+    return this->operator()(i);
+}
+
+template<typename T>
+const T& Matrix<T>::at(uint i) const{
+    return this->operator()(i);
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::at(uu_pair rs, uint c) const{
+    return this->operator()(rs,c);
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::at(uint r, uu_pair cs) const{
+    return this->operator()(r,cs);
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::at(uu_pair rs, uu_pair cs) const{
+    return this->operator()(rs,cs);
+}
+
+template<typename T>
 uint Matrix<T>::r() const{return _r;}
 template<typename T>
 uint Matrix<T>::c() const{return _c;}
@@ -106,7 +141,7 @@ Matrix<T> Matrix<T>::diag() const{
     Matrix v = Matrix(dim,1);
 
     for(uint i=0; i<dim; ++i){
-        v(i) = this->operator()(i,i);
+        v(i) = this->at(i,i);
     }
 
     return v;
@@ -199,7 +234,7 @@ Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, std::vector<U> v){
 
     for (uint i = 0; i < nRows; ++i){
         for (uint j = 0; j < nCols; ++j){
-            this->operator()(i + rs.first, j + cs.first) = v[i * nCols + j];
+            this->at(i + rs.first, j + cs.first) = v[i * nCols + j];
         }
     }
     return *this;
@@ -212,7 +247,7 @@ Matrix<T>& Matrix<T>::set(uint r, uint c, U x){
     if(r == UINT_MAX) r = this->_r-1;
     if(c == UINT_MAX) c = this->_c-1;
 
-    this->operator()(r,c) = x;
+    this->at(r,c) = x;
     return *this;
 }
 
@@ -230,7 +265,7 @@ Matrix<T>& Matrix<T>::set(uu_pair rs, uint c, Matrix<U> m){
     if(m.shape() != uu_pair{rs.second - rs.first + 1, 1}) throw std::invalid_argument("Given matrix's shape does not match");
 
     for(uint i=0; i<m._r; ++i){
-        this->operator()(i + rs.first, c) = m(i,0);
+        this->at(i + rs.first, c) = m(i,0);
     }
     return *this;
 }
@@ -267,7 +302,7 @@ Matrix<T>& Matrix<T>::set(uint r, uu_pair cs, Matrix<U> m){
     if(m.shape() != uu_pair{1, cs.second - cs.first + 1}) throw std::invalid_argument("Given matrix's shape does not match");
 
     for(uint j=0; j<m.c(); ++j){
-        this->operator()(r, j + cs.first) = m(r,j);
+        this->at(r, j + cs.first) = m(r,j);
     }
     return *this;
 }
@@ -307,7 +342,7 @@ Matrix<T>& Matrix<T>::set(uu_pair rs, uu_pair cs, Matrix<U> m){
 
     for (uint i = 0; i < m.r(); ++i){
         for (uint j = 0; j < m.c(); ++j){
-            this->operator()(i + rs.first, j + cs.first) = m(i,j);
+            this->at(i + rs.first, j + cs.first) = m(i,j);
         }
     }
     return *this;
@@ -338,7 +373,7 @@ template<typename U, typename>
 Matrix<T>& Matrix<T>::diag(std::vector<U> v){
     if(std::min(_r,_c) != v.size()) throw std::invalid_argument("Size of v must match the size of the matrix diagonal");
 
-    for(uint i=0; i<v.size(); ++i) this->operator()(i) = v[i];
+    for(uint i=0; i<v.size(); ++i) this->at(i) = v[i];
     return *this;
 }
 
@@ -348,7 +383,7 @@ Matrix<T>& Matrix<T>::diag(Matrix<U> m){
     if(!m.is_vec()) throw std::invalid_argument("Input matrix must be vector-shaped");
     if(std::min(_r,_c) != m.size()) throw std::invalid_argument("Size of m must match the size of the matrix diagonal");
 
-    for(uint i=0; i<m.size(); ++i) this->operator()(i) = m(i);
+    for(uint i=0; i<m.size(); ++i) this->at(i) = m(i);
     return *this;
 }
 
@@ -378,9 +413,9 @@ Matrix<T>& Matrix<T>::swap_rows(uint r1, uint r2){
     if(r1 == r2) return *this;
 
     // extract r1
-    Matrix tmp = this->operator()(r1, ALL);
+    Matrix tmp = this->at(r1, ALL);
     // substitute r2 into r1
-    this->set(r1, ALL, this->operator()(r2, ALL));
+    this->set(r1, ALL, this->at(r2, ALL));
     // substitute r1 into r2
     this->set(r2, ALL, tmp);
     return *this;
@@ -398,9 +433,9 @@ Matrix<T>& Matrix<T>::swap_cols(uint c1, uint c2){
     if(c1 == c2) return *this;
 
     // extract c1
-    Matrix tmp = this->operator()(ALL, c1);
+    Matrix tmp = this->at(ALL, c1);
     // substitute c2 into c1
-    this->set(ALL, c1, this->operator()(ALL, c2));
+    this->set(ALL, c1, this->at(ALL, c2));
     // substitute c1 into c2
     this->set(ALL, c2, tmp);
     return *this;
@@ -489,7 +524,7 @@ template<typename T>
 bool Matrix<T>::is_upper_triang() const{
     for(uint i=1; i<_r; ++i){
         for(uint j=0; j<std::min<uint>(i, _c); ++j){
-            if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
+            if(abs(this->at(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
 
@@ -500,7 +535,7 @@ template<typename T>
 bool Matrix<T>::is_lower_triang() const{
     for(uint j=1; j<_c; ++j){
         for(uint i=0; i<std::min<uint>(j, _r); ++i){
-            if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
+            if(abs(this->at(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
 
@@ -512,7 +547,7 @@ bool Matrix<T>::is_upper_hessenberg() const{
     uint n = std::min(_r, _c);
     for(uint i=2; i<n; ++i){
         for(uint j=0; j<i-1; ++j){
-            if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
+            if(abs(this->at(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
 
@@ -524,7 +559,7 @@ bool Matrix<T>::is_lower_hessenberg() const{
     uint n = std::min(_r, _c);
     for(uint j=2; j<n; ++j){
         for(uint i=0; i<j-1; ++i){
-            if(abs(this->operator()(i,j)) > Matrix<T>::epsilon) return false;
+            if(abs(this->at(i,j)) > Matrix<T>::epsilon) return false;
         }
     }
 
@@ -576,7 +611,7 @@ Matrix<T> Matrix<T>::submat_del(const uint & p, const uint & q) const{
             // Copying into result matrix only those element
             // which are not in given row and column
             if (row != p && col != q){
-                ret(i,j) = this->operator()(row,col);
+                ret(i,j) = this->at(row,col);
                 ++j;
  
                 // Row is filled, so increase row index and
@@ -885,7 +920,7 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
 }
 
 template<typename T>
-void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt){
+void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt) const{
     if(_r < _c) throw std::invalid_argument("Number of rows must be greater or equal to number of columns");
 
     B = *this;
@@ -912,7 +947,7 @@ void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt){
             for(uint k=0; k<u.size(); ++k) U(j,i+k) -= u_t(k) * tmp;
         }
 
-        if(i <= _c-2){
+        if(i < _c-2){
             v = B(i, {i+1, _c-1}).reflector();
             v_t = 2 * v.t();
 
@@ -930,6 +965,121 @@ void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt){
             }
         }
     }
+}
+
+template<typename T>
+T Matrix<T>::svd_shift() const{
+    uint n = std::min(_r-1,_c-1);
+    using namespace std;
+
+    T a, b, c, d;
+    // matrix elements: | a  b |
+    //                  | c  d |
+    a = this->at(n-1)*this->at(n-1) + this->at(n-2,n-1)*this->at(n-2,n-1);
+    b = this->at(n-1) * this->at(n-1,n);
+    c = b;
+    d = this->at(n)*this->at(n) + this->at(n-1,n)*this->at(n-1,n);
+    // polynom coefficients
+    c = a * d - c * b;
+    b = (- a - d)/2; // b/2
+    // matrix is symmetric -> only real eigenvalues 
+    a = sqrt(b*b - c); // alpha
+    c = -b+a;
+    d = -b-a;
+    // return closest to A(n,n)
+    if(abs(c - this->at(n)) <= abs(d - this->at(n))) return c;
+    else return d;
+}
+
+// template<typename T>
+// void Matrix<T>::svd_reinsch_step(Matrix<T> & P, Matrix<T> & B, Matrix<T> & G, T shift) const{
+
+// }
+
+template<typename T>
+void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_iterations, double tolerance) const{
+    using namespace std;
+    (void) tolerance;
+
+    // reduce to bidiagonal form
+    this->bidiagonal_form(U,E,Vt);
+    cout << "starting matrix: " << E << endl;
+    
+    // init matrices
+    Matrix<T> P = IdMat(E.r());
+    Matrix<T> G = IdMat(E.c());
+
+    uint zero_shift_iterations = 0;
+    max_iterations = 1;
+    T shift, tmp; 
+    Matrix<T> v, v_t, u, u_t;
+
+    for(uint steps=0; steps<max_iterations; ++steps){
+        // compute shift
+        if(steps < zero_shift_iterations) shift = 0;
+        else shift = E.svd_shift();
+        cout << "shift: " << shift << endl;
+        // -- apply step
+        // apply shift
+        // compute first reflector
+        v = Matrix<T>(2,1,{E(0)*E(0) - shift, E(0)*E(0,1)}).reflector();
+        v_t = 2 * v.t();
+        // apply on right: E -> E*G1 = E - (E * v) * 2v'
+        for(uint j=0; j<_r; ++j){
+            tmp = 0.0;
+            for(uint k=0; k<v.size(); ++k) tmp += v(k) * E(j,k);
+            for(uint k=0; k<v.size(); ++k) E(j,k) -= v_t(k) * tmp;
+        }
+        // // apply on right: G -> G*Gi = G - (G * v) * 2v'
+        // for(uint j=0; j<_r; ++j){
+        //     tmp = 0.0;
+        //     for(uint k=0; k<v.size(); ++k) tmp += v(k) * G(j,k);
+        //     for(uint k=0; k<v.size(); ++k) G(j,k) -= v_t(k) * tmp;
+        // }
+
+        cout << "after shift: " << E << endl;
+        // chase the bulge
+        for(uint i=0; i<_c; ++i){
+            u = E({i, std::min(i+1, _r-1)}, i).reflector();
+            u_t = 2 * u.t();
+
+            // Update E: PE = E - 2u * (u' * E)
+            for(uint j=i; j<_c; ++j){
+                tmp = 0.0;
+                for(uint k=0; k<u.size(); ++k) tmp += u_t(k) * E(i+k,j);
+                for(uint k=0; k<u.size(); ++k) E(i+k,j) -= u(k) * tmp;
+            }
+            // // Update P: PPi = Pi - 2u * (u' * Pi)
+            // for(uint j=i; j<_c; ++j){
+            //     tmp = 0.0;
+            //     for(uint k=0; k<u.size(); ++k) tmp += u_t(k) * P(i+k,j);
+            //     for(uint k=0; k<u.size(); ++k) P(i+k,j) -= u(k) * tmp;
+            // }
+            cout << "after lower bulge: " << E << endl;
+
+            if(i < _c-2){
+                // v = E(i, {i+1, i+2}).reflector();
+                // v_t = 2 * v.t();
+
+                // // Update B: BQ = B - (B * v) * 2v'
+                // for(uint j=0; j<_r; ++j){
+                //     tmp = 0.0;
+                //     for(uint k=0; k<v.size(); ++k) tmp += v(k) * B(j,i+1+k);
+                //     for(uint k=0; k<v.size(); ++k) B(j,i+1+k) -= v_t(k) * tmp;
+                // }
+                // // Update Vt: PV = Vt - 2v * (v' * Vt)
+                // for(uint j=0; j<_c; ++j){
+                //     tmp = 0.0;
+                //     for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * Vt(i+1+k,j);
+                //     for(uint k=0; k<v.size(); ++k) Vt(i+1+k,j) -= v(k) * tmp;
+                // }
+            }
+            cout << "after upper bulge: " << E << endl;
+            break;
+        }
+            
+    }
+
 }
 
 #pragma endregion decomposition_methods
@@ -1104,8 +1254,8 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
     // if(_r == 0) throw std::invalid_argument("Matrix is empty");
     if(_r <= 1) return *this;
     else if(_r == 2){
-        T b = -this->operator()(0,0) - this->operator()(1,1);
-        T c = this->operator()(0,0) * this->operator()(1,1) - this->operator()(0,1) * this->operator()(1,0);
+        T b = -this->at(0,0) - this->at(1,1);
+        T c = this->at(0,0) * this->at(1,1) - this->at(0,1) * this->at(1,0);
         T alpha = b*b - 4.0*c;
         
         if constexpr (is_complex<T>::value){

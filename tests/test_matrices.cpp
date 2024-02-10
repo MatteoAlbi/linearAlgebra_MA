@@ -2977,3 +2977,11 @@ TEST(Matrix, eigen_dec){
     Matrix<c_double>::set_double_precision();
 }
 
+TEST(Matrix, svd){
+    Matrix A(6,4,{ 14,   4, -16, -20, -3,  -4,
+                   17,  17, -16,   5,  6, -13,
+                   -2,  12,  -7,  15, -1,  -3,
+                   19,   4,  -3,   5, 16,  -9});
+    Matrix U,E,V;
+    A.svd(U,E,V);
+}

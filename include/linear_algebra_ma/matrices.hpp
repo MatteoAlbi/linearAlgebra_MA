@@ -71,6 +71,24 @@ using enable_if_not_comp2d_t = typename enable_if_not_comp2d<T, U>::type;
 
 template<typename T = double>
 class Matrix {
+
+private:
+    /**
+     * @brief computes the Wilkinson’s shift for the given bidiagonal matrix
+     * @return Wilkinson’s shift
+    */
+    T svd_shift() const;
+
+    static void svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & G, T shift);
+
+    /**
+     * @brief implementation of the implicit double QR algorithm,
+     *  one single step. Works only for upper hessenberg matrices.
+     * @return matrix after one step
+     * @throw invalid_argument if the matrix is not upper hessenberg matrices
+    */
+    Matrix<T> implicit_double_QR_step() const;
+
 protected:
 
     // number of decimals used in double comparison
@@ -915,21 +933,6 @@ public:
     void eigen_dec(Matrix<c_double> & D, Matrix<c_double> & V, uint max_iterations = 1000, double tolerance = TOL) const;
 
 #pragma endregion eigen
-
-private:
-    /**
-     * @brief computes the Wilkinson’s shift for the given bidiagonal matrix
-     * @return Wilkinson’s shift
-    */
-    T svd_shift() const;
-
-    /**
-     * @brief implementation of the implicit double QR algorithm,
-     *  one single step. Works only for upper hessenberg matrices.
-     * @return matrix after one step
-     * @throw invalid_argument if the matrix is not upper hessenberg matrices
-    */
-    Matrix<T> implicit_double_QR_step() const;
 
 };
 

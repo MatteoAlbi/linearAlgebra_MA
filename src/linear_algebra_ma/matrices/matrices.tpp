@@ -991,10 +991,69 @@ T Matrix<T>::svd_shift() const{
     else return d;
 }
 
-// template<typename T>
-// void Matrix<T>::svd_reinsch_step(Matrix<T> & P, Matrix<T> & B, Matrix<T> & G, T shift) const{
+template<typename T>
+void Matrix<T>::svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & G, T shift){
+    using namespace std;
+    T tmp; 
+    Matrix<T> v, v_t, u, u_t;
 
-// }
+    // apply shift
+    // compute first reflector
+    v = Matrix<T>(2,1,{E(0)*E(0) - shift, E(0)*E(0,1)}).reflector();
+    v_t = 2 * v.t();
+    // apply on right: E -> E*G1 = E - (E * v) * 2v'
+    for(uint j=0; j<E.r(); ++j){
+        tmp = 0.0;
+        for(uint k=0; k<v.size(); ++k) tmp += v(k) * E(j,k);
+        for(uint k=0; k<v.size(); ++k) E(j,k) -= v_t(k) * tmp;
+    }
+    // Update Vt: G1G = G - 2v * (v' * G)
+    for(uint j=0; j<E.c(); ++j){
+        tmp = 0.0;
+        for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * G(k,j);
+        for(uint k=0; k<v.size(); ++k) G(k,j) -= v(k) * tmp;
+    }
+
+    cout << "after shift: " << E << endl;
+    // chase the bulge
+    for(uint i=0; i<E.c()-1; ++i){
+        u = E({i, std::min(i+1, E.r()-1)}, i).reflector();
+        u_t = 2 * u.t();
+
+        // Update E: PiE = E - 2u * (u' * E)
+        for(uint j=i; j<E.c(); ++j){
+            tmp = 0.0;
+            for(uint k=0; k<u.size(); ++k) tmp += u_t(k) * E(i+k,j);
+            for(uint k=0; k<u.size(); ++k) E(i+k,j) -= u(k) * tmp;
+        }
+        // Update P: PPi = P - (P * v) * 2v'
+        for(uint j=0; j<E.r(); ++j){
+            tmp = 0.0;
+            for(uint k=0; k<u.size(); ++k) tmp += u(k) * P(j,i+k);
+            for(uint k=0; k<u.size(); ++k) P(j,i+k) -= u_t(k) * tmp;
+        }
+        cout << "after lower bulge: " << E << endl;
+
+        if(i < E.c()-2){
+            v = E(i, {i+1, i+2}).reflector();
+            v_t = 2 * v.t();
+
+            // Update E: EGi = E - (E * v) * 2v'
+            for(uint j=0; j<E.r(); ++j){
+                tmp = 0.0;
+                for(uint k=0; k<v.size(); ++k) tmp += v(k) * E(j,i+1+k);
+                for(uint k=0; k<v.size(); ++k) E(j,i+1+k) -= v_t(k) * tmp;
+            }
+            // Update G: GiG = G - 2v * (v' * G)
+            for(uint j=0; j<E.c(); ++j){
+                tmp = 0.0;
+                for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * G(i+1+k,j);
+                for(uint k=0; k<v.size(); ++k) G(i+1+k,j) -= v(k) * tmp;
+            }
+            cout << "after upper bulge: " << E << endl;
+        }
+    }
+}
 
 template<typename T>
 void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_iterations, double tolerance) const{
@@ -1011,72 +1070,17 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
 
     uint zero_shift_iterations = 0;
     max_iterations = 1;
-    T shift, tmp; 
-    Matrix<T> v, v_t, u, u_t;
+    T shift;
 
     for(uint steps=0; steps<max_iterations; ++steps){
+        // -- apply step
+
         // compute shift
         if(steps < zero_shift_iterations) shift = 0;
         else shift = E.svd_shift();
         cout << "shift: " << shift << endl;
-        // -- apply step
-        // apply shift
-        // compute first reflector
-        v = Matrix<T>(2,1,{E(0)*E(0) - shift, E(0)*E(0,1)}).reflector();
-        v_t = 2 * v.t();
-        // apply on right: E -> E*G1 = E - (E * v) * 2v'
-        for(uint j=0; j<_r; ++j){
-            tmp = 0.0;
-            for(uint k=0; k<v.size(); ++k) tmp += v(k) * E(j,k);
-            for(uint k=0; k<v.size(); ++k) E(j,k) -= v_t(k) * tmp;
-        }
-        // // apply on right: G -> G*Gi = G - (G * v) * 2v'
-        // for(uint j=0; j<_r; ++j){
-        //     tmp = 0.0;
-        //     for(uint k=0; k<v.size(); ++k) tmp += v(k) * G(j,k);
-        //     for(uint k=0; k<v.size(); ++k) G(j,k) -= v_t(k) * tmp;
-        // }
-
-        cout << "after shift: " << E << endl;
-        // chase the bulge
-        for(uint i=0; i<_c; ++i){
-            u = E({i, std::min(i+1, _r-1)}, i).reflector();
-            u_t = 2 * u.t();
-
-            // Update E: PE = E - 2u * (u' * E)
-            for(uint j=i; j<_c; ++j){
-                tmp = 0.0;
-                for(uint k=0; k<u.size(); ++k) tmp += u_t(k) * E(i+k,j);
-                for(uint k=0; k<u.size(); ++k) E(i+k,j) -= u(k) * tmp;
-            }
-            // // Update P: PPi = Pi - 2u * (u' * Pi)
-            // for(uint j=i; j<_c; ++j){
-            //     tmp = 0.0;
-            //     for(uint k=0; k<u.size(); ++k) tmp += u_t(k) * P(i+k,j);
-            //     for(uint k=0; k<u.size(); ++k) P(i+k,j) -= u(k) * tmp;
-            // }
-            cout << "after lower bulge: " << E << endl;
-
-            if(i < _c-2){
-                // v = E(i, {i+1, i+2}).reflector();
-                // v_t = 2 * v.t();
-
-                // // Update B: BQ = B - (B * v) * 2v'
-                // for(uint j=0; j<_r; ++j){
-                //     tmp = 0.0;
-                //     for(uint k=0; k<v.size(); ++k) tmp += v(k) * B(j,i+1+k);
-                //     for(uint k=0; k<v.size(); ++k) B(j,i+1+k) -= v_t(k) * tmp;
-                // }
-                // // Update Vt: PV = Vt - 2v * (v' * Vt)
-                // for(uint j=0; j<_c; ++j){
-                //     tmp = 0.0;
-                //     for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * Vt(i+1+k,j);
-                //     for(uint k=0; k<v.size(); ++k) Vt(i+1+k,j) -= v(k) * tmp;
-                // }
-            }
-            cout << "after upper bulge: " << E << endl;
-            break;
-        }
+        
+        Matrix<T>::svd_reinsch_step(P, E, G, shift);
             
     }
 

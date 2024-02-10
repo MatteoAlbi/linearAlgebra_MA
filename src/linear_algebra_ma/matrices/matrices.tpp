@@ -760,14 +760,20 @@ Matrix<T> Matrix<T>::reflector() const{
 }
 
 template<typename T>
-void Matrix<T>::apply_reflector_right(const Matrix<T> & v, uint reflector_start_pos, uint start_index){
+void Matrix<T>::apply_reflector_right(
+    const Matrix<T> & v, 
+    uint reflector_start_pos, 
+    uint start_index,
+    uint dim
+){
     if(reflector_start_pos + v.size() - 1 >= _c) throw std::invalid_argument("Reflector too big to be applied using given start_index");
+    if(dim == 0) dim = _r;
 
     uint i = reflector_start_pos;
     T tmp;
     Matrix<T> v_t = 2 * v.t();
 
-    for(uint j=start_index; j<_r; ++j){
+    for(uint j=start_index; j<dim; ++j){
         tmp = 0.0;
         for(uint k=0; k<v.size(); ++k) tmp += v(k) * this->at(j,i+k);
         for(uint k=0; k<v.size(); ++k) this->at(j,i+k) -= v_t(k) * tmp;
@@ -775,14 +781,20 @@ void Matrix<T>::apply_reflector_right(const Matrix<T> & v, uint reflector_start_
 }
 
 template<typename T>
-void Matrix<T>::apply_reflector_left(const Matrix<T> & v, uint reflector_start_pos, uint start_index){
+void Matrix<T>::apply_reflector_left(
+    const Matrix<T> & v, 
+    uint reflector_start_pos, 
+    uint start_index,
+    uint dim
+){
     if(reflector_start_pos + v.size() - 1 >= _r) throw std::invalid_argument("Reflector too big to be applied using given start_index");
-    
+    if(dim == 0) dim = _c;
+
     uint i = reflector_start_pos;
     T tmp;
     Matrix<T> v_t = 2 * v.t();
 
-    for(uint j=start_index; j<_c; ++j){
+    for(uint j=start_index; j<dim; ++j){
         tmp = 0.0;
         for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * this->at(i+k,j);
         for(uint k=0; k<v.size(); ++k) this->at(i+k,j) -= v(k) * tmp;
@@ -957,29 +969,43 @@ T Matrix<T>::svd_shift() const{
 }
 
 template<typename T>
-void Matrix<T>::svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & Gt, T shift){
+void Matrix<T>::svd_reinsch_step(
+    Matrix<T> & P,
+    Matrix<T> & E,
+    Matrix<T> & Gt,
+    T shift,
+    uint start_index,
+    uint dim
+){
     if(E.r() < E.c()) throw std::invalid_argument("Matrix must represent an overdetermined problem");
+    if(dim == 0) dim = E.c();
+    uint si = start_index;
+    if(start_index + dim > E.c()) throw std::invalid_argument("Given bounds exceed matrix dimensions");
+    // I can stop: we deflated a single value, meaning it converged
+    if(dim == 1) return;
 
     using namespace std;
 
     // apply shift
     // compute first reflector
-    Matrix<T> v = Matrix<T>(2,1,{E(0)*E(0) - shift, E(0)*E(0,1)}).reflector(); // G1
-    E.apply_reflector_right(v,0,0); // EG1
-    Gt.apply_reflector_left(v,0,0); // G1Gt
+    Matrix<T> v = Matrix<T>(2,1,{E(si)*E(si) - shift, E(si)*E(si,si+1)}).reflector(); // G1
+    E.apply_reflector_right(v,si,si); // EG1
+    Gt.apply_reflector_left(v,si); // G1Gt
 
     // cout << "after shift: " << E << endl;
     // chase the bulge
-    for(uint i=0; i<E.c()-1; ++i){
-        v = E({i, std::min(i+1, E.r()-1)}, i).reflector(); // Pi
-        E.apply_reflector_left(v,i,i); // PiE
-        P.apply_reflector_right(v,i,0); // PPi
+    for(uint i=0; i<dim-1; ++i){
+        v = E({si+i, si+i+1}, si+i).reflector(); // Pi
+        E.apply_reflector_left(v,si+i,si+i,dim); // PiE
+        P.apply_reflector_right(v,si+i); // PPi
         // cout << "after lower bulge: " << E << endl;
 
-        if(i < E.c()-2){
-            v = E(i, {i+1, i+2}).reflector(); // Gi
-            E.apply_reflector_right(v,i+1,i); // EGi
-            Gt.apply_reflector_left(v,i+1,0); // GiGt
+        if(i < dim-2){
+            // need to transpose the vector becaue I am taking a row vector 
+            // actually, it is necessary only for complex matrices
+            v = E(si+i, {si+i+1, si+i+2}).reflector().t(); // Gi
+            E.apply_reflector_right(v,si+i+1,si+i,dim); // EGi
+            Gt.apply_reflector_left(v,si+i+1); // GiGt
             // cout << "after upper bulge: " << E << endl;
         }
     }
@@ -987,9 +1013,47 @@ void Matrix<T>::svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & Gt, T
 }
 
 template<typename T>
+void Matrix<T>::svd_steps_iteration(
+    Matrix<T> & P,
+    Matrix<T> & E,
+    Matrix<T> & Gt,
+    uint start_index,
+    uint dim,
+    uint max_iterations,
+    double tolerance
+){
+    if(E.r() < E.c()) throw std::invalid_argument("Matrix must represent an overdetermined problem");
+    uint si = start_index;
+    if(dim == 0) dim = E.c();
+    if(start_index + dim > E.c()) throw std::invalid_argument("Given bounds exceed matrix dimensions");
+    
+    uint zero_shift_iterations = 0;
+    T shift;
+    bool converged = false;
+
+    using namespace std;
+
+    for(uint steps=0; steps<max_iterations && !converged; ++steps){
+        // apply step
+        if(steps < zero_shift_iterations) shift = 0;
+        else shift = E({si,si+dim-1},{si,si+dim-1}).svd_shift();
+        Matrix<T>::svd_reinsch_step(P, E, Gt, shift, si, dim);
+
+        // deflation
+        for(uint i=E.c()-1; i>=1; --i){
+            if(abs(E(i-1,i)) < tolerance){
+                cout << P * E * Gt << endl;
+                cout << "converged in i=" << i << endl << E << endl;
+                converged = true;
+
+            }
+        }
+    }
+}
+
+template<typename T>
 void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_iterations, double tolerance) const{
     using namespace std;
-    (void) tolerance;
 
     // reduce to bidiagonal form
     this->bidiagonal_form(U,E,Vt);
@@ -999,34 +1063,31 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
     Matrix<T> P = IdMat(E.r());
     Matrix<T> Gt = IdMat(E.c());
 
-    uint zero_shift_iterations = 0;
-    // max_iterations = 1;
-    T shift;
-    bool converged = false;
+    Matrix<T>::svd_steps_iteration(P,E,Gt, 0, 0, max_iterations, tolerance);
 
-    for(uint steps=0; steps<max_iterations && !converged; ++steps){
-        // -- apply step
+    // for(uint steps=0; steps<max_iterations && !converged; ++steps){
+    //     // -- apply step
 
-        // compute shift
-        if(steps < zero_shift_iterations) shift = 0;
-        else shift = E.svd_shift();
-        // cout << "shift: " << shift << endl;
+    //     // compute shift
+    //     if(steps < zero_shift_iterations) shift = 0;
+    //     else shift = E.svd_shift();
+    //     // cout << "shift: " << shift << endl;
         
-        // run step
-        Matrix<T>::svd_reinsch_step(P, E, Gt, shift);
+    //     // run step
+    //     Matrix<T>::svd_reinsch_step(P, E, Gt, shift);
 
-        cout << "orthogonality:" << P.is_orthogonal() << Gt.is_orthogonal() << endl;
-        cout << P*E*Gt << endl;
+    //     // -- check convergence
+    //     // split
+    //     for(uint i=E.c()-1; i>=1; --i){
+    //         if(abs(E(i-1,i)) < tolerance){
+    //             cout << P * E * Gt << endl;
+    //             cout << "converged in i=" << i << endl << E << endl;
+    //             converged = true;
 
-        // -- check convergence
-        // split
-        for(uint i=E.c()-1; i>=1; --i){
-            if(abs(E(i-1,i)) < tolerance){
-                cout << "converged in i=" << i << endl << E << endl;
-                converged = true;
-            }
-        }
-    }
+    //         }
+    //     }
+    // }
+
 }
 
 #pragma endregion decomposition_methods

@@ -79,7 +79,43 @@ private:
     */
     T svd_shift() const;
 
-    static void svd_reinsch_step(Matrix<T> & P, Matrix<T> & E, Matrix<T> & Gt, T shift);
+    /**
+     * @brief perform one Reinsch step for svd 
+     * @param P left orthogonal matrix
+     * @param E matrix to diagonalize
+     * @param Gt right side orthogonal matrix
+     * @param shift shift to apply to the matrix E
+     * @param start_index from which diagonal index the step must start,
+     *  used to implement deflation
+     * @param dim dimension of the deflated matrix
+    */
+    static void svd_reinsch_step(
+        Matrix<T> & P, 
+        Matrix<T> & E, 
+        Matrix<T> & Gt, 
+        T shift, 
+        uint start_index = 0,
+        uint dim = 0
+    );
+
+    /**
+     * @brief perform one Reinsch step for svd 
+     * @param P left orthogonal matrix
+     * @param E matrix to diagonalize
+     * @param Gt right side orthogonal matrix
+     * @param start_index from which diagonal index the step must start,
+     *  used to implement deflation
+     * @param dim dimension of the deflated matrix
+    */
+    static void svd_steps_iteration(
+        Matrix<T> & P, 
+        Matrix<T> & E, 
+        Matrix<T> & Gt,
+        uint start_index = 0,
+        uint dim = 0,
+        uint max_iterations = 1000, 
+        double tolerance = TOL
+    );
 
     /**
      * @brief implementation of the implicit double QR algorithm,
@@ -846,7 +882,12 @@ public:
      * @param start_index index from which the product AQ is computed. Can be != in order to exclude
      *  portions of A which are full zeros
     */
-    void apply_reflector_right(const Matrix<T> & v, uint reflector_start_pos = 0, uint start_index = 0);
+    void apply_reflector_right(
+        const Matrix<T> & v, 
+        uint reflector_start_pos = 0, 
+        uint start_index = 0,
+        uint dim = 0
+    );
 
     /**
      * @brief given this matrix (A) and reflector v, updates A as:
@@ -857,7 +898,11 @@ public:
      * @param start_index index from which the product QA is computed. Can be != in order to exclude
      *  portions of A which are full zeros
     */
-    void apply_reflector_left(const Matrix<T> & v, uint reflector_start_pos = 0, uint start_index = 0);
+    void apply_reflector_left(const Matrix<T> & v, 
+        uint reflector_start_pos = 0, 
+        uint start_index = 0,
+        uint dim = 0
+    );
 
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 
@@ -922,7 +967,13 @@ public:
      *  - E m*n diagonal matrix, with singular values as diagonal elements
      *  - V n*n orthogonal matrix
     */
-    void svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_iterations = 1000, double tolerance = TOL) const;
+    void svd(
+        Matrix<T> & U, 
+        Matrix<T> & E, 
+        Matrix<T> & Vt, 
+        uint max_iterations = 1000, 
+        double tolerance = TOL
+    ) const;
 
 #pragma endregion decomposition_methods
 

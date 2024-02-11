@@ -3006,6 +3006,7 @@ TEST(Matrix, svd){
     }
     EXPECT_TRUE(U.is_orthogonal());
     EXPECT_TRUE(Vt.is_orthogonal());
-    Matrix<double>::set_double_precision(13);
+    Matrix<long double>::set_double_precision(13);
     EXPECT_EQ(A, U*E*Vt);
+    // cout << A - U*E*Vt << endl;
 }

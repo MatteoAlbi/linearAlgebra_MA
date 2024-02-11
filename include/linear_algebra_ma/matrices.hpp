@@ -876,16 +876,16 @@ public:
      * @brief given this matrix (A) and reflector v updates A as:
      *  A -> AQ = A - (A * v) * 2v'
      * @param v reflector
-     * @param reflector_start_pos starting position of the vector from which the reflector is 
-     *  calulated. Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
+     * @param start_index starting position of the matrix from which the reflector is 
+     *  applied. Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
      *  as Q = I-2vv'
-     * @param start_index index from which the product AQ is computed. Can be != in order to exclude
+     * @param skip_index index from which the product AQ is computed. Can be != 0 in order to exclude
      *  portions of A which are full zeros
     */
     void apply_reflector_right(
         const Matrix<T> & v, 
-        uint reflector_start_pos = 0, 
-        uint start_index = 0,
+        uint start_index = 0, 
+        uint skip_index = 0,
         uint dim = 0
     );
 
@@ -893,14 +893,15 @@ public:
      * @brief given this matrix (A) and reflector v, updates A as:
      *  A -> QA = A - v * (2v' * A)
      * @param v reflector
-     * @param reflector_start_pos starting position of the vector from which the reflector is 
-     * calulated. Matches the first non-unitary diagonal entry of the reflector matrix computed as I-2vv'
-     * @param start_index index from which the product QA is computed. Can be != in order to exclude
+     * @param start_index starting position of the matrix from which the reflector is 
+     *  applied. Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
+     *  as Q = I-2vv'
+     * @param skip_index index from which the product QA is computed. Can be != 0 in order to exclude
      *  portions of A which are full zeros
     */
     void apply_reflector_left(const Matrix<T> & v, 
-        uint reflector_start_pos = 0, 
-        uint start_index = 0,
+        uint start_index = 0, 
+        uint skip_index = 0,
         uint dim = 0
     );
 

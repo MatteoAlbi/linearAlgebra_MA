@@ -762,18 +762,18 @@ Matrix<T> Matrix<T>::reflector() const{
 template<typename T>
 void Matrix<T>::apply_reflector_right(
     const Matrix<T> & v, 
-    uint reflector_start_pos, 
-    uint start_index,
+    uint start_index, 
+    uint skip_index,
     uint dim
 ){
-    if(reflector_start_pos + v.size() - 1 >= _c) throw std::invalid_argument("Reflector too big to be applied using given start_index");
-    if(dim == 0) dim = _r;
+    if(start_index + v.size() - 1 >= _c) throw std::invalid_argument("Reflector too big to be applied using given start_index");
+    uint i = start_index;
+    if(dim == 0) dim = _r - i;
 
-    uint i = reflector_start_pos;
     T tmp;
     Matrix<T> v_t = 2 * v.t();
 
-    for(uint j=start_index; j<dim; ++j){
+    for(uint j=skip_index; j<i+dim; ++j){
         tmp = 0.0;
         for(uint k=0; k<v.size(); ++k) tmp += v(k) * this->at(j,i+k);
         for(uint k=0; k<v.size(); ++k) this->at(j,i+k) -= v_t(k) * tmp;
@@ -783,18 +783,18 @@ void Matrix<T>::apply_reflector_right(
 template<typename T>
 void Matrix<T>::apply_reflector_left(
     const Matrix<T> & v, 
-    uint reflector_start_pos, 
-    uint start_index,
+    uint start_index, 
+    uint skip_index,
     uint dim
 ){
-    if(reflector_start_pos + v.size() - 1 >= _r) throw std::invalid_argument("Reflector too big to be applied using given start_index");
-    if(dim == 0) dim = _c;
+    if(start_index + v.size() - 1 >= _r) throw std::invalid_argument("Reflector too big to be applied using given start_index");
+    uint i = start_index;
+    if(dim == 0) dim = _c - i;
 
-    uint i = reflector_start_pos;
     T tmp;
     Matrix<T> v_t = 2 * v.t();
 
-    for(uint j=start_index; j<dim; ++j){
+    for(uint j=skip_index; j<i+dim; ++j){
         tmp = 0.0;
         for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * this->at(i+k,j);
         for(uint k=0; k<v.size(); ++k) this->at(i+k,j) -= v(k) * tmp;
@@ -990,21 +990,21 @@ void Matrix<T>::svd_reinsch_step(
     E.apply_reflector_right(v,si,si); // EG1
     Gt.apply_reflector_left(v,si); // G1Gt
 
-    // cout << "after shift: " << E << endl;
+    cout << "after shift: " << E << endl;
     // chase the bulge
     for(uint i=0; i<dim-1; ++i){
         v = E({si+i, si+i+1}, si+i).reflector(); // Pi
-        E.apply_reflector_left(v,si+i,si+i,dim); // PiE
+        E.apply_reflector_left(v,si+i,si+i,dim-i); // PiE
         P.apply_reflector_right(v,si+i); // PPi
-        // cout << "after lower bulge: " << E << endl;
+        cout << "after lower bulge: " << E << endl;
 
         if(i < dim-2){
             // need to transpose the vector becaue I am taking a row vector 
             // actually, it is necessary only for complex matrices
             v = E(si+i, {si+i+1, si+i+2}).reflector().t(); // Gi
-            E.apply_reflector_right(v,si+i+1,si+i,dim); // EGi
+            E.apply_reflector_right(v,si+i+1,si+i,dim-i); // EGi
             Gt.apply_reflector_left(v,si+i+1); // GiGt
-            // cout << "after upper bulge: " << E << endl;
+            cout << "after upper bulge: " << E << endl;
         }
     }
 
@@ -1031,12 +1031,12 @@ void Matrix<T>::svd_steps_iteration(
 
     using namespace std;
 
-    // cout << "starting index: " << si << ", dim: " << dim << endl
-    //      << "working matrix:" << E({si,si+dim-1},{si,si+dim-1}) << endl;
+    cout << "starting index: " << si << ", dim: " << dim << endl
+         << "working matrix:" << E({si,si+dim-1},{si,si+dim-1}) << endl;
 
     // I can stop: we deflated a single value, meaning it converged
     if(dim == 1){ 
-        // cout << "single value: iteration terminated" << endl;
+        cout << "single value: iteration terminated" << endl;
         return;
     }
 
@@ -1049,8 +1049,8 @@ void Matrix<T>::svd_steps_iteration(
         // deflation
         for(uint i=si+dim-1; i>=si+1; --i){ // i indicates column position
             if(abs(E(i-1,i)) < tolerance){
-                // cout << P * E * Gt << endl;
-                // cout << "converged in i=" << i << endl << E << endl;
+                cout << P * E * Gt << endl;
+                cout << "converged in i=" << i << endl << E << endl;
                 converged = true;
                 // upper part
                 Matrix<T>::svd_steps_iteration(P, E, Gt, si, i-si, max_iterations, tolerance);
@@ -1073,7 +1073,7 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
 
     // reduce to bidiagonal form
     this->bidiagonal_form(U,E,Vt);
-    // cout << "starting matrix: " << E << endl;
+    cout << "starting matrix: " << E << endl;
     
     // init matrices
     Matrix<T> P = IdMat(E.r());

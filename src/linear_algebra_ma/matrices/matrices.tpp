@@ -1047,7 +1047,7 @@ void Matrix<T>::svd_steps_iteration(
         Matrix<T>::svd_reinsch_step(P, E, Gt, shift, si, dim);
 
         // deflation
-        for(uint i=si+dim-1; i>=si+1; --i){
+        for(uint i=si+dim-1; i>=si+1; --i){ // i indicates column position
             if(abs(E(i-1,i)) < tolerance){
                 // cout << P * E * Gt << endl;
                 // cout << "converged in i=" << i << endl << E << endl;
@@ -1055,10 +1055,14 @@ void Matrix<T>::svd_steps_iteration(
                 // upper part
                 Matrix<T>::svd_steps_iteration(P, E, Gt, si, i-si, max_iterations, tolerance);
                 // lower part
-                Matrix<T>::svd_steps_iteration(P, E, Gt, i, dim-i, max_iterations, tolerance);
+                Matrix<T>::svd_steps_iteration(P, E, Gt, i, si+dim-i, max_iterations, tolerance);
                 // exit
                 return;
             }
+        }
+        // cancellation
+        for(uint i=si+dim-1; i>=si+1; --i){
+        
         }
     }
 }

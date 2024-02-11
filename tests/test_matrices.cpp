@@ -2991,11 +2991,11 @@ TEST(Matrix, eigen_dec){
 }
 
 TEST(Matrix, svd){
-    Matrix A(6,4,{ 14,   4, -16, -20, -3,  -4,
+    Matrix<long double> A(6,4,{ 14,   4, -16, -20, -3,  -4,
                    17,  17, -16,   5,  6, -13,
                    -2,  12,  -7,  15, -1,  -3,
                    19,   4,  -3,   5, 16,  -9});
-    Matrix U,E,Vt;
+    Matrix<long double> U,E,Vt;
     A.svd(U,E,Vt);
     Matrix<double>::set_double_precision(14);
     for(uint i=0; i<E.r(); ++i){

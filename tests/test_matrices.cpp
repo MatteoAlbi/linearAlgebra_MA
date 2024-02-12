@@ -2075,13 +2075,58 @@ TEST(Matrix, is_lower_hessenberg){
     EXPECT_FALSE(m2.is_lower_hessenberg());
 }
 
+TEST(Matrix, reflector){
+    Matrix<c_double> Ac = Matrix<c_double>(6,4,
+        {  4.0-3i,       4, -16.0+1i,      -12, 
+               -3,      -4,       17,  17.0-1i, 
+              -16,       5,   6.0+1i, -13.0+1i,
+               -2, 12.0+1i,       -7,       15, 
+          -1.0-1i,      -3,       19,        4,  
+          -3.0+1i,       5,  16.0+1i,       -9}
+    );
+    Matrix<c_double> vc = Ac(ALL, 0);
+}
 
 TEST(Matrix, givens_rotation){
-    Matrix A = Matrix(6,4,{ 14,   4, -16, -20, -3,  -4,
-                            17,  17, -16,   5,  6, -13,
-                            -2,  12,  -7,  15, -1,  -3,
-                            19,   4,  -3,   5, 16,  -9});
+    Matrix rot;
+    Matrix A = Matrix(6,4,
+        { 14,  4, -16, -20, 
+          -3, -4,  17,  17, 
+         -16,  5,   6, -13,
+          -2, 12,  -7,  15, 
+          -1, -3,  19,   4,  
+          -3,  5, 16,   -9}
+    );
     
+    EXPECT_THROW(A.givens_rot(1,3), invalid_argument);
+    EXPECT_NO_THROW(rot = A(ALL, 2).givens_rot(1,3));
+    EXPECT_NO_THROW(A.apply_givens_rot_left(rot,1,3,2));
+    EXPECT_TRUE(abs(A(3,2)) < Matrix<double>::get_epsilon());
+    EXPECT_NO_THROW(rot = A(0, ALL).givens_rot(0,3));
+    EXPECT_NO_THROW(A.apply_givens_rot_right(rot,0,3,0));
+    Matrix<double>::set_double_precision(14);
+    EXPECT_TRUE(abs(A(0,3)) < Matrix<double>::get_epsilon());
+
+    Matrix<c_double> rot_c;
+    Matrix<c_double> Ac = Matrix<c_double>(6,4,
+        {  4.0-3i,       4, -16.0+1i,      -12, 
+               -3,      -4,       17,  17.0-1i, 
+              -16,       5,   6.0+1i, -13.0+1i,
+               -2, 12.0+1i,       -7,       15, 
+          -1.0-1i,      -3,       19,        4,  
+          -3.0+1i,       5,  16.0+1i,       -9}
+    );
+    
+    EXPECT_THROW(Ac.givens_rot(1,3), invalid_argument);
+    EXPECT_NO_THROW(rot_c = Ac(ALL, 2).givens_rot(2,5));
+    EXPECT_NO_THROW(Ac.apply_givens_rot_left(rot_c,2,5,2));
+    EXPECT_TRUE(abs(Ac(5,2)) < Matrix<c_double>::get_epsilon());
+    EXPECT_TRUE(abs(Ac(2,2).imag()) < Matrix<c_double>::get_epsilon());
+    EXPECT_NO_THROW(rot_c = Ac(0, ALL).givens_rot(0,3));
+    EXPECT_NO_THROW(Ac.apply_givens_rot_right(rot_c,0,3,0));
+    Matrix<c_double>::set_double_precision(14);
+    EXPECT_TRUE(abs(Ac(0,3)) < Matrix<c_double>::get_epsilon());
+    EXPECT_TRUE(abs(Ac(0,0).imag()) < Matrix<c_double>::get_epsilon());
 }
 
 TEST(Matrix, qr_dec){

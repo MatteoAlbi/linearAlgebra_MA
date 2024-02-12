@@ -808,49 +808,60 @@ Matrix<T> Matrix<T>::givens_rot(uint i, uint j) const{
     T f = this->at(i);
     T g = this->at(j);
 
-    if(abs(g) < Matrix<T>::epsilon){
+    if(abs(g) < Matrix<T>::epsilon && abs(f) < Matrix<T>::epsilon){
         ret(0) = 1.0;
         ret(1) = 0.0;
     }
-    else if(abs(f) < Matrix<T>::epsilon){
-        ret(0) = 0.0;
-        if constexpr (is_complex<T>::value) ret(1) = std::conj(g)/abs(g);
-        else ret(1) = g/abs(g);
-    }
     else{
         if constexpr (is_complex<T>::value){
-            T f2 = f.real()*f.real() + f.imag()*f.imag();
-            T d1 = 1/sqrt(f2 * (f2 + g.real()*g.real() + g.imag()*g.imag()));
-            ret(0) = f2 * d1;
-            ret(1) = f * d1 * std::conj(g);
+            // T f2 = f.real()*f.real() + f.imag()*f.imag();
+            // T d1 = 1.0/sqrt(f2 * (f2 + g.real()*g.real() + g.imag()*g.imag()));
+            // ret(0) = f2 * d1;
+            // ret(1) = f * d1 * std::conj(g);
+            T d = 1/sqrt(f.real()*f.real() + f.imag()*f.imag() + g.real()*g.real() + g.imag()*g.imag());
+            ret(0) = f * d;
+            ret(1) = std::conj(g) * d;
         }
         else{
             T f2 = f*f;
-            T d1 = 1/sqrt(f2 * (f2 + g*g));
+            T d1 = 1.0/sqrt(f2 * (f2 + g*g));
             ret(0) = f2 * d1;
             ret(1) = f * d1 * g;
         }
     }
+    return ret;
 }
 
 template<typename T>
-void Matrix<T>::apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uint c){
-    if(!rot.is_vec() || rot.size() != 2) throw std::invalid_argument("Given rotation does not respect shape requirements");
-    T f = this->at(i,c);
-    T g = this->at(j,c);
-    this->at(i,c) = rot(0)*f + rot(1)*g;
-    if constexpr(is_complex<T>::value) this->at(j,c) = rot(0)*g - std::conj(rot(1))*f;
-    else this->at(j,c) = rot(0)*g - rot(1)*f;
-}
-
-template<typename T>
-void Matrix<T>::apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uint r){
+void Matrix<T>::apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uint r){
     if(!rot.is_vec() || rot.size() != 2) throw std::invalid_argument("Given rotation does not respect shape requirements");
     T f = this->at(r,i);
     T g = this->at(r,j);
-    this->at(r,i) = rot(0)*f + rot(1)*g;
-    if constexpr(is_complex<T>::value) this->at(j,c) = rot(0)*g - std::conj(rot(1))*f;
-    else this->at(r,j) = rot(0)*g - rot(1)*f;
+
+    if constexpr(is_complex<T>::value) {
+        this->at(r,i) = std::conj(rot(0))*f + rot(1)*g;
+        this->at(r,j) = rot(0)*g - std::conj(rot(1))*f;
+    }
+    else {
+        this->at(r,i) = rot(0)*f + rot(1)*g;
+        this->at(r,j) = rot(0)*g - rot(1)*f;
+    }
+}
+
+template<typename T>
+void Matrix<T>::apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uint c){
+    if(!rot.is_vec() || rot.size() != 2) throw std::invalid_argument("Given rotation does not respect shape requirements");
+    T f = this->at(i,c);
+    T g = this->at(j,c);
+    
+    if constexpr(is_complex<T>::value) {
+        this->at(i,c) = std::conj(rot(0))*f + rot(1)*g;
+        this->at(j,c) = rot(0)*g - std::conj(rot(1))*f;
+    }
+    else {
+        this->at(i,c) = rot(0)*f + rot(1)*g;
+        this->at(j,c) = rot(0)*g - rot(1)*f;
+    }
 }
 
 template<typename T>

@@ -910,7 +910,8 @@ public:
      *  for elements in positions i,j:
      *  [G][... i ... j ...]' = [... r ... 0 ...]'
      *  explanation: https://en.wikipedia.org/wiki/Givens_rotation
-     *  computation: https://www.netlib.org/lapack/lawnspdf/lawn148.pdf
+     *  computation: https://www.netlib.org/lapack/lawnspdf/lawn148.pdf, 
+     *               https://patentimages.storage.googleapis.com/e4/51/85/2c89fd0a7e4a42/US8473539.pdf
      * @param i first index: element -> r
      * @param j second index: element -> 0
      * @return vector of dim (2,1) containing c and s, from which G can be easily computed

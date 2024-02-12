@@ -2076,6 +2076,13 @@ TEST(Matrix, is_lower_hessenberg){
 }
 
 
+TEST(Matrix, givens_rotation){
+    Matrix A = Matrix(6,4,{ 14,   4, -16, -20, -3,  -4,
+                            17,  17, -16,   5,  6, -13,
+                            -2,  12,  -7,  15, -1,  -3,
+                            19,   4,  -3,   5, 16,  -9});
+    
+}
 
 TEST(Matrix, qr_dec){
     Matrix Q, R;
@@ -2991,11 +2998,17 @@ TEST(Matrix, eigen_dec){
 }
 
 TEST(Matrix, svd){
-    Matrix<long double> A(6,4,{ 14,   4, -16, -20, -3,  -4,
-                   17,  17, -16,   5,  6, -13,
-                   -2,  12,  -7,  15, -1,  -3,
-                   19,   4,  -3,   5, 16,  -9});
-    Matrix<long double> U,E,Vt;
+    Matrix<double> A(6,8,
+        { 14,   4, -16, -20, -3,  -4,
+           7,  17, -16,   5,  6, -13,
+          -2,  12,  -7,  15, -1,  -3,
+          19,   4,  -3,   5, 16,  -9,
+          -8,  11,   4,   7, -5,   2,
+           4,  -2,   5,  -8, -6,   7,
+          -8,   4,  12,   4, -5,   8, 
+           5, -10,   4,  -7,  8,   5}
+    );
+    Matrix<double> U,E,Vt;
     A.svd(U,E,Vt);
     Matrix<double>::set_double_precision(14);
     for(uint i=0; i<E.r(); ++i){
@@ -3006,7 +3019,8 @@ TEST(Matrix, svd){
     }
     EXPECT_TRUE(U.is_orthogonal());
     EXPECT_TRUE(Vt.is_orthogonal());
-    Matrix<long double>::set_double_precision(13);
+    Matrix<double>::set_double_precision(13);
+    // cout << U << endl << E << endl << Vt << endl;
     EXPECT_EQ(A, U*E*Vt);
     // cout << A - U*E*Vt << endl;
 }

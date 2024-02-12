@@ -802,6 +802,58 @@ void Matrix<T>::apply_reflector_left(
 }
 
 template<typename T>
+Matrix<T> Matrix<T>::givens_rot(uint i, uint j) const{
+    if(!this->is_vec()) throw std::invalid_argument("Given matrix must be vector shaped");
+    Matrix<T> ret(2,1);
+    T f = this->at(i);
+    T g = this->at(j);
+
+    if(abs(g) < Matrix<T>::epsilon){
+        ret(0) = 1.0;
+        ret(1) = 0.0;
+    }
+    else if(abs(f) < Matrix<T>::epsilon){
+        ret(0) = 0.0;
+        if constexpr (is_complex<T>::value) ret(1) = std::conj(g)/abs(g);
+        else ret(1) = g/abs(g);
+    }
+    else{
+        if constexpr (is_complex<T>::value){
+            T f2 = f.real()*f.real() + f.imag()*f.imag();
+            T d1 = 1/sqrt(f2 * (f2 + g.real()*g.real() + g.imag()*g.imag()));
+            ret(0) = f2 * d1;
+            ret(1) = f * d1 * std::conj(g);
+        }
+        else{
+            T f2 = f*f;
+            T d1 = 1/sqrt(f2 * (f2 + g*g));
+            ret(0) = f2 * d1;
+            ret(1) = f * d1 * g;
+        }
+    }
+}
+
+template<typename T>
+void Matrix<T>::apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uint c){
+    if(!rot.is_vec() || rot.size() != 2) throw std::invalid_argument("Given rotation does not respect shape requirements");
+    T f = this->at(i,c);
+    T g = this->at(j,c);
+    this->at(i,c) = rot(0)*f + rot(1)*g;
+    if constexpr(is_complex<T>::value) this->at(j,c) = rot(0)*g - std::conj(rot(1))*f;
+    else this->at(j,c) = rot(0)*g - rot(1)*f;
+}
+
+template<typename T>
+void Matrix<T>::apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uint r){
+    if(!rot.is_vec() || rot.size() != 2) throw std::invalid_argument("Given rotation does not respect shape requirements");
+    T f = this->at(r,i);
+    T g = this->at(r,j);
+    this->at(r,i) = rot(0)*f + rot(1)*g;
+    if constexpr(is_complex<T>::value) this->at(j,c) = rot(0)*g - std::conj(rot(1))*f;
+    else this->at(r,j) = rot(0)*g - rot(1)*f;
+}
+
+template<typename T>
 void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
     // init matrices
     uint n = std::min<double>(_r, _c);
@@ -987,24 +1039,24 @@ void Matrix<T>::svd_reinsch_step(
     // apply shift
     // compute first reflector
     Matrix<T> v = Matrix<T>(2,1,{E(si)*E(si) - shift, E(si)*E(si,si+1)}).reflector(); // G1
-    E.apply_reflector_right(v,si,si); // EG1
+    E.apply_reflector_right(v,si,si,min<uint>(dim,3)); // EG1
     Gt.apply_reflector_left(v,si); // G1Gt
 
-    cout << "after shift: " << E << endl;
+    // cout << "after shift: " << E << endl;
     // chase the bulge
     for(uint i=0; i<dim-1; ++i){
         v = E({si+i, si+i+1}, si+i).reflector(); // Pi
-        E.apply_reflector_left(v,si+i,si+i,dim-i); // PiE
+        E.apply_reflector_left(v,si+i,si+i,min<uint>(dim-i,3)); // PiE
         P.apply_reflector_right(v,si+i); // PPi
-        cout << "after lower bulge: " << E << endl;
+        // cout << "after lower bulge: " << E << endl;
 
         if(i < dim-2){
             // need to transpose the vector becaue I am taking a row vector 
             // actually, it is necessary only for complex matrices
             v = E(si+i, {si+i+1, si+i+2}).reflector().t(); // Gi
-            E.apply_reflector_right(v,si+i+1,si+i,dim-i); // EGi
+            E.apply_reflector_right(v,si+i+1,si+i,min<uint>(dim-i,3)); // EGi
             Gt.apply_reflector_left(v,si+i+1); // GiGt
-            cout << "after upper bulge: " << E << endl;
+            // cout << "after upper bulge: " << E << endl;
         }
     }
 
@@ -1031,12 +1083,12 @@ void Matrix<T>::svd_steps_iteration(
 
     using namespace std;
 
-    cout << "starting index: " << si << ", dim: " << dim << endl
-         << "working matrix:" << E({si,si+dim-1},{si,si+dim-1}) << endl;
+    // cout << "starting index: " << si << ", dim: " << dim << endl
+    //      << "working matrix:" << E({si,si+dim-1},{si,si+dim-1}) << endl;
 
     // I can stop: we deflated a single value, meaning it converged
     if(dim == 1){ 
-        cout << "single value: iteration terminated" << endl;
+        // cout << "single value: iteration terminated" << endl;
         return;
     }
 
@@ -1049,8 +1101,7 @@ void Matrix<T>::svd_steps_iteration(
         // deflation
         for(uint i=si+dim-1; i>=si+1; --i){ // i indicates column position
             if(abs(E(i-1,i)) < tolerance){
-                cout << P * E * Gt << endl;
-                cout << "converged in i=" << i << endl << E << endl;
+                // cout << P * E * Gt << endl << "converged in i=" << i << endl << E << endl;
                 converged = true;
                 // upper part
                 Matrix<T>::svd_steps_iteration(P, E, Gt, si, i-si, max_iterations, tolerance);
@@ -1071,20 +1122,34 @@ template<typename T>
 void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_iterations, double tolerance) const{
     using namespace std;
 
+    // transpose this if r<c
+    Matrix<T> A;
+    if(_r<_c) A = this->t();
+    else A = *this;
+
     // reduce to bidiagonal form
-    this->bidiagonal_form(U,E,Vt);
-    cout << "starting matrix: " << E << endl;
+    A.bidiagonal_form(U,E,Vt);
+    // cout << "starting matrices: " << E 
+    //      << endl << U << endl << Vt << endl;
     
     // init matrices
     Matrix<T> P = IdMat(E.r());
     Matrix<T> Gt = IdMat(E.c());
 
     Matrix<T>::svd_steps_iteration(P,E,Gt, 0, 0, max_iterations, tolerance);
+    // cout << P << endl << E << endl << Gt << endl;
 
     // update solution incorporating bidiagonal decomposition
     U = U*P;
     Vt = Gt*Vt;
 
+    // transpose the result
+    if(_r<_c){
+        E = E.t();
+        Matrix<T> tmp = U;
+        U = Vt.t();
+        Vt = tmp.t();
+    }
 }
 
 #pragma endregion decomposition_methods

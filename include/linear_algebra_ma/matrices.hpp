@@ -906,6 +906,38 @@ public:
     );
 
     /**
+     * @brief computes Given rotation of the given vector 
+     *  for elements in positions i,j:
+     *  [G][... i ... j ...]' = [... r ... 0 ...]'
+     *  explanation: https://en.wikipedia.org/wiki/Givens_rotation
+     *  computation: https://www.netlib.org/lapack/lawnspdf/lawn148.pdf
+     * @param i first index: element -> r
+     * @param j second index: element -> 0
+     * @return vector of dim (2,1) containing c and s, from which G can be easily computed
+    */
+    Matrix<T> givens_rot(uint i, uint j) const;
+
+    /**
+     * @brief applies givens rotation as right product to a matrix: G*A
+     *  modifying the column c
+     * @param rot rotation to apply
+     * @param i first index: element -> r
+     * @param j second index: element -> 0
+     * @param c column to modify
+    */
+    void apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uint c);
+
+    /**
+     * @brief applies givens rotation as left product to a matrix: A*G
+     *  modifying the row r, ATT: G is not transpose
+     * @param rot rotation to apply
+     * @param i first index: element -> r
+     * @param j second index: element -> 0
+     * @param r row to modify
+    */
+    void apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uint r);
+
+    /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 
      *        with Q orthogonal matrix and R upper triangular matrix
      *      http://matlab.izmiran.ru/help/techdoc/ref/mldivide.html

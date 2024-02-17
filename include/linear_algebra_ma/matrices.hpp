@@ -35,6 +35,7 @@ typedef std::pair<uint,uint> uu_pair;
 typedef std::complex<double> c_double;
 #define ALL uu_pair{0, UINT_MAX}
 // #define ALL uu_pair{}
+template<typename T> class Reflector; // forward declaration to use it in calss Matrix
 
 #pragma region helper_structs
 
@@ -71,6 +72,8 @@ using enable_if_not_comp2d_t = typename enable_if_not_comp2d<T, U>::type;
 
 template<typename T = double>
 class Matrix {
+
+#pragma region private
 
 private:
     /**
@@ -124,6 +127,7 @@ private:
      * @throw invalid_argument if the matrix is not upper hessenberg matrices
     */
     Matrix<T> implicit_double_QR_step() const;
+#pragma endregion private
 
 protected:
 
@@ -873,6 +877,22 @@ public:
     Matrix<T> reflector() const;
 
     /**
+     * @brief computes the reflector of the given vector
+     * https://en.wikipedia.org/wiki/QR_decomposition
+     * 
+     * @return reflector vector
+    */
+    Reflector<T> reflector(uu_pair rs, uint c) const;
+
+    /**
+     * @brief computes the reflector of the given vector
+     * https://en.wikipedia.org/wiki/QR_decomposition
+     * 
+     * @return reflector vector
+    */
+    Reflector<T> reflector(uint r, uu_pair cs) const;
+
+    /**
      * @brief given this matrix (A) and reflector v updates A as:
      *  A -> AQ = A - (A * v) * 2v'
      * @param v reflector
@@ -1048,6 +1068,42 @@ public:
 #pragma endregion eigen
 
 };
+
+#pragma region reflector
+
+template<typename T>
+class Reflector {
+private:
+    Matrix<T> _v;
+    T _tau;
+    double _alpha;
+    uint _start_index;
+
+public:
+    static Reflector<T> zero_reflector(Matrix<T> & v, uint start);
+
+    Reflector();
+
+    Reflector(
+        Matrix<T> v,
+        T tau = 1,
+        double alpha = 1,
+        uint start_index = 0
+    );
+
+    Matrix<T> v() const;
+    T tau() const;
+    double alpha() const;
+    uint si() const;
+
+    template<typename U>
+    void apply_left(Matrix<U> & m, uu_pair cs);
+
+    template<typename U>
+    void apply_right(Matrix<U> & m, uu_pair rs);
+
+};
+#pragma endregion reflector
 
 #pragma region ls_solution
     /**

@@ -6,7 +6,10 @@ using namespace std::complex_literals;
 
 using std::cout, std::endl, std::string, std::vector, std::complex;
 using std::invalid_argument, std::runtime_error, std::out_of_range;
+
+using Mat = Matrix<double>;
 using c_double = complex<double>;
+using Mat_c = Matrix<c_double>;
 
 
 TEST(Matrix, constructor_getter) {
@@ -61,24 +64,24 @@ TEST(Matrix, constructor_getter) {
 
     // -- complex matrix -- //
     // empty constructor
-    EXPECT_NO_THROW(Matrix<c_double>());
-    Matrix<c_double> empty_comp{};
+    EXPECT_NO_THROW(Mat_c());
+    Mat_c empty_comp{};
     EXPECT_EQ(empty_comp.r(), (uint)0);
     EXPECT_EQ(empty_comp.c(), (uint)0);
     EXPECT_EQ(empty_comp.v(), nullptr);
 
     // zeros initialization
-    EXPECT_NO_THROW(Matrix<c_double> zeros_comp(2,2));
-    Matrix<c_double> zeros_comp(2,2);
+    EXPECT_NO_THROW(Mat_c zeros_comp(2,2));
+    Mat_c zeros_comp(2,2);
     EXPECT_EQ(zeros_comp.r(), (uint)2);
     EXPECT_EQ(zeros_comp.c(), (uint)2);
     EXPECT_NO_THROW((void) zeros_comp.v()[3]);
     for(uint i=0; i<2; ++i) for(uint j=0; j<2; ++j) EXPECT_EQ(zeros_comp(i,j), 0.0);
 
     // vector initialization
-    EXPECT_THROW(Matrix<c_double> comp_from_vec(4, 2, v_comp), out_of_range);
-    EXPECT_NO_THROW(Matrix<c_double> comp_from_vec(2, 3, v_comp));
-    Matrix<c_double> comp_from_vec(2, 3, v_comp);
+    EXPECT_THROW(Mat_c comp_from_vec(4, 2, v_comp), out_of_range);
+    EXPECT_NO_THROW(Mat_c comp_from_vec(2, 3, v_comp));
+    Mat_c comp_from_vec(2, 3, v_comp);
     EXPECT_EQ(comp_from_vec.r(), (uint)2);
     EXPECT_EQ(comp_from_vec.c(), (uint)3);
     EXPECT_NO_THROW((void) comp_from_vec.v()[3]);
@@ -115,17 +118,17 @@ TEST(Matrix, constructor_getter) {
 
     // -- from double to complex -- //
     // vector initialization
-    EXPECT_THROW(Matrix<c_double> comp_from_vec_double(4, 2, v), out_of_range);
-    EXPECT_NO_THROW(Matrix<c_double> comp_from_vec_double(2, 3, v));
-    Matrix<c_double> comp_from_vec_double(2, 3, v);
+    EXPECT_THROW(Mat_c comp_from_vec_double(4, 2, v), out_of_range);
+    EXPECT_NO_THROW(Mat_c comp_from_vec_double(2, 3, v));
+    Mat_c comp_from_vec_double(2, 3, v);
     EXPECT_EQ(comp_from_vec_double.r(), (uint)2);
     EXPECT_EQ(comp_from_vec_double.c(), (uint)3);
     EXPECT_NO_THROW((void) comp_from_vec_double.v()[3]);
     for(uint i=0, k=1; i<2; ++i, ++k) for(uint j=0; j<2; ++j, ++k) EXPECT_EQ(comp_from_vec_double(i,j), (double)k);
 
     // copy constructor
-    EXPECT_NO_THROW(Matrix<c_double> mat_comp_copy_double(mat_copy));
-    Matrix<c_double> mat_comp_copy_double(mat_copy);
+    EXPECT_NO_THROW(Mat_c mat_comp_copy_double(mat_copy));
+    Mat_c mat_comp_copy_double(mat_copy);
     EXPECT_EQ(mat_comp_copy_double.r(), (uint)2);
     EXPECT_EQ(mat_comp_copy_double.c(), (uint)3);
     EXPECT_NO_THROW((void) mat_comp_copy_double.v()[3]);
@@ -133,7 +136,7 @@ TEST(Matrix, constructor_getter) {
 
 
     // -- from complex to double -- //
-    // EXPECT_ANY_THROW(Matrix<double> tmp(mat_comp_copy_double));
+    // EXPECT_ANY_THROW(Mat tmp(mat_comp_copy_double));
     // -> no matching function (this constructor is disabled)
 }
 
@@ -157,9 +160,9 @@ TEST(Matrix, assignment_operator) {
 
     
     // -- complex matrix -- //
-    Matrix<c_double> m1c(3,2, {1.0+1i,2.0+1i,3.0+1i,4.0+1i,5.0+1i,6.0+1i});
-    const Matrix<c_double> m2c(3,2, {7.0+1i,8.0+1i,9.0+1i,10.0+1i,11.0+1i,12.0+1i});
-    Matrix<c_double> m3c, m4c(4,4);
+    Mat_c m1c(3,2, {1.0+1i,2.0+1i,3.0+1i,4.0+1i,5.0+1i,6.0+1i});
+    const Mat_c m2c(3,2, {7.0+1i,8.0+1i,9.0+1i,10.0+1i,11.0+1i,12.0+1i});
+    Mat_c m3c, m4c(4,4);
 
     // copy from ref
     EXPECT_NO_THROW(m3c = m1c);
@@ -261,8 +264,8 @@ TEST(Matrix, access_operator){
 
 
     // -- complex matrix -- //
-    Matrix<c_double> m2c;
-    Matrix<c_double> m1c(4,4,
+    Mat_c m2c;
+    Mat_c m1c(4,4,
         {10.0+1i,11.0+1i,12.0+1i,13.0+1i,
          14.0+1i,15.0+1i,16.0+1i,17.0+1i,
          18.0+1i,19.0+1i,20.0+1i,21.0+1i,
@@ -319,11 +322,11 @@ TEST(Matrix, access_operator){
     EXPECT_THROW(m1c({1,3},{1,5}), out_of_range);
     EXPECT_THROW(m1c({4,1},{2,2}), invalid_argument);
     EXPECT_THROW(m1c({1,3},{5,3}), invalid_argument);
-    EXPECT_EQ(m1c({1,1},{3,3}), Matrix<c_double>(1,1,{17.0+1i}));
-    EXPECT_EQ(m1c({1,3},{3,3}), Matrix<c_double>(3,1,{17.0+1i,21.0+1i,25.0+1i}));
-    EXPECT_EQ(m1c({3,3},{1,2}), Matrix<c_double>(1,2,{23.0+1i,24.0+1i}));
-    EXPECT_EQ(m1c({1,2},{1,2}), Matrix<c_double>(2,2,{15.0+1i,16.0+1i,19.0+1i,20.0+1i}));
-    EXPECT_EQ(m1c({1,2},{0,3}), Matrix<c_double>(2,4,{14.0+1i,15.0+1i,16.0+1i,17.0+1i,18.0+1i,19.0+1i,20.0+1i,21.0+1i}));
+    EXPECT_EQ(m1c({1,1},{3,3}), Mat_c(1,1,{17.0+1i}));
+    EXPECT_EQ(m1c({1,3},{3,3}), Mat_c(3,1,{17.0+1i,21.0+1i,25.0+1i}));
+    EXPECT_EQ(m1c({3,3},{1,2}), Mat_c(1,2,{23.0+1i,24.0+1i}));
+    EXPECT_EQ(m1c({1,2},{1,2}), Mat_c(2,2,{15.0+1i,16.0+1i,19.0+1i,20.0+1i}));
+    EXPECT_EQ(m1c({1,2},{0,3}), Mat_c(2,4,{14.0+1i,15.0+1i,16.0+1i,17.0+1i,18.0+1i,19.0+1i,20.0+1i,21.0+1i}));
 }
 
 TEST(Matrix, get_diag){
@@ -335,13 +338,13 @@ TEST(Matrix, get_diag){
     );
     EXPECT_EQ(m1.diag(), Matrix(4,1,{1,3,9,9}));
 
-    Matrix<c_double> m2(4,4,
+    Mat_c m2(4,4,
         {1,3,5,9,
          0,3.0+1i,1,7,
          0.0+0i,0,9,7,
          0,0.0+0i,0.0+0i,9.0+1i}
     );
-    EXPECT_EQ(m2.diag(), Matrix<c_double>(4,1,{1,3.0+1i,9,9.0+1i}));
+    EXPECT_EQ(m2.diag(), Mat_c(4,1,{1,3.0+1i,9,9.0+1i}));
 
     m1 = Matrix(6,4,
         {1,3,5,9,
@@ -451,7 +454,7 @@ TEST(Matrix, setter) {
     }
 
     // -- complex matrix -- //
-    Matrix<c_double> m1c(4,4,
+    Mat_c m1c(4,4,
         {10.0+1i,11.0+1i,12.0+1i,13.0+1i,
          14.0+1i,15.0+1i,16.0+1i,17.0+1i,
          18.0+1i,19.0+1i,20.0+1i,21.0+1i,
@@ -644,13 +647,13 @@ TEST(Matrix, reshape){
     EXPECT_EQ(m1, m2);
 
     // -- complex matrix -- //
-    Matrix<c_double> m1c(4,4,
+    Mat_c m1c(4,4,
         {10.0+1i,11.0+1i,12.0+1i,13.0+1i,
          14.0+1i,15.0+1i,16.0+1i,17.0+1i,
          18.0+1i,19.0+1i,20.0+1i,21.0+1i,
          22.0+1i,23.0+1i,24.0+1i,25.0+1i}
     );
-    Matrix<c_double> m2c(2,8,
+    Mat_c m2c(2,8,
         {10.0+1i,11.0+1i,12.0+1i,13.0+1i,14.0+1i,15.0+1i,16.0+1i,17.0+1i,
          18.0+1i,19.0+1i,20.0+1i,21.0+1i,22.0+1i,23.0+1i,24.0+1i,25.0+1i}
     );
@@ -684,18 +687,18 @@ TEST(Matrix, set_diag){
     m3 = m1;
     EXPECT_EQ(m3.diag(Matrix(4,1)), m2);
     // EXPECT_THROW(m1.diag(vector<c_double>{1,1,1,1,1,1}), invalid_argument);
-    // EXPECT_THROW(m1.diag(Matrix<c_double>(4,1)), invalid_argument);
+    // EXPECT_THROW(m1.diag(Mat_c(4,1)), invalid_argument);
     // -> no instance of overloaded function "MA::Matrix<T>::diag [with T=double]" matches the argument list
 
 
     // -- complex matrix -- //
-    Matrix<c_double> m1c(4,6,
+    Mat_c m1c(4,6,
         {1.0+1i,3,5,9.0+1i,0,3,
          1,7.0+1i,0,3,0.0+1i,7,
          0,3.0+1i,2.0+1i,9,0,5,
          6,4.0+1i,8,0.0+1i,7,1.0+1i}
     );
-    Matrix<c_double> m2c(4,6,
+    Mat_c m2c(4,6,
         {0,3,5,9.0+1i,0,3,
          1,0,0,3,0.0+1i,7,
          0,3.0+1i,0,9,0,5,
@@ -704,9 +707,9 @@ TEST(Matrix, set_diag){
     EXPECT_THROW(m1c.diag(vector<double>{1,1,1,1,1,1}), invalid_argument);
     EXPECT_THROW(m1c.diag(vector<c_double>{1,1,1,1,1,1}), invalid_argument);
     EXPECT_THROW(m1c.diag(Matrix(2,2)), invalid_argument);
-    EXPECT_THROW(m1c.diag(Matrix<c_double>(2,2)), invalid_argument);
+    EXPECT_THROW(m1c.diag(Mat_c(2,2)), invalid_argument);
     EXPECT_THROW(m1c.diag(Matrix(6,1)), invalid_argument);
-    EXPECT_THROW(m1c.diag(Matrix<c_double>(6,1)), invalid_argument);
+    EXPECT_THROW(m1c.diag(Mat_c(6,1)), invalid_argument);
     Matrix m3c = m1c;
     EXPECT_EQ(m3c.diag(vector<double>{0,0,0,0}), m2c);
     m3c = m1c;
@@ -714,7 +717,7 @@ TEST(Matrix, set_diag){
     m3c = m1c;
     EXPECT_EQ(m3c.diag(Matrix(4,1)), m2c);
     m3c = m1c;
-    EXPECT_EQ(m3c.diag(Matrix<c_double>(4,1)), m2c);
+    EXPECT_EQ(m3c.diag(Mat_c(4,1)), m2c);
 
 }
 
@@ -773,7 +776,7 @@ TEST(Matrix, swap_rows){
 }
 
 TEST(Matrix, swap_columns){
-    Matrix<c_double> m1(4,4,
+    Mat_c m1(4,4,
         {10.0+1i,11.0+1i,12.0+1i,13.0+1i,
          14.0+1i,15.0+1i,16.0+1i,17.0+1i,
          18.0+1i,19.0+1i,20.0+1i,21.0+1i,
@@ -785,7 +788,7 @@ TEST(Matrix, swap_columns){
     EXPECT_THROW(m1.swap_cols(4,1), out_of_range);
 
     m1.swap_cols(0,2);
-    EXPECT_EQ(m1, Matrix<c_double>(4,4,
+    EXPECT_EQ(m1, Mat_c(4,4,
         {12.0+1i,11.0+1i,10.0+1i,13.0+1i,
          16.0+1i,15.0+1i,14.0+1i,17.0+1i,
          20.0+1i,19.0+1i,18.0+1i,21.0+1i,
@@ -830,10 +833,10 @@ TEST(Matrix, equal_operator){
     EXPECT_FALSE(Matrix(3, 4, v1c) == Matrix(3, 4, v2c));
 
     // -- double and complex
-    EXPECT_FALSE(Matrix<c_double>(3, 4, v1) == Matrix<double>(4, 3, v1));
-    EXPECT_FALSE(Matrix<c_double>(3, 4, v1) == Matrix<double>(3, 3, v1));
-    EXPECT_TRUE( Matrix<c_double>(2, 4, v1) == Matrix<double>(2, 4, v1));
-    EXPECT_FALSE(Matrix<c_double>(3, 4, v1) == Matrix<double>(3, 4, v2));
+    EXPECT_FALSE(Mat_c(3, 4, v1) == Mat(4, 3, v1));
+    EXPECT_FALSE(Mat_c(3, 4, v1) == Mat(3, 3, v1));
+    EXPECT_TRUE( Mat_c(2, 4, v1) == Mat(2, 4, v1));
+    EXPECT_FALSE(Mat_c(3, 4, v1) == Mat(3, 4, v2));
 }
 
 TEST(Matrix, unequal_operator){
@@ -871,10 +874,10 @@ TEST(Matrix, unequal_operator){
     EXPECT_TRUE(Matrix(3, 4, v1c) != Matrix(3, 4, v2c));
 
     // -- double and complex
-    EXPECT_TRUE(Matrix<c_double>(3, 4, v1) != Matrix<double>(4, 3, v1));
-    EXPECT_TRUE(Matrix<c_double>(3, 4, v1) != Matrix<double>(3, 3, v1));
-    EXPECT_FALSE( Matrix<c_double>(2, 4, v1) != Matrix<double>(2, 4, v1));
-    EXPECT_TRUE(Matrix<c_double>(3, 4, v1) != Matrix<double>(3, 4, v2));
+    EXPECT_TRUE(Mat_c(3, 4, v1) != Mat(4, 3, v1));
+    EXPECT_TRUE(Mat_c(3, 4, v1) != Mat(3, 3, v1));
+    EXPECT_FALSE( Mat_c(2, 4, v1) != Mat(2, 4, v1));
+    EXPECT_TRUE(Mat_c(3, 4, v1) != Mat(3, 4, v2));
 }
 
 TEST(Matrix, sum_operator){
@@ -921,16 +924,16 @@ TEST(Matrix, sum_operator){
     for(uint i=0; i<v2.size(); ++i) v2[i] = v2[i] + v2[i] + 2.28;
     EXPECT_EQ((Matrix(3,4,v1) + Matrix(3,4,v1) + 2.28), Matrix(3,4, v2));
     EXPECT_EQ((Matrix(3,4,v1) += Matrix(3,4,v1) + 2.28), Matrix(3,4, v2));
-    // EXPECT_THROW(Matrix(3,4,v1)+=Matrix<c_double>(3,4, v1c), invalid_argument);
+    // EXPECT_THROW(Matrix(3,4,v1)+=Mat_c(3,4, v1c), invalid_argument);
     // -> no match for ‘operator+=’ (operand types are ‘double’ and ‘const MA::Matrix<std::c_double >’)
 
 
     // -- complex matrix -- //
     
     // int
-    EXPECT_NO_THROW(Matrix<c_double>(0,3)+=3);
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)+3);
-    EXPECT_NO_THROW(3+Matrix<c_double>(3,0));
+    EXPECT_NO_THROW(Mat_c(0,3)+=3);
+    EXPECT_NO_THROW(Mat_c(3,0)+3);
+    EXPECT_NO_THROW(3+Mat_c(3,0));
     v2c = v1c;
     for(uint i=0; i<v2c.size(); ++i) v2c[i]+=7;
     EXPECT_EQ(Matrix(3,4, v1c)+7, Matrix(3,4, v2c));
@@ -938,9 +941,9 @@ TEST(Matrix, sum_operator){
     EXPECT_EQ(Matrix(3,4, v1c)+=7, Matrix(3,4, v2c));
 
     // double
-    EXPECT_NO_THROW(Matrix<c_double>(0,3)+=7.72);
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)+8.13);
-    EXPECT_NO_THROW(8.13+Matrix<c_double>(3,0));
+    EXPECT_NO_THROW(Mat_c(0,3)+=7.72);
+    EXPECT_NO_THROW(Mat_c(3,0)+8.13);
+    EXPECT_NO_THROW(8.13+Mat_c(3,0));
     v2c = v1c;
     for(uint i=0; i<v2.size(); ++i) v2c[i]+=(-3.14);
     EXPECT_EQ(Matrix(3,4,v1c)+(-3.14), Matrix(3,4, v2c));
@@ -948,9 +951,9 @@ TEST(Matrix, sum_operator){
     EXPECT_EQ(Matrix(3,4,v1c)+=(-3.14), Matrix(3,4, v2c));
 
     // complex
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)+(8.13+1i));
-    EXPECT_NO_THROW((8.13+1i)+Matrix<c_double>(3,0));
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)+=(8.13+1i));
+    EXPECT_NO_THROW(Mat_c(3,0)+(8.13+1i));
+    EXPECT_NO_THROW((8.13+1i)+Mat_c(3,0));
+    EXPECT_NO_THROW(Mat_c(3,0)+=(8.13+1i));
     v2c = v1c;
     for(uint i=0; i<v1.size(); ++i) v2c[i]+=(8.13+1i);
     EXPECT_EQ(Matrix(3,4,v1c)+(8.13+1i), Matrix(3,4, v2c));
@@ -1032,22 +1035,22 @@ TEST(Matrix, subtract_operator){
     for(uint i=0; i<v2.size(); ++i) v3[i] = v1[i] - v2[i];
     EXPECT_EQ((Matrix(3,4,v1) - Matrix(3,4,v2)), Matrix(3,4, v3));
     EXPECT_EQ((Matrix(3,4,v1) -= Matrix(3,4,v2)), Matrix(3,4, v3));
-    // EXPECT_THROW(Matrix(3,4,v1)-=Matrix<c_double>(3,4, v1c), invalid_argument);
+    // EXPECT_THROW(Matrix(3,4,v1)-=Mat_c(3,4, v1c), invalid_argument);
     // -> no match for ‘operator-=’ (operand types are ‘double’ and ‘const MA::Matrix<std::c_double >’)
 
 
     // -- complex matrix -- //
 
     // self
-    EXPECT_NO_THROW(-Matrix<c_double>(0,3));
+    EXPECT_NO_THROW(-Mat_c(0,3));
     v2 = v1;
     for(uint i=0; i<v2c.size(); ++i) v2c[i]=-v1c[i];
     EXPECT_EQ(-Matrix(3,4, v1c), Matrix(3,4, v2c));
 
     // double
-    EXPECT_NO_THROW(Matrix<c_double>(0,3)-=7.72);
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)-8.13);
-    EXPECT_NO_THROW(8.13-Matrix<c_double>(3,0));
+    EXPECT_NO_THROW(Mat_c(0,3)-=7.72);
+    EXPECT_NO_THROW(Mat_c(3,0)-8.13);
+    EXPECT_NO_THROW(8.13-Mat_c(3,0));
     v2c = v1c;
     for(uint i=0; i<v2.size(); ++i) v2c[i]-=3.14;
     EXPECT_EQ(Matrix(3,4,v1c)-3.14, Matrix(3,4, v2c));
@@ -1056,9 +1059,9 @@ TEST(Matrix, subtract_operator){
     EXPECT_EQ(3.14-Matrix(3,4,v1c), Matrix(3,4, v2c));
 
     // complex
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)-(8.13+1i));
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)-=(8.13+1i));
-    EXPECT_NO_THROW((8.13+1i)-Matrix<c_double>(3,0));
+    EXPECT_NO_THROW(Mat_c(3,0)-(8.13+1i));
+    EXPECT_NO_THROW(Mat_c(3,0)-=(8.13+1i));
+    EXPECT_NO_THROW((8.13+1i)-Mat_c(3,0));
     v2c = v1c;
     for(uint i=0; i<v1.size(); ++i) v2c[i]-=(8.13+1i);
     EXPECT_EQ(Matrix(3,4,v1c)-(8.13+1i), Matrix(3,4, v2c));
@@ -1093,7 +1096,7 @@ TEST(Matrix, multiply_operator){
 
     std::vector<c_double> v1c =  {1,3.0+1i,5,9,1.0+1i,3,1.0+1i,7,4,3.0+1i,9,7};
     std::vector<c_double> v2c;
-    Matrix<c_double> m1c, m2c;
+    Mat_c m1c, m2c;
 
     // int
     EXPECT_NO_THROW(Matrix(0,3)*=3);
@@ -1133,16 +1136,16 @@ TEST(Matrix, multiply_operator){
     m2 = m1({1,2}, {0,3}).t();
     EXPECT_EQ(m1*m2, Matrix(3,2, v2));
     EXPECT_EQ(m1*=m2, Matrix(3,2, v2));
-    // EXPECT_THROW(Matrix(3,4,v1)*=Matrix<c_double>(4,3, v1c), invalid_argument);
+    // EXPECT_THROW(Matrix(3,4,v1)*=Mat_c(4,3, v1c), invalid_argument);
     // -> no match for ‘operator*=’ (operand types are ‘double’ and ‘const MA::Matrix<std::c_double >’)
 
 
     // -- complex matrix -- //
     
     // int
-    EXPECT_NO_THROW(Matrix<c_double>(0,3)*=3);
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)*3);
-    EXPECT_NO_THROW(3*Matrix<c_double>(3,0));
+    EXPECT_NO_THROW(Mat_c(0,3)*=3);
+    EXPECT_NO_THROW(Mat_c(3,0)*3);
+    EXPECT_NO_THROW(3*Mat_c(3,0));
     v2c = v1c;
     for(uint i=0; i<v2c.size(); ++i) v2c[i]*=7;
     EXPECT_EQ(Matrix(3,4, v1c)*7, Matrix(3,4, v2c));
@@ -1150,9 +1153,9 @@ TEST(Matrix, multiply_operator){
     EXPECT_EQ(Matrix(3,4, v1c)*=7, Matrix(3,4, v2c));
 
     // double
-    EXPECT_NO_THROW(Matrix<c_double>(0,3)*=7.72);
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)*8.13);
-    EXPECT_NO_THROW(8.13*Matrix<c_double>(3,0));
+    EXPECT_NO_THROW(Mat_c(0,3)*=7.72);
+    EXPECT_NO_THROW(Mat_c(3,0)*8.13);
+    EXPECT_NO_THROW(8.13*Mat_c(3,0));
     v2c = v1c;
     for(uint i=0; i<v2c.size(); ++i) v2c[i]*=(-3.14);
     EXPECT_EQ(Matrix(3,4,v1c)*(-3.14), Matrix(3,4, v2c));
@@ -1160,9 +1163,9 @@ TEST(Matrix, multiply_operator){
     EXPECT_EQ(Matrix(3,4,v1c)*=(-3.14), Matrix(3,4, v2c));
 
     // complex
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)*(8.13+1i));
-    EXPECT_NO_THROW((8.13+1i)*Matrix<c_double>(3,0));
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)*=(8.13+1i));
+    EXPECT_NO_THROW(Mat_c(3,0)*(8.13+1i));
+    EXPECT_NO_THROW((8.13+1i)*Mat_c(3,0));
+    EXPECT_NO_THROW(Mat_c(3,0)*=(8.13+1i));
     v2c = v1c;
     for(uint i=0; i<v1c.size(); ++i) v2c[i]*=(8.13+1i);
     EXPECT_EQ(Matrix(3,4,v1c)*(8.13+1i), Matrix(3,4, v2c));
@@ -1198,23 +1201,23 @@ TEST(Matrix, multiply_operator){
 TEST(Matrix, concatenate_operators){
     EXPECT_THROW(Matrix(1,3)| Matrix(1,4), invalid_argument);
     EXPECT_THROW(Matrix(1,3)|=Matrix(1,4), invalid_argument);
-    EXPECT_THROW(Matrix(1,3)| Matrix<c_double>(1,4), invalid_argument);
-    // EXPECT_THROW(Matrix(1,3)|=Matrix<c_double>(1,4), invalid_argument);
+    EXPECT_THROW(Matrix(1,3)| Mat_c(1,4), invalid_argument);
+    // EXPECT_THROW(Matrix(1,3)|=Mat_c(1,4), invalid_argument);
     // -> no operator "|=" matches these operands
-    EXPECT_THROW(Matrix<c_double>(1,3)| Matrix<c_double>(1,4), invalid_argument);
-    EXPECT_THROW(Matrix<c_double>(1,3)|=Matrix<c_double>(1,4), invalid_argument);
-    EXPECT_THROW(Matrix<c_double>(1,3)| Matrix(1,4), invalid_argument);
-    EXPECT_THROW(Matrix<c_double>(1,3)|=Matrix(1,4), invalid_argument);
+    EXPECT_THROW(Mat_c(1,3)| Mat_c(1,4), invalid_argument);
+    EXPECT_THROW(Mat_c(1,3)|=Mat_c(1,4), invalid_argument);
+    EXPECT_THROW(Mat_c(1,3)| Matrix(1,4), invalid_argument);
+    EXPECT_THROW(Mat_c(1,3)|=Matrix(1,4), invalid_argument);
 
     EXPECT_THROW(Matrix(3,1)& Matrix(4,1), invalid_argument);
     EXPECT_THROW(Matrix(3,1)&=Matrix(4,1), invalid_argument);
-    EXPECT_THROW(Matrix(3,1)& Matrix<c_double>(4,1), invalid_argument);
-    // EXPECT_THROW(Matrix(3,1)&=Matrix<c_double>(4,1), invalid_argument);
+    EXPECT_THROW(Matrix(3,1)& Mat_c(4,1), invalid_argument);
+    // EXPECT_THROW(Matrix(3,1)&=Mat_c(4,1), invalid_argument);
     // -> no operator "&=" matches these operands
-    EXPECT_THROW(Matrix<c_double>(3,1)& Matrix<c_double>(4,1), invalid_argument);
-    EXPECT_THROW(Matrix<c_double>(3,1)&=Matrix<c_double>(4,1), invalid_argument);
-    EXPECT_THROW(Matrix<c_double>(3,1)& Matrix(4,1), invalid_argument);
-    EXPECT_THROW(Matrix<c_double>(3,1)&=Matrix(4,1), invalid_argument);
+    EXPECT_THROW(Mat_c(3,1)& Mat_c(4,1), invalid_argument);
+    EXPECT_THROW(Mat_c(3,1)&=Mat_c(4,1), invalid_argument);
+    EXPECT_THROW(Mat_c(3,1)& Matrix(4,1), invalid_argument);
+    EXPECT_THROW(Mat_c(3,1)&=Matrix(4,1), invalid_argument);
 
 
     Matrix m1(4,6,{ 14,   4, -16, -20, -3,  -4,
@@ -1243,7 +1246,7 @@ TEST(Matrix, concatenate_operators){
 
     // -- complex matrix -- // 
 
-    Matrix<c_double> m1c(4,6,{ 
+    Mat_c m1c(4,6,{ 
         14.0+1i,       4, -16,    -20, -3,  -4.0+1i,
              17,      17, -16,      5,  6,      -13,
              -2, 12.0+1i,  -7,     15, -1,  -3.0+1i,
@@ -1251,29 +1254,29 @@ TEST(Matrix, concatenate_operators){
     
     // concatenate per rows
     EXPECT_EQ(m1c,
-        Matrix<c_double>(1,6, {14.0+1i,       4, -16,    -20,      -3,  -4.0+1i}) |=
+        Mat_c(1,6, {14.0+1i,       4, -16,    -20,      -3,  -4.0+1i}) |=
         Matrix          (1,6, {     17,      17, -16,      5,       6,      -13}) |
-        Matrix<c_double>(1,6, {     -2, 12.0+1i,  -7,     15,      -1,  -3.0+1i}) |
-        Matrix<c_double>(1,6, {19.0+1i,       4,  -3, 5.0+1i,      16,       -9})
+        Mat_c(1,6, {     -2, 12.0+1i,  -7,     15,      -1,  -3.0+1i}) |
+        Mat_c(1,6, {19.0+1i,       4,  -3, 5.0+1i,      16,       -9})
     );
 
     // concatenate per columns
     EXPECT_EQ(m1c,
-        Matrix<c_double>(4,1, {14.0+1i,  17,      -2, 19.0+1i}) &=
-        Matrix<c_double>(4,1, {      4,  17, 12.0+1i,       4}) &
+        Mat_c(4,1, {14.0+1i,  17,      -2, 19.0+1i}) &=
+        Mat_c(4,1, {      4,  17, 12.0+1i,       4}) &
         Matrix          (4,1, {    -16, -16,      -7,      -3}) &
-        Matrix<c_double>(4,1, {    -20,   5,      15,  5.0+1i}) &
+        Mat_c(4,1, {    -20,   5,      15,  5.0+1i}) &
         Matrix          (4,1, {     -3,   6,      -1,      16}) &
-        Matrix<c_double>(4,1, {-4.0+1i, -13, -3.0+1i,      -9})
+        Mat_c(4,1, {-4.0+1i, -13, -3.0+1i,      -9})
     );
 }
 
 
 
 TEST(Matrix, to_vec){
-    Matrix<c_double> m1(2,3,{10.0+1i,11.0+1i,13.0+1i,14.0+1i,15.0+1i,17.0+1i});
-    Matrix<c_double> m2(1,6,{10.0+1i,11.0+1i,13.0+1i,14.0+1i,15.0+1i,17.0+1i});
-    Matrix<c_double> m3(6,1,{10.0+1i,11.0+1i,13.0+1i,14.0+1i,15.0+1i,17.0+1i});
+    Mat_c m1(2,3,{10.0+1i,11.0+1i,13.0+1i,14.0+1i,15.0+1i,17.0+1i});
+    Mat_c m2(1,6,{10.0+1i,11.0+1i,13.0+1i,14.0+1i,15.0+1i,17.0+1i});
+    Mat_c m3(6,1,{10.0+1i,11.0+1i,13.0+1i,14.0+1i,15.0+1i,17.0+1i});
 
     EXPECT_THROW(Matrix().to_c_vec(), runtime_error);
     EXPECT_THROW(Matrix().to_r_vec(), runtime_error);
@@ -1295,7 +1298,7 @@ TEST(Matrix, norm2){
     EXPECT_EQ(m1({3,3},1).norm2(), 2);
 
     // -- complex matrix -- //
-    Matrix<c_double> m2(4,4,
+    Mat_c m2(4,4,
         {1,     3,5,9,
          1,3.0+4i,1,7,
          4,3.0+4i,9,7,
@@ -1321,8 +1324,8 @@ TEST(Matrix, normalize){
     EXPECT_EQ(m1.normalize(), Matrix(1,4, {0.5,0.5,0.5,0.5}));
 
     // -- complex matrix -- //
-    Matrix<c_double> m2(1,4, {3.0+4i, 4.0+3i, 5.0, 3.0+4i});
-    EXPECT_EQ(m2.normalize(), Matrix<c_double>(1,4, {0.3+0.4i, 0.4+0.3i, 0.5, 0.3+0.4i}));
+    Mat_c m2(1,4, {3.0+4i, 4.0+3i, 5.0, 3.0+4i});
+    EXPECT_EQ(m2.normalize(), Mat_c(1,4, {0.3+0.4i, 0.4+0.3i, 0.5, 0.3+0.4i}));
 }
 
 TEST(Matrix, normalize_self){
@@ -1338,8 +1341,8 @@ TEST(Matrix, normalize_self){
     EXPECT_EQ(m1.normalize_self(), Matrix(1,4, {0.5,0.5,0.5,0.5}));
 
     // -- complex matrix -- //
-    Matrix<c_double> m2(1,4, {3.0+4i, 4.0+3i, 5.0, 3.0+4i});
-    EXPECT_EQ(m2.normalize_self(), Matrix<c_double>(1,4, {0.3+0.4i, 0.4+0.3i, 0.5, 0.3+0.4i}));
+    Mat_c m2(1,4, {3.0+4i, 4.0+3i, 5.0, 3.0+4i});
+    EXPECT_EQ(m2.normalize_self(), Mat_c(1,4, {0.3+0.4i, 0.4+0.3i, 0.5, 0.3+0.4i}));
 }
 
 
@@ -1371,7 +1374,7 @@ TEST(Matrix, Ones){
 
 TEST(Matrix, RandMat){
     Matrix m1;
-    Matrix<c_double> m1c;
+    Mat_c m1c;
     
     EXPECT_NO_THROW(m1 = RandMat(5,6));
     EXPECT_EQ(m1.r(), (uint)5);
@@ -1401,7 +1404,7 @@ TEST(Matrix, RandMat){
 
 TEST(Matrix, diag){
     Matrix m1;
-    Matrix<c_double> m1c;
+    Mat_c m1c;
     
     EXPECT_NO_THROW(m1 = diag(vector<double>{1.0,2.0,3.0,4.0}));
     EXPECT_EQ(m1.r(), (uint)4);
@@ -1439,7 +1442,7 @@ TEST(Matrix, diag){
         }
     }
 
-    Matrix<c_double> m2c(1,4,{1.0+1i,3.0,5.0+1i,9.0-1i});
+    Mat_c m2c(1,4,{1.0+1i,3.0,5.0+1i,9.0-1i});
 
     EXPECT_NO_THROW(m1c = diag(m2c));
     EXPECT_EQ(m1c.r(), (uint)4);
@@ -1479,8 +1482,8 @@ TEST(Matrix, transpose){
     }
 
     // -- complex matrix -- //
-    Matrix<c_double> m2c;
-    Matrix<c_double> m1c(3,4,
+    Mat_c m2c;
+    Mat_c m1c(3,4,
         {10.0+1i,11.0-1i,12,13,
          14.0+1i,15.0-1i,16,17,
          18.0+1i,19.0-1i,20,21}
@@ -1492,7 +1495,7 @@ TEST(Matrix, transpose){
         EXPECT_EQ(m1c(i,j), conj(m2c(j,i)));
     }
 
-    m1c = Matrix<c_double>(1,5,
+    m1c = Mat_c(1,5,
         {10.0+1i,11.0+1i,12.0-1i,13.0-1i,14}
     );
     EXPECT_NO_THROW(m2c = m1c.t());
@@ -1504,8 +1507,8 @@ TEST(Matrix, transpose){
 }
 
 TEST(Matrix, submat_del){
-    Matrix<c_double> m2;
-    Matrix<c_double> m1(3,4,
+    Mat_c m2;
+    Mat_c m1(3,4,
         {10.0+1i,11,12.0-1i,13,
          14.0+1i,15,16.0-1i,17,
          18.0+1i,19,20.0-1i,21}
@@ -1521,7 +1524,7 @@ TEST(Matrix, submat_del){
         EXPECT_EQ(m2(i,j), m1(k,l));
     }
 
-    m1 = Matrix<c_double>(1,5,
+    m1 = Mat_c(1,5,
         {10,11,12,13,14}
     );
     EXPECT_NO_THROW(m2 = m1.submat_del(0,3));
@@ -1566,14 +1569,14 @@ TEST(Matrix, determinant){
 
 
     // -- complex matrix -- //
-    Matrix<c_double> m1c(3,4,
+    Mat_c m1c(3,4,
         {10,11,12,13,
          14,15,16,17,
          18,19,20,21}
     );
     EXPECT_THROW(m1c.det(), invalid_argument);
 
-    m1c = Matrix<c_double>(4,4,
+    m1c = Mat_c(4,4,
         {1.0+2i,3,5,9,
          1,3.0+2i,1,7,
          4,3,9.0+2i,7,
@@ -1597,7 +1600,7 @@ TEST(Matrix, determinant){
     EXPECT_DOUBLE_EQ(det.real(), -644.0);
     EXPECT_DOUBLE_EQ(det.imag(), -750.0);
 
-    m1c = Matrix<c_double>(4,4,
+    m1c = Mat_c(4,4,
         {1,3.0+1i,5,0,
          1,3.0+1i,1,0,
          4,3.0+1i,9,0,
@@ -1607,7 +1610,7 @@ TEST(Matrix, determinant){
 }
 
 TEST(Matrix, minor){
-    Matrix<c_double> m(3,4,
+    Mat_c m(3,4,
         {10,11.0+1i,12,13.0-2i,
          14,15.0+1i,16,17.0-2i,
          18,19.0+1i,20,21.0-2i}
@@ -1627,7 +1630,7 @@ TEST(Matrix, minor){
     EXPECT_DOUBLE_EQ(minor, 94.0);
 
     // -- complex matrix -- //
-    Matrix<c_double> m1c(4,4,
+    Mat_c m1c(4,4,
         {1.0+2i,3,5,9,
          1,3.0+2i,1,7,
          4,3,9.0+2i,7,
@@ -1643,7 +1646,7 @@ TEST(Matrix, minor){
 }
 
 TEST(Matrix, cofactor){
-    Matrix<c_double> m(3,4,
+    Mat_c m(3,4,
         {10,11.0+1i,12,13.0-2i,
          14,15.0+1i,16,17.0-2i,
          18,19.0+1i,20,21.0-2i}
@@ -1663,7 +1666,7 @@ TEST(Matrix, cofactor){
     EXPECT_DOUBLE_EQ(cofactor, -94.0);
 
     // -- complex matrix -- //
-    Matrix<c_double> m1c(4,4,
+    Mat_c m1c(4,4,
         {1.0+2i,3,5,9,
          1,3.0+2i,1,7,
          4,3,9.0+2i,7,
@@ -1680,7 +1683,7 @@ TEST(Matrix, cofactor){
 
 TEST(Matrix, cofactor_matrix){
     EXPECT_THROW( 
-        Matrix<c_double>(3,4,
+        Mat_c(3,4,
             {10,11,12,13,
              14,15,16,17,
              18,19,20,21}
@@ -1701,13 +1704,13 @@ TEST(Matrix, cofactor_matrix){
     for(uint i=0; i<m1.size(); ++i) EXPECT_DOUBLE_EQ(m1.v()[i], m2.v()[i]);
 
     // -- complex matrix -- //
-    Matrix<c_double> m1c = Matrix<c_double>(4,4,
+    Mat_c m1c = Mat_c(4,4,
         {1.0+2i,3,5,9,
          1,3.0+2i,1,7,
          4,3,9.0+2i,7,
          5,2,0,9.0+2i}
     ).cof_mat();
-    Matrix<c_double> m2c(4,4,
+    Mat_c m2c(4,4,
         {20.0+228i,  239.0+42i, -23.0-20i, -90.0-116i,
           -4.0-42i, -405.0+60i,   65.0-8i,   90.0-10i,
         -36.0-114i,  -90.0-10i, -78.0-54i,   52.0+54i,
@@ -1748,14 +1751,14 @@ TEST(Matrix, adj){
     }
 
     // -- complex matrix -- //
-    Matrix<c_double> m1c = Matrix<c_double>(4,4,
+    Mat_c m1c = Mat_c(4,4,
         {1.0+2i,3,5,9,
          1,3.0+2i,1,7,
          4,3,9.0+2i,7,
          5,2,0,9.0+2i}
     );
     Matrix m2c = m1c.adj();
-    Matrix<c_double> m3c(4,4,
+    Mat_c m3c(4,4,
         {20.0+228i,   -4.0-42i, -36.0-114i, -12.0-104i,
          239.0+42i, -405.0+60i,  -90.0-10i, 122.0-108i,
          -23.0-20i,    65.0-8i,  -78.0-54i,   46.0+58i,
@@ -1784,7 +1787,7 @@ TEST(Matrix, inv){
     EXPECT_THROW(m1.inv(), invalid_argument);
 
     // singular
-    Matrix<c_double> m1c(4,4,
+    Mat_c m1c(4,4,
         {1.0-1i,3,4,2,
          0,2.0-1i,1,-2.0+1i,
          2,1.0+1i,-3,2,
@@ -1805,22 +1808,22 @@ TEST(Matrix, inv){
          4,3,9,7,
          5,2,0,9}
     );
-    Matrix<double>::set_double_precision(15);
+    Mat::set_double_precision(15);
     EXPECT_EQ(m1*m1.inv(), IdMat(4));
-    Matrix<double>::set_double_precision();
+    Mat::set_double_precision();
 
 
     // -- complex matrix -- //
 
-    m1c = Matrix<c_double>(4,4,
+    m1c = Mat_c(4,4,
         {1.0+1i,3,5.0-1i,9,
          1,3.0-1i,1,7,
          4,3,9.0+1i,7,
          5.0+1i,2,0,9.0-1i}
     );
-    Matrix<c_double>::set_double_precision(13);
+    Mat_c::set_double_precision(13);
     EXPECT_EQ(m1c*m1c.inv(), IdMat(4));
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 TEST(Matrix, pinv){
@@ -1832,7 +1835,7 @@ TEST(Matrix, pinv){
     );
     Matrix m2;
 
-    Matrix<double>::set_double_precision(15);
+    Mat::set_double_precision(15);
     EXPECT_NO_THROW(m2 = m1.pinv_left());
     EXPECT_EQ(m2*m1, IdMat(3));
 
@@ -1843,31 +1846,31 @@ TEST(Matrix, pinv){
 
     EXPECT_NO_THROW(m2 = m1.pinv_right());
     EXPECT_EQ(m1*m2, IdMat(3));
-    Matrix<double>::set_double_precision();
+    Mat::set_double_precision();
 
 
     // -- complex matrix -- // 
 
-    Matrix<c_double> m1c(4,3,
+    Mat_c m1c(4,3,
         {1.0-1i,3,4,
          2,0.0+1i,2.0-1i,
          1.0+1i,-2,2,
          1,-3.0+1i,2}
     );
-    Matrix<c_double> m2c;
+    Mat_c m2c;
 
-    Matrix<c_double>::set_double_precision(13);
+    Mat_c::set_double_precision(13);
     EXPECT_NO_THROW(m2c = m1c.pinv_left());
     EXPECT_EQ(m2c*m1c, IdMat(3));
 
-    m1c = Matrix<c_double>(3,4,
+    m1c = Mat_c(3,4,
         {1.0-1i,3,4,2.0+1i,
          0,2,1.0+1i,-2,
          2,1.0+1i,-3,2.0-1i});
 
     EXPECT_NO_THROW(m2c = m1c.pinv_right());
     EXPECT_EQ(m1c*m2c, IdMat(3));
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 
@@ -1892,7 +1895,7 @@ TEST(Matrix, is_sing){
     );
 
     EXPECT_FALSE(
-        Matrix<c_double>(4,4,
+        Mat_c(4,4,
             {1,3.0+1i,5,9.0-2i,
              1,3.0+1i,1,7.0-2i,
              4,3.0+1i,9,7.0-2i,
@@ -1909,7 +1912,7 @@ TEST(Matrix, is_sing){
     ).is_sing());
 
     EXPECT_TRUE(
-        Matrix<c_double>(3,3,
+        Mat_c(3,3,
             {1.0-1i,1.0+2i,0,
              1.0-1i,2.0+2i,0,
              1.0-1i,3.0+2i,0}
@@ -1918,7 +1921,7 @@ TEST(Matrix, is_sing){
 
 TEST(Matrix, is_vec){
     EXPECT_FALSE(
-        Matrix<c_double>(2,3,
+        Mat_c(2,3,
             {10.0+1i,11,13,
             14,15,17.0+1i}
         ).is_vec()
@@ -1929,7 +1932,7 @@ TEST(Matrix, is_vec){
         ).is_vec()
     );
     EXPECT_TRUE(
-        Matrix<c_double>(3,1,
+        Mat_c(3,1,
             {10,11.0+1i,13}
         ).is_vec()
     );
@@ -1944,7 +1947,7 @@ TEST(Matrix, is_upper_triang){
     );
     EXPECT_FALSE(m1.is_upper_triang());
 
-    Matrix<c_double> m2(4,4,
+    Mat_c m2(4,4,
         {1,3,5,9,
          0,3,1,7,
          0.0+0i,0,9,7,
@@ -1972,7 +1975,7 @@ TEST(Matrix, is_upper_triang){
     );
     EXPECT_TRUE(m1.is_upper_triang());
 
-    m2 = Matrix<c_double>(4,4,
+    m2 = Mat_c(4,4,
         {1,3,5,9,
          0,3,1,7,
          0.0+1i,0,9,7,
@@ -1990,7 +1993,7 @@ TEST(Matrix, is_lower_triang){
     );
     EXPECT_FALSE(m1.is_lower_triang());
 
-    Matrix<c_double> m2(4,4,
+    Mat_c m2(4,4,
         {1,0,0,0.0+0i,
          1,3,0.0+0i,0,
          4,3,9,0.0+0i,
@@ -2014,7 +2017,7 @@ TEST(Matrix, is_lower_triang){
     );
     EXPECT_TRUE(m1.is_lower_triang());
 
-    m2 = Matrix<c_double>(4,4,
+    m2 = Mat_c(4,4,
         {1,0,0,0,
          1,3,0,0,
          4,3,9,0.0+1i,
@@ -2032,7 +2035,7 @@ TEST(Matrix, is_upper_hessenberg){
     );
     EXPECT_FALSE(m1.is_upper_hessenberg());
 
-    Matrix<c_double> m2(4,4,
+    Mat_c m2(4,4,
         {1,3,5,9,
          1,3.0+1i,1,7,
          0,1,9,7.0+1i,
@@ -2040,7 +2043,7 @@ TEST(Matrix, is_upper_hessenberg){
     );
     EXPECT_TRUE(m2.is_upper_hessenberg());
 
-    m2 = Matrix<c_double>(4,4,
+    m2 = Mat_c(4,4,
         {1.0+1i,3,5,9,
          1,3,1.0+1i,7,
          0,1,9,7,
@@ -2066,7 +2069,7 @@ TEST(Matrix, is_lower_hessenberg){
     );
     EXPECT_TRUE(m1.is_lower_hessenberg());
 
-    Matrix<c_double> m2(4,4,
+    Mat_c m2(4,4,
         {1,1,0,0,
          1,3,1,0.0+0.1i,
          4.0+1i,3,9,1,
@@ -2075,8 +2078,10 @@ TEST(Matrix, is_lower_hessenberg){
     EXPECT_FALSE(m2.is_lower_hessenberg());
 }
 
+
+
 TEST(Matrix, reflector){
-    Matrix<c_double> Ac = Matrix<c_double>(6,4,
+    Mat_c Ac = Mat_c(6,4,
         {  4.0-3i,       4, -16.0+1i,      -12, 
                -3,      -4,       17,  17.0-1i, 
               -16,       5,   6.0+1i, -13.0+1i,
@@ -2084,7 +2089,20 @@ TEST(Matrix, reflector){
           -1.0-1i,      -3,       19,        4,  
           -3.0+1i,       5,  16.0+1i,       -9}
     );
-    Matrix<c_double> vc = Ac(ALL, 0);
+    Mat_c vc = Ac(ALL, 2);
+    Reflector<c_double> ref = Ac.reflector(ALL,2);
+    ref.apply_left(Ac, ALL);
+    cout << Ac << endl;
+    ref = Ac.reflector({2,5},0);
+    ref.apply_left(Ac, ALL);
+    cout << Ac << endl;
+    ref = Ac.reflector(1,{1,3});
+    ref.apply_right(Ac, {1,5});
+    cout << ref.v() << endl;
+    cout << ref.alpha() << endl;
+    cout << ref.v()(0) + ref.alpha() << endl;
+    cout << Ac << endl;
+
 }
 
 TEST(Matrix, givens_rotation){
@@ -2101,14 +2119,14 @@ TEST(Matrix, givens_rotation){
     EXPECT_THROW(A.givens_rot(1,3), invalid_argument);
     EXPECT_NO_THROW(rot = A(ALL, 2).givens_rot(1,3));
     EXPECT_NO_THROW(A.apply_givens_rot_left(rot,1,3,2));
-    EXPECT_TRUE(abs(A(3,2)) < Matrix<double>::get_epsilon());
+    EXPECT_TRUE(abs(A(3,2)) < Mat::get_epsilon());
     EXPECT_NO_THROW(rot = A(0, ALL).givens_rot(0,3));
     EXPECT_NO_THROW(A.apply_givens_rot_right(rot,0,3,0));
-    Matrix<double>::set_double_precision(14);
-    EXPECT_TRUE(abs(A(0,3)) < Matrix<double>::get_epsilon());
+    Mat::set_double_precision(14);
+    EXPECT_TRUE(abs(A(0,3)) < Mat::get_epsilon());
 
-    Matrix<c_double> rot_c;
-    Matrix<c_double> Ac = Matrix<c_double>(6,4,
+    Mat_c rot_c;
+    Mat_c Ac = Mat_c(6,4,
         {  4.0-3i,       4, -16.0+1i,      -12, 
                -3,      -4,       17,  17.0-1i, 
               -16,       5,   6.0+1i, -13.0+1i,
@@ -2120,21 +2138,21 @@ TEST(Matrix, givens_rotation){
     EXPECT_THROW(Ac.givens_rot(1,3), invalid_argument);
     EXPECT_NO_THROW(rot_c = Ac(ALL, 2).givens_rot(2,5));
     EXPECT_NO_THROW(Ac.apply_givens_rot_left(rot_c,2,5,2));
-    EXPECT_TRUE(abs(Ac(5,2)) < Matrix<c_double>::get_epsilon());
-    EXPECT_TRUE(abs(Ac(2,2).imag()) < Matrix<c_double>::get_epsilon());
+    EXPECT_TRUE(abs(Ac(5,2)) < Mat_c::get_epsilon());
+    EXPECT_TRUE(abs(Ac(2,2).imag()) < Mat_c::get_epsilon());
     EXPECT_NO_THROW(rot_c = Ac(0, ALL).givens_rot(0,3));
     EXPECT_NO_THROW(Ac.apply_givens_rot_right(rot_c,0,3,0));
-    Matrix<c_double>::set_double_precision(14);
-    EXPECT_TRUE(abs(Ac(0,3)) < Matrix<c_double>::get_epsilon());
-    EXPECT_TRUE(abs(Ac(0,0).imag()) < Matrix<c_double>::get_epsilon());
+    Mat_c::set_double_precision(14);
+    EXPECT_TRUE(abs(Ac(0,3)) < Mat_c::get_epsilon());
+    EXPECT_TRUE(abs(Ac(0,0).imag()) < Mat_c::get_epsilon());
 }
 
 TEST(Matrix, qr_dec){
     Matrix Q, R;
-    Matrix<c_double> Qc, Rc;
+    Mat_c Qc, Rc;
 
-    Matrix<double>::set_double_precision(12);
-    Matrix<c_double>::set_double_precision(12);
+    Mat::set_double_precision(12);
+    Mat_c::set_double_precision(12);
 
     Matrix A(3,3, {2, -2, 18,
                    2, 1, 0,
@@ -2156,7 +2174,7 @@ TEST(Matrix, qr_dec){
 
     // -- complex matrix -- //
 
-    Matrix<c_double> Ac(3,3, 
+    Mat_c Ac(3,3, 
        {12.0+1i, -51,   4,
          6, 167, -68.0+1i,
         -4,  24.0+1i, -41});
@@ -2165,7 +2183,7 @@ TEST(Matrix, qr_dec){
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac, Qc*Rc);
 
-    Ac = Matrix<c_double>(4,6,
+    Ac = Mat_c(4,6,
        {14.0+1i,  4, -16, -20, -3.0+1i,  -4,
         17, 17, -16.0+1i,   5.0+1i,  6, -13,
         -2, 12.0+1i,  -7,  15.0+1i, -1,  -3,
@@ -2178,10 +2196,10 @@ TEST(Matrix, qr_dec){
 
 TEST(Matrix, qrp_dec){
     Matrix Q, R, P;
-    Matrix<c_double> Qc, Rc;
+    Mat_c Qc, Rc;
 
-    Matrix<c_double>::set_double_precision(13);
-    Matrix<double>::set_double_precision  (13);
+    Mat_c::set_double_precision(13);
+    Mat::set_double_precision  (13);
 
     Matrix A(3,3, {2, -2, 18,
                    2,  1,  0,
@@ -2220,7 +2238,7 @@ TEST(Matrix, qrp_dec){
 
     // -- complex matrix -- //
 
-    Matrix<c_double> Ac(3,3, 
+    Mat_c Ac(3,3, 
         {2.0+1i, -2.0-1i, 18,
          2,  1,  0.0+1i,
          1,  2.0-1i,  0});
@@ -2229,7 +2247,7 @@ TEST(Matrix, qrp_dec){
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac*P, Qc*Rc);
 
-    Ac = Matrix<c_double>(3,3, 
+    Ac = Mat_c(3,3, 
         {12, -51.0-1i,   4,
           6.0+1i, 167, -68,
          -4,  24.0+1i, -41.0-1i});
@@ -2238,7 +2256,7 @@ TEST(Matrix, qrp_dec){
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac*P, Qc*Rc);
 
-    Ac = Matrix<c_double>(4,6,
+    Ac = Mat_c(4,6,
         { 14.0+1i,   4, -16.0-1i, -20, -3,  -4,
           17,  17, -16,   5.0+1i,  6, -13.0-1i,
           -2,  12,  -7.0+1i,  15, -1.0-1i,  -3,
@@ -2248,7 +2266,7 @@ TEST(Matrix, qrp_dec){
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac*P, Qc*Rc);
 
-    Ac = Matrix<c_double>(6,4,
+    Ac = Mat_c(6,4,
         { 14.0+1i,   4, -16, -20.0-1i, -3,  -4,
           17,  17.0-1i, -16.0+1i,   5,  6, -13.0-1i,
           -2,  12.0+1i,  -7,  15, -1.0-1i,  -3,
@@ -2258,8 +2276,8 @@ TEST(Matrix, qrp_dec){
     EXPECT_TRUE(Rc.is_upper_triang());
     EXPECT_EQ(Ac*P, Qc*Rc);
 
-    Matrix<c_double>::set_double_precision();
-    Matrix<double>::set_double_precision  ();
+    Mat_c::set_double_precision();
+    Mat::set_double_precision  ();
 }
 
 TEST(Matrix, lup_dec){
@@ -2293,23 +2311,23 @@ TEST(Matrix, lup_dec){
     EXPECT_EQ(L*U, P*m1);
 
     // -- complex matrix -- //
-    Matrix<c_double> Lc,Uc, expected, res;
-    Matrix<c_double> m1c(4,4,
+    Mat_c Lc,Uc, expected, res;
+    Mat_c m1c(4,4,
         {2.0+2i, 0, 2.0+3i, 0.6,
          3, 3, 4, -2.0-1i,
          5, 5.0-1i, 4, 2,
         -1, -2, 3.4+2i, -1}
     );
     EXPECT_NO_THROW(m1c.lup_dec(Lc,Uc,P));
-    // Matrix<c_double>::set_double_precision(16);
+    // Mat_c::set_double_precision(16);
     EXPECT_EQ(L*U, P*m1);
-    // Matrix<c_double>::set_double_precision();
+    // Mat_c::set_double_precision();
 
 }
 
 TEST(Matrix, hessenberg_dec){
     Matrix m1, Q, H;
-    Matrix<c_double> m1c, Qc, Hc;
+    Mat_c m1c, Qc, Hc;
 
     // matrix not square
     m1 = Matrix (3,4,
@@ -2319,7 +2337,7 @@ TEST(Matrix, hessenberg_dec){
          5,2,1,9}
     );
     EXPECT_THROW(m1.hessenberg_dec(Q, H), invalid_argument);
-    m1c = Matrix<c_double> (3,4,
+    m1c = Mat_c (3,4,
         {1.0+1i,3,5,9,
          0,2,1.0+1i,7,
          4.0+1i,1,8,2,
@@ -2327,8 +2345,8 @@ TEST(Matrix, hessenberg_dec){
     );
     EXPECT_THROW(m1c.hessenberg_dec(Qc, Hc), invalid_argument);
 
-    Matrix<c_double>::set_double_precision(13);
-    Matrix<double>::set_double_precision  (13);
+    Mat_c::set_double_precision(13);
+    Mat::set_double_precision  (13);
 
     // matrix decomposable
     m1 = Matrix (4,4,
@@ -2342,7 +2360,7 @@ TEST(Matrix, hessenberg_dec){
     EXPECT_TRUE(H.is_upper_hessenberg());
     EXPECT_EQ(Q * H * Q.t(), m1);
 
-    m1c = Matrix<c_double> (4,4,
+    m1c = Mat_c (4,4,
         {7.5+1i, 8.7, 3.6+1i, 4.6,
          6.4, 2.9+1i, 4.3, 8.8+1i,
          1.4, 8.3+1i, 6.4+1i, 8.3,
@@ -2353,8 +2371,8 @@ TEST(Matrix, hessenberg_dec){
     EXPECT_TRUE(Hc.is_upper_hessenberg());
     EXPECT_EQ(Qc * Hc * Qc.t(), m1c);
 
-    Matrix<c_double>::set_double_precision();
-    Matrix<double>::set_double_precision  ();
+    Mat_c::set_double_precision();
+    Mat::set_double_precision  ();
 }
 
 TEST(Matrix, bidiagonal_form){
@@ -2368,20 +2386,20 @@ TEST(Matrix, bidiagonal_form){
     EXPECT_NO_THROW(A.bidiagonal_form(U,B,Vt));
     EXPECT_TRUE(U.is_orthogonal());
     EXPECT_TRUE(Vt.is_orthogonal());
-    Matrix<double>::set_double_precision(14);
+    Mat::set_double_precision(14);
     EXPECT_TRUE(B.is_upper_triang());
     for(uint i=0; i<B.c()-2; ++i){
         for(uint j=i+2; j<B.c(); ++j){
-            EXPECT_TRUE(abs(B(i,j)) < Matrix<double>::get_epsilon());
+            EXPECT_TRUE(abs(B(i,j)) < Mat::get_epsilon());
         }
     }
-    Matrix<double>::set_double_precision(13);
+    Mat::set_double_precision(13);
     EXPECT_EQ(A, U*B*Vt);
-    Matrix<double>::set_double_precision();
+    Mat::set_double_precision();
 
 
-    Matrix<c_double> Bc,Uc,Vtc;
-    Matrix<c_double> Ac(6,4,{ 14.0+1i,   4.0-1i, -16.0-1i, -20, -3.0-1i,  -4,
+    Mat_c Bc,Uc,Vtc;
+    Mat_c Ac(6,4,{ 14.0+1i,   4.0-1i, -16.0-1i, -20, -3.0-1i,  -4,
                     17,  17.0+1i, -16,   5,  6.0-1i, -13,
                     -2,  12,  -7.0-1i,  15, -1,  -3.0+1i,
                     19.0-1i,   4,  -3,   5, 16.0+1i,  -9});
@@ -2389,23 +2407,23 @@ TEST(Matrix, bidiagonal_form){
     EXPECT_THROW(Ac.reshape(4,6).bidiagonal_form(Uc,Bc,Vtc), invalid_argument);
     EXPECT_NO_THROW(Ac.bidiagonal_form(Uc,Bc,Vtc));
     EXPECT_TRUE(Vtc.is_orthogonal());
-    Matrix<c_double>::set_double_precision(14);
+    Mat_c::set_double_precision(14);
     EXPECT_TRUE(Uc.is_orthogonal());
     EXPECT_TRUE(Bc.is_upper_triang());
     for(uint i=0; i<Bc.c()-2; ++i){
         for(uint j=i+2; j<Bc.c(); ++j){
-            EXPECT_TRUE(abs(Bc(i,j)) < Matrix<c_double>::get_epsilon());
+            EXPECT_TRUE(abs(Bc(i,j)) < Mat_c::get_epsilon());
         }
     }
-    Matrix<c_double>::set_double_precision(13);
+    Mat_c::set_double_precision(13);
     EXPECT_EQ(Ac, Uc*Bc*Vtc);
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 
 TEST(Matrix, backward_sub){
     Matrix U,b;
-    Matrix<c_double> Uc,bc;
+    Mat_c Uc,bc;
 
     U = Matrix(4,4,
         {1,3,5,9,
@@ -2428,15 +2446,15 @@ TEST(Matrix, backward_sub){
 
 
     // -- complex matrix -- //
-    Matrix<c_double>::set_double_precision(15);
+    Mat_c::set_double_precision(15);
 
-    Uc = Matrix<c_double>(4,4,
+    Uc = Mat_c(4,4,
         {1,3.0+1i,5,9,
          0,1.0+1i,1,7.0-2i,
          0,0,2,7,
          0,0,0,3.0-1i}
     );
-    bc = Matrix<c_double>(4,1, {2,6.0+1i,1.0-1i,3});
+    bc = Mat_c(4,1, {2,6.0+1i,1.0-1i,3});
 
     // U not square
     EXPECT_THROW(backward_sub(Uc(ALL,{1,3}), bc), invalid_argument);
@@ -2449,12 +2467,12 @@ TEST(Matrix, backward_sub){
     // solve
     EXPECT_EQ(Uc * backward_sub(Uc, bc), bc);
 
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 TEST(Matrix, forward_sub){
     Matrix L,b;
-    Matrix<c_double> Lc,bc;
+    Mat_c Lc,bc;
 
     L = Matrix(4,4,
         {1,3,5,9,
@@ -2477,15 +2495,15 @@ TEST(Matrix, forward_sub){
 
 
     // -- complex matrix -- //
-    Matrix<c_double>::set_double_precision(15);
+    Mat_c::set_double_precision(15);
 
-    Lc = Matrix<c_double>(4,4,
+    Lc = Mat_c(4,4,
         {1,3.0+1i,5,9,
          0,1.0+1i,1,7.0-2i,
          0,0,2,7,
          0,0,0,3.0-1i}
     ).t();
-    bc = Matrix<c_double>(4,1, {2,6.0+1i,1.0-1i,3});
+    bc = Mat_c(4,1, {2,6.0+1i,1.0-1i,3});
 
     // L not square
     EXPECT_THROW(forward_sub(Lc({0,3},{1,3}), bc), invalid_argument);
@@ -2498,12 +2516,12 @@ TEST(Matrix, forward_sub){
     // solve
     EXPECT_EQ(Lc * forward_sub(Lc, bc), bc);
 
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 TEST(Matrix, matrix_l_divide){
     Matrix A,b,C;
-    Matrix<c_double> Ac,bc,Cc;
+    Mat_c Ac,bc,Cc;
     A = Matrix (4,4,
         {1,3,4,2,
          0,2,1,-2,
@@ -2516,7 +2534,7 @@ TEST(Matrix, matrix_l_divide){
     EXPECT_THROW(matrix_l_divide(A, b({1,3},0)), invalid_argument);
     
     // underdetermined
-    Cc = Matrix<c_double> (4,4,
+    Cc = Mat_c (4,4,
         {1,3.0+1i,4,2,
          0,2,1,-2.0+1i,
          2.0+1i,1.0+1i,-3,2,
@@ -2532,11 +2550,11 @@ TEST(Matrix, matrix_l_divide){
     EXPECT_THROW(matrix_l_divide(C, b), runtime_error);
 
     // solution
-    Matrix<double>::set_double_precision(15);
+    Mat::set_double_precision(15);
     EXPECT_NO_THROW(C = matrix_l_divide(A,b));
     EXPECT_EQ(A*C, b);
     // overdetermined
-    Matrix<double>::set_double_precision(8);
+    Mat::set_double_precision(8);
     A = Matrix(6,4,
         {-1,3,4,2,
          0,2,1,-2,
@@ -2552,48 +2570,48 @@ TEST(Matrix, matrix_l_divide){
           -0.110443, 
           -0.456683}
     )); // computed with numpy
-    Matrix<double>::set_double_precision();
+    Mat::set_double_precision();
 
 
     // -- complex matrix -- //
 
     // solution
-    Ac = Matrix<c_double> (4,4,
+    Ac = Mat_c (4,4,
         {1.0+1i,3,4,2,
          0,2.0-1i,1.0+1i,-2,
          2,1.0+1i,-3,2,
          0.0+1i,2,1,-1.0-1i}
     );
-    bc = Matrix<c_double>(4,1, {2,4.0+1i,1.0-1i,3});
+    bc = Mat_c(4,1, {2,4.0+1i,1.0-1i,3});
 
-    Matrix<c_double>::set_double_precision(13);
+    Mat_c::set_double_precision(13);
     EXPECT_NO_THROW(Cc = matrix_l_divide(Ac,bc));
     EXPECT_EQ(Ac*Cc, bc);
 
     // overdetermined
-    Ac = Matrix<c_double>(6,4,
+    Ac = Mat_c(6,4,
         {-1.0+1i,3,4,2,
          0.0-1i,2,1,-2,
          2.0-1i,1,-3.0+1i,2,
          0,2.0-1i,1,-1,
          7,-3.0+1i,0,3.0-1i,
          -2,5,1,4.0+1i});
-    bc = Matrix<c_double>(6,1,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
+    bc = Mat_c(6,1,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
 
-    Matrix<c_double>::set_double_precision(8);
+    Mat_c::set_double_precision(8);
     EXPECT_NO_THROW(Cc = matrix_l_divide(Ac, bc));
-    EXPECT_EQ(Cc, Matrix<c_double>(4,1,
+    EXPECT_EQ(Cc, Mat_c(4,1,
         { 0.35833002+0.03083223i,
           1.31384349+0.39449758i,
          -0.07673036-0.03475009i,
          -0.37961168-0.29254325i}
     )); // computed with numpy
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 TEST(Matrix, solve_ls){
     Matrix A,b,C;
-    Matrix<c_double> Ac,bc,Cc;
+    Mat_c Ac,bc,Cc;
     A = Matrix (4,4,
         {1,3,4,2,
          0,2,1,-2,
@@ -2606,7 +2624,7 @@ TEST(Matrix, solve_ls){
     EXPECT_THROW(solve_ls(A, b({1,3},0)), invalid_argument);
     
     // underdetermined
-    Cc = Matrix<c_double> (4,4,
+    Cc = Mat_c (4,4,
         {1,3.0+1i,4,2,
          0,2,1,-2.0+1i,
          2.0+1i,1.0+1i,-3,2,
@@ -2622,11 +2640,11 @@ TEST(Matrix, solve_ls){
     EXPECT_THROW(solve_ls(C, b), runtime_error);
 
     // solution
-    Matrix<double>::set_double_precision(15);
+    Mat::set_double_precision(15);
     EXPECT_NO_THROW(C = solve_ls(A,b));
     EXPECT_EQ(A*C, b);
     // overdetermined
-    Matrix<double>::set_double_precision(8);
+    Mat::set_double_precision(8);
     A = Matrix(6,4,
         {-1,3,4,2,
          0,2,1,-2,
@@ -2642,48 +2660,48 @@ TEST(Matrix, solve_ls){
           -0.110443, 
           -0.456683}
     )); // computed with numpy
-    Matrix<double>::set_double_precision();
+    Mat::set_double_precision();
 
 
     // -- complex matrix -- //
 
     // solution
-    Ac = Matrix<c_double> (4,4,
+    Ac = Mat_c (4,4,
         {1.0+1i,3,4,2,
          0,2.0-1i,1.0+1i,-2,
          2,1.0+1i,-3,2,
          0.0+1i,2,1,-1.0-1i}
     );
-    bc = Matrix<c_double>(4,1, {2,4.0+1i,1.0-1i,3});
+    bc = Mat_c(4,1, {2,4.0+1i,1.0-1i,3});
 
-    Matrix<c_double>::set_double_precision(13);
+    Mat_c::set_double_precision(13);
     EXPECT_NO_THROW(Cc = solve_ls(Ac,bc));
     EXPECT_EQ(Ac*Cc, bc);
 
     // overdetermined
-    Ac = Matrix<c_double>(6,4,
+    Ac = Mat_c(6,4,
         {-1.0+1i,3,4,2,
          0.0-1i,2,1,-2,
          2.0-1i,1,-3.0+1i,2,
          0,2.0-1i,1,-1,
          7,-3.0+1i,0,3.0-1i,
          -2,5,1,4.0+1i});
-    bc = Matrix<c_double>(6,1,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
+    bc = Mat_c(6,1,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
 
-    Matrix<c_double>::set_double_precision(8);
+    Mat_c::set_double_precision(8);
     EXPECT_NO_THROW(Cc = solve_ls(Ac, bc));
-    EXPECT_EQ(Cc, Matrix<c_double>(4,1,
+    EXPECT_EQ(Cc, Mat_c(4,1,
         { 0.35833002+0.03083223i,
           1.31384349+0.39449758i,
          -0.07673036-0.03475009i,
          -0.37961168-0.29254325i}
     )); // computed with numpy
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 TEST(Matrix, matrix_r_divide){
     Matrix A,b,C;
-    Matrix<c_double> Ac,bc,Cc;
+    Mat_c Ac,bc,Cc;
 
     A = Matrix (4,4,
         {1,3,4,2,
@@ -2705,7 +2723,7 @@ TEST(Matrix, matrix_r_divide){
     EXPECT_THROW(matrix_r_divide(b, C), runtime_error);
     
     // solution
-    Matrix<double>::set_double_precision(15);
+    Mat::set_double_precision(15);
     EXPECT_NO_THROW(C = matrix_r_divide(b, A));
     EXPECT_EQ(C*A, b);
 
@@ -2720,50 +2738,50 @@ TEST(Matrix, matrix_r_divide){
     ).t();
     b = Matrix(1,6, {2,4,1,3,-3,5});
     EXPECT_NO_THROW(C = matrix_r_divide(b,A));
-    Matrix<double>::set_double_precision(8);
+    Mat::set_double_precision(8);
     EXPECT_EQ(C, 
         Matrix(1,4,{0.34582912, 
                     1.42291125, 
                     -0.110443, 
                     -0.456683})
     );
-    Matrix<double>::set_double_precision();
+    Mat::set_double_precision();
 
 
     // -- complex matrix -- //
 
     // solution
-    Ac = Matrix<c_double> (4,4,
+    Ac = Mat_c (4,4,
         {1.0+1i,3,4,2,
          0,2.0-1i,1.0+1i,-2,
          2,1.0+1i,-3,2,
          0.0+1i,2,1,-1.0-1i}
     );
-    bc = Matrix<c_double>(1,4, {2,4.0+1i,1.0-1i,3});
+    bc = Mat_c(1,4, {2,4.0+1i,1.0-1i,3});
 
-    Matrix<c_double>::set_double_precision(13);
+    Mat_c::set_double_precision(13);
     EXPECT_NO_THROW(Cc = matrix_r_divide(bc,Ac));
     EXPECT_EQ(Cc*Ac, bc);
 
     // overdetermined
-    Ac = Matrix<c_double>(6,4,
+    Ac = Mat_c(6,4,
         {-1.0+1i,3,4,2,
          0.0-1i,2,1,-2,
          2.0-1i,1,-3.0+1i,2,
          0,2.0-1i,1,-1,
          7,-3.0+1i,0,3.0-1i,
          -2,5,1,4.0+1i}).no_conj_t();
-    bc = Matrix<c_double>(1,6,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
+    bc = Mat_c(1,6,{2,4.0+1i,1.0-1i,3,-3,5.0+1i});
 
-    Matrix<c_double>::set_double_precision(8);
+    Mat_c::set_double_precision(8);
     EXPECT_NO_THROW(Cc = matrix_r_divide(bc,Ac));
-    EXPECT_EQ(Cc, Matrix<c_double>(1,4,
+    EXPECT_EQ(Cc, Mat_c(1,4,
         { 0.35833002+0.03083223i,
           1.31384349+0.39449758i,
          -0.07673036-0.03475009i,
          -0.37961168-0.29254325i}
     )); // computed with numpy
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 TEST(Matrix, divide_operator){
@@ -2772,10 +2790,10 @@ TEST(Matrix, divide_operator){
     std::vector<c_double> v1c =  {1.0-1i,3.0+1i,5.0-1i,9.0-1i,1,3.0+1i,1,7,4.0-1i,3,9.0+1i,7};
     std::vector<c_double> v2c;
     Matrix A, b, C;
-    Matrix<c_double> Ac, bc, Cc;
+    Mat_c Ac, bc, Cc;
 
-    Matrix<double>::set_double_precision(14);
-    Matrix<c_double>::set_double_precision(14);
+    Mat::set_double_precision(14);
+    Mat_c::set_double_precision(14);
 
     // int
     EXPECT_NO_THROW(Matrix(0,3)/=2);
@@ -2848,42 +2866,42 @@ TEST(Matrix, divide_operator){
     // -- complex matrix -- //
 
     // int
-    EXPECT_NO_THROW(Matrix<c_double>(0,3)/=2);
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)/2);
+    EXPECT_NO_THROW(Mat_c(0,3)/=2);
+    EXPECT_NO_THROW(Mat_c(3,0)/2);
     v2c = v1c;
     for(uint i=0; i<v2c.size(); ++i) v2c[i]/=2;
     EXPECT_EQ(Matrix(3,4,v1c)/2, Matrix(3,4, v2c));
     EXPECT_EQ(Matrix(3,4,v1c)/=2, Matrix(3,4, v2c));
 
     // double
-    EXPECT_NO_THROW(Matrix<c_double>(0,3)/=2.5);
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)/2.5);
+    EXPECT_NO_THROW(Mat_c(0,3)/=2.5);
+    EXPECT_NO_THROW(Mat_c(3,0)/2.5);
     v2c = v1c;
     for(uint i=0; i<v2c.size(); ++i) v2c[i]/=2.5;
     EXPECT_EQ(Matrix(3,4,v1c)/2.5, Matrix(3,4, v2c));
     EXPECT_EQ(Matrix(3,4,v1c)/=2.5, Matrix(3,4, v2c));
 
     // complex
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)/(2.5+1i));
-    EXPECT_NO_THROW(Matrix<c_double>(3,0)/=(2.5+1i));
+    EXPECT_NO_THROW(Mat_c(3,0)/(2.5+1i));
+    EXPECT_NO_THROW(Mat_c(3,0)/=(2.5+1i));
     v2c = v1c;
     for(uint i=0; i<v2c.size(); ++i) v2c[i] /= (2.5+1i);
     EXPECT_EQ(Matrix(3,4,v1c)/(2.5+1i), Matrix(3,4, v2c));
     EXPECT_EQ(Matrix(3,4,v1c)/=(2.5+1i), Matrix(3,4, v2c));
 
     // matrices
-    Ac = Matrix<c_double>(4,4,
+    Ac = Mat_c(4,4,
         {1.5-1i,3,4,2,
          0.5+1i,2,1,-2.5-1i,
          2,1.5+1i,-3,2,
          0,2.5-1i,1.5+1i,-1}
     );
-    bc = Matrix<c_double>(1,4, {2.5+1i,4,1.5+1i,3.5-1i});
+    bc = Mat_c(1,4, {2.5+1i,4,1.5+1i,3.5-1i});
     // shape doesn't match
     EXPECT_THROW((bc(0,{1,3})/Ac), invalid_argument);
     EXPECT_THROW((bc(0,{1,3})/=Ac), invalid_argument);
     // underdetermined
-    Cc = Matrix<c_double>(4,4,
+    Cc = Mat_c(4,4,
         {1.5-1i,3,4,2,
          0.5+1i,2,1,-2.5-1i,
          2,1.5+1i,-3,2,
@@ -2922,15 +2940,15 @@ TEST(Matrix, divide_operator){
     EXPECT_NO_THROW(Cc = (2.5+1i)/Ac({1,3}, ALL));
     EXPECT_EQ(Ac({1,3}, ALL)*Cc, (2.5+1i)*IdMat(3));
 
-    Matrix<double>::set_double_precision();
-    Matrix<c_double>::set_double_precision();
+    Mat::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 
 
 TEST(Matrix, eigenvalues){
-    Matrix<double>::set_double_precision(8);
-    Matrix<c_double>::set_double_precision(8);
+    Mat::set_double_precision(8);
+    Mat_c::set_double_precision(8);
 
     Matrix m1(6,6,
         {0.289316, 0.514435,  0.414028, 0.876566,  0.729748, 0.715642,
@@ -2943,12 +2961,12 @@ TEST(Matrix, eigenvalues){
 
     EXPECT_THROW(m1(ALL, {0,4}).eigenvalues(), invalid_argument);
     EXPECT_NO_THROW(Matrix().eigenvalues());
-    EXPECT_EQ(m1.eigenvalues(), Matrix<c_double>(6,1,
+    EXPECT_EQ(m1.eigenvalues(), Mat_c(6,1,
         {3.06484856+0i, -0.43274903+0.5936662i, -0.43274903-0.5936662i,
         -0.42845434+0i, 0.20374645+0i, -0.26069222+0i}
     )); //  computed using numpy
 
-    Matrix<c_double> m2(6,6,
+    Mat_c m2(6,6,
         {0.885648  + 0.410313i, 0.365339 + 0.162199i, 0.455307 + 0.135109i, 0.931674 + 0.452336i, 0.908922 + 0.215248i, 0.505956 + 0.860846i,
          0.462245  + 0.817561i, 0.824697 + 0.632739i, 0.954415 + 0.702207i, 0.514435 + 0.289316i, 0.876566 + 0.414028i, 0.715642 + 0.729748i,
          0.0190924 + 0.706535i, 0.065193 + 0.524987i, 0.682049 + 0.488943i, 0.890019 + 0.916634i, 0.989362 + 0.139195i, 0.514659 + 0.446023i,
@@ -2958,18 +2976,18 @@ TEST(Matrix, eigenvalues){
     );
 
     EXPECT_THROW(m2(ALL, {0,4}).eigenvalues(), invalid_argument);
-    EXPECT_NO_THROW(Matrix<c_double>().eigenvalues());
-    EXPECT_EQ(m2.eigenvalues(), Matrix<c_double>(6,1,
+    EXPECT_NO_THROW(Mat_c().eigenvalues());
+    EXPECT_EQ(m2.eigenvalues(), Mat_c(6,1,
         {3.17117652+2.94167887i, 0.299358  +0.82044159i, 0.69038181-0.09100735i,
          -0.00851327-0.62277115i,0.51258838-0.69008745i,-0.34551444+0.02982849i}
     )); //  computed using numpy
     
-    Matrix<double>::set_double_precision();
-    Matrix<c_double>::set_double_precision();
+    Mat::set_double_precision();
+    Mat_c::set_double_precision();
 } 
 
 TEST(Matrix, eigen_dec){
-    Matrix<c_double> D, V;
+    Mat_c D, V;
 
     Matrix m1(6,6,
         {0.289316, 0.514435,  0.414028, 0.876566,  0.729748, 0.715642,
@@ -2981,12 +2999,12 @@ TEST(Matrix, eigen_dec){
     );
     EXPECT_THROW(m1({1, m1.r()-1}, ALL).eigen_dec(D, V), invalid_argument); // matrix not square
     EXPECT_NO_THROW(m1.eigen_dec(D, V));
-    Matrix<c_double>::set_double_precision(8);
-    EXPECT_EQ(D, Matrix<c_double>(6,1,
+    Mat_c::set_double_precision(8);
+    EXPECT_EQ(D, Mat_c(6,1,
         {3.06484856+0i, -0.43274903+0.5936662i, -0.43274903-0.5936662i,
         -0.42845434+0i, 0.20374645+0i, -0.26069222+0i}
     )); //  computed using numpy
-    Matrix<c_double> expected(6, 6, 
+    Mat_c expected(6, 6, 
         {0.44820316,  0.10515559+0.15884329i,  0.10515559-0.15884329i, -0.74890417, -0.03795603,  0.47877402,
          0.34866671,             0.56597124,              0.56597124,   0.21542993,  0.40336694, -0.26421685,
          0.48305211, -0.2593295 -0.2565831i,  -0.2593295 +0.2565831i,   0.59421563,  0.53279817, -0.78476402,
@@ -2995,18 +3013,18 @@ TEST(Matrix, eigen_dec){
          0.34545418, -0.17952752+0.37210824i, -0.17952752-0.37210824i,  0.18447982,  0.24544083,  0.01066194 }
     ); //  computed using numpy
     // // check correctness fo eigenvector -> check that vectors are equal except for common factor
-    // Matrix<c_double>::set_double_precision(5);
+    // Mat_c::set_double_precision(5);
     // for(uint i=0; i<6; ++i){
-    //     Matrix<c_double> ref = V(uu_pair{0,0},i) / expected(0,i);
+    //     Mat_c ref = V(uu_pair{0,0},i) / expected(0,i);
     //     for(uint j=1; j<6; ++j) EXPECT_EQ(ref, V(uu_pair{j,j},i) / expected(j,i));
     // }
     // correctness of eigen decomposition
-    Matrix<c_double>::set_double_precision(14);
+    Mat_c::set_double_precision(14);
     EXPECT_EQ( V * diag(D) * V.inv(), m1);
 
 
 
-    Matrix<c_double> m2(6,6,
+    Mat_c m2(6,6,
         {0.885648  + 0.410313i, 0.365339 + 0.162199i, 0.455307 + 0.135109i, 0.931674 + 0.452336i, 0.908922 + 0.215248i, 0.505956 + 0.860846i,
          0.462245  + 0.817561i, 0.824697 + 0.632739i, 0.954415 + 0.702207i, 0.514435 + 0.289316i, 0.876566 + 0.414028i, 0.715642 + 0.729748i,
          0.0190924 + 0.706535i, 0.065193 + 0.524987i, 0.682049 + 0.488943i, 0.890019 + 0.916634i, 0.989362 + 0.139195i, 0.514659 + 0.446023i,
@@ -3016,12 +3034,12 @@ TEST(Matrix, eigen_dec){
     );
     EXPECT_THROW(m2(ALL, {0,4}).eigen_dec(D, V), invalid_argument); // matrix not square
     EXPECT_NO_THROW(m2.eigen_dec(D, V));
-    Matrix<c_double>::set_double_precision(8);
-    EXPECT_EQ(D , Matrix<c_double>(6,1,
+    Mat_c::set_double_precision(8);
+    EXPECT_EQ(D , Mat_c(6,1,
         {3.17117652+2.94167887i, 0.299358  +0.82044159i, 0.69038181-0.09100735i,
          -0.00851327-0.62277115i,0.51258838-0.69008745i,-0.34551444+0.02982849i}
     )); //  computed using numpy
-    expected = Matrix<c_double>(6,6,
+    expected = Mat_c(6,6,
         {0.39393406-0.08034442i,  0.00633721+0.06081147i, -0.35977206+0.31601806i, -0.14600491-0.21240447i,  0.06084051-0.09417003i, -0.13329616-0.47962943i,
          0.53406368+0i,          0.67557383+0i,          0.49622002+0i,         -0.21788182+0.14358656i,  0.34510475-0.04445892i, -0.34031265+0.17067641i,
          0.40829014+0.07479322i, -0.12166569+0.41330583i, -0.13364649-0.3383384i,   0.28732817+0.0764962i,  -0.38702644-0.1769171i,  -0.31134435+0.06566931i,
@@ -3030,20 +3048,20 @@ TEST(Matrix, eigen_dec){
          0.31908054+0.06142001i,  0.18182042+0.17752043i,  0.08509546+0.17867152i,  0.57626795+0i,          0.0638994 +0.40168208i,  0.51458473+0i}
     );
     // check on correctness of eigenvectors does not work in this case (dk why)
-    // Matrix<c_double>::set_double_precision(5);
+    // Mat_c::set_double_precision(5);
     // for(uint i=0; i<6; ++i){
-    //     Matrix<c_double> ref = V(uu_pair{0,0},i) / expected(0,i);
+    //     Mat_c ref = V(uu_pair{0,0},i) / expected(0,i);
     //     for(uint j=1; j<6; ++j) EXPECT_EQ(ref, V(uu_pair{j,j},i) / expected(j,i));
     // }
     // correctness of eigen decomposition
-    Matrix<c_double>::set_double_precision(14);
+    Mat_c::set_double_precision(14);
     EXPECT_EQ( V * diag(D) * V.inv(), m2);
 
-    Matrix<c_double>::set_double_precision();
+    Mat_c::set_double_precision();
 }
 
 TEST(Matrix, svd){
-    Matrix<double> A(6,8,
+    Mat A(6,8,
         { 14,   4, -16, -20, -3,  -4,
            7,  17, -16,   5,  6, -13,
           -2,  12,  -7,  15, -1,  -3,
@@ -3053,18 +3071,18 @@ TEST(Matrix, svd){
           -8,   4,  12,   4, -5,   8, 
            5, -10,   4,  -7,  8,   5}
     );
-    Matrix<double> U,E,Vt;
+    Mat U,E,Vt;
     A.svd(U,E,Vt);
-    Matrix<double>::set_double_precision(14);
+    Mat::set_double_precision(14);
     for(uint i=0; i<E.r(); ++i){
         for(uint j=0; j<E.c(); ++j){
-            if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Matrix<double>::get_epsilon());
+            if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Mat::get_epsilon());
             else continue;
         }
     }
     EXPECT_TRUE(U.is_orthogonal());
     EXPECT_TRUE(Vt.is_orthogonal());
-    Matrix<double>::set_double_precision(13);
+    Mat::set_double_precision(13);
     // cout << U << endl << E << endl << Vt << endl;
     EXPECT_EQ(A, U*E*Vt);
     // cout << A - U*E*Vt << endl;

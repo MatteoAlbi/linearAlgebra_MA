@@ -487,7 +487,7 @@ double Matrix<T>::norm2() const{
     if(!this->is_vec()) throw std::invalid_argument("Norm only appliable to row/column vectors");
 
     double ret = 0;
-    for(uint i=0; i< this->_r+this->_c-1; ++i){
+    for(uint i=0; i< this->size(); ++i){
         if constexpr(is_complex<T>::value) ret += _v[i].real() * _v[i].real() + _v[i].imag() * _v[i].imag();
         else ret += _v[i] * _v[i];
     }
@@ -743,6 +743,18 @@ Matrix<T> Matrix<T>::pinv_right() const{
 
 
 #pragma region decomposition_methods
+
+template<typename T>
+Reflector<T> Matrix<T>::reflector(uu_pair rs, uint c) const{
+    Matrix<T> v = this->at(rs, c);
+    return Reflector<T>::zero_reflector(v, rs.first);
+}
+
+template<typename T>
+Reflector<T> Matrix<T>::reflector(uint r, uu_pair cs) const{
+    Matrix<T> v = this->at(r, cs).t();
+    return Reflector<T>::zero_reflector(v, cs.first);
+}
 
 template<typename T>
 Matrix<T> Matrix<T>::reflector() const{
@@ -1164,6 +1176,95 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
 }
 
 #pragma endregion decomposition_methods
+
+
+#pragma region reflector
+
+template<typename T>
+Reflector<T> Reflector<T>::zero_reflector(Matrix<T> & v, uint start){
+    // Ha = b
+    // z = a -b
+    // Q = I - zz' / tau
+    double a_n2 = 0.0;
+    for(uint i=0; i<v.size(); ++i) {
+        if constexpr (is_complex<T>::value) a_n2 += v(i).real()*v(i).real() + v(i).imag() * v(i).imag();
+        else a_n2 += v(i) * v(i);
+    }
+    double a_n = sqrt(a_n2);
+    T tau = a_n2 - a_n * v(0);
+    v(0) -= a_n;
+
+    return Reflector<T>(v, tau, a_n, start);
+}
+
+template<typename T>
+Reflector<T>::Reflector(): _v() {}
+
+template<typename T>
+Reflector<T>::Reflector(
+    Matrix<T> v,
+    T tau,
+    double alpha,
+    uint start_index
+):
+_v(v),
+_tau(tau),
+_alpha(alpha),
+_start_index(start_index)
+{}
+
+template<typename T>
+Matrix<T> Reflector<T>::v() const {return _v;}
+
+template<typename T>
+T Reflector<T>::tau() const {return _tau;}
+
+template<typename T>
+double Reflector<T>::alpha() const {return _alpha;}
+
+template<typename T>
+uint Reflector<T>::si() const {return _start_index;}
+
+
+template<typename T>
+template<typename U>
+void Reflector<T>::apply_left(Matrix<U> & m, uu_pair cs){
+    if(_start_index + _v.size() > m.r()) throw std::invalid_argument("Reflector too big to be applied to this matrix");
+    if(cs.second == UINT_MAX) cs.second = m.c()-1;
+    if(cs.second >= m.c()) throw std::out_of_range("Col index out of range");
+    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
+
+    uint i = _start_index;
+    T tmp;
+    Matrix<T> v_t = _v.t() / _tau;
+
+    for(uint j=cs.first; j<=cs.second; ++j){
+        tmp = 0.0;
+        for(uint k=0; k<_v.size(); ++k) tmp += v_t(k) * m(i+k,j);
+        for(uint k=0; k<_v.size(); ++k) m(i+k,j) -= _v(k) * tmp;
+    }
+}
+
+template<typename T>
+template<typename U>
+void Reflector<T>::apply_right(Matrix<U> & m, uu_pair rs){
+    if(_start_index + _v.size() > m.c()) throw std::invalid_argument("Reflector too big to be applied to this matrix");
+    if(rs.second == UINT_MAX) rs.second = m.r()-1;
+    if(rs.second >= m.r()) throw std::out_of_range("Row index out of range");
+    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
+
+    uint i = _start_index;
+    T tmp;
+    Matrix<T> v_t = _v.t() / _tau;
+
+    for(uint j=rs.first; j<=rs.second; ++j){
+        tmp = 0.0;
+        for(uint k=0; k<_v.size(); ++k) tmp += _v(k) * m(j,i+k);
+        for(uint k=0; k<_v.size(); ++k) m(j,i+k) -= v_t(k) * tmp;
+    }
+}
+
+#pragma endregion reflector
 
 
 #pragma region ls_solution

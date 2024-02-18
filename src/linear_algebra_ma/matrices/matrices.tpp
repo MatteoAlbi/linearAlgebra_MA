@@ -483,6 +483,12 @@ Matrix<RetType_t<U,V>> cross(const Matrix<U> & v1, const Matrix<V> & v2){
 }
 
 template<typename T>
+double Matrix<T>::norm() const{
+    if(!this->is_vec()) throw std::invalid_argument("Norm only appliable to row/column vectors");
+    return sqrt(this->norm2());
+}
+
+template<typename T>
 double Matrix<T>::norm2() const{
     if(!this->is_vec()) throw std::invalid_argument("Norm only appliable to row/column vectors");
 
@@ -491,17 +497,17 @@ double Matrix<T>::norm2() const{
         if constexpr(is_complex<T>::value) ret += _v[i].real() * _v[i].real() + _v[i].imag() * _v[i].imag();
         else ret += _v[i] * _v[i];
     }
-    return sqrt(ret);
+    return ret;
 }
 
 template<typename T>
 Matrix<T> Matrix<T>::normalize() const{
-    return Matrix<T>(*this) / this->norm2();
+    return Matrix<T>(*this) / this->norm();
 }
 
 template<typename T>
 Matrix<T>& Matrix<T>::normalize_self(){
-    return this->operator/=(this->norm2());
+    return this->operator/=(this->norm());
 }
 
 #pragma endregion vector
@@ -764,8 +770,8 @@ Matrix<T> Matrix<T>::reflector() const{
     Matrix<T> u(*this);
     T alpha;
 
-    if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm2();
-    else alpha = -copysign(u.norm2(), u(0));
+    if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm();
+    else alpha = -copysign(u.norm(), u(0));
 
     u(0) -= alpha;
     return u.normalize();
@@ -908,7 +914,7 @@ void Matrix<T>::qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const{
         uint index = 0;
         double max_norm = -1;
         for(uint k=i; k<n; ++k){
-            double norm = R({i, _r-1}, k).norm2();
+            double norm = R({i, _r-1}, k).norm();
             if(norm > max_norm){
                 max_norm = norm;
                 index = k;
@@ -1502,7 +1508,7 @@ Matrix<c_double> Matrix<T>::eigenvector(c_double eigenv, uint max_iterations, do
     // // extract eigenvector solving the linear system
     // Matrix<c_double> M = *this - eigenv * IdMat(_r);
     // Matrix<c_double> eigen_vec = Matrix(1,1,{1}) | solve_ls(M(ALL, {1,_r-1}), - M(ALL, 0));
-    // // std::cout << (*this * eigen_vec - eigenv * eigen_vec).norm2() << std::endl;
+    // // std::cout << (*this * eigen_vec - eigenv * eigen_vec).norm() << std::endl;
     // return eigen_vec;
     
     // compute LU decomposition of shifted matrix
@@ -1518,7 +1524,7 @@ Matrix<c_double> Matrix<T>::eigenvector(c_double eigenv, uint max_iterations, do
     for(k=0; k<max_iterations; ++k){
         tmp = forward_sub(L, P*q);
         q = backward_sub(U, tmp).normalize();
-        residual = (*this * q - eigenv * q).norm2();
+        residual = (*this * q - eigenv * q).norm();
         // check for convergence
         if(residual < tolerance) break;
         // the algorithm should converge very fast

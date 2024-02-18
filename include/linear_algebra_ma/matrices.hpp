@@ -719,9 +719,16 @@ public:
     friend Matrix<RetType_t<U,V>> cross(const Matrix<U> & v1, const Matrix<V> & v2);
 
     /**
-     * @brief return norm2: sqrt(sum(v(i)^2)) of the given vector
+     * @brief computes norm of the given vector
      * 
-     * @return double: norm2 of the vector
+     * @return norm
+     */
+    double norm() const;
+
+    /**
+     * @brief computes squared norm of the given vector
+     * 
+     * @return squared norm
      */
     double norm2() const;
 

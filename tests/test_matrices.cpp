@@ -1284,7 +1284,7 @@ TEST(Matrix, to_vec){
     EXPECT_EQ(m1.to_r_vec(), m2);
 }
 
-TEST(Matrix, norm2){
+TEST(Matrix, norm){
     Matrix m1(4,4,
         {1,3,5,9,
          1,3,1,7,
@@ -1292,10 +1292,13 @@ TEST(Matrix, norm2){
          5,2,0,9}
     );
 
-    EXPECT_THROW(m1.norm2(), invalid_argument);
-    EXPECT_EQ(m1(2,{0,3}).norm2(), sqrt(155));
-    EXPECT_EQ(m1({0,2},1).norm2(), sqrt(27));
-    EXPECT_EQ(m1({3,3},1).norm2(), 2);
+    EXPECT_THROW(m1.norm(), invalid_argument);
+    EXPECT_EQ(m1(2,{0,3}).norm(), sqrt(155));
+    EXPECT_EQ(m1(2,{0,3}).norm2(), 155);
+    EXPECT_EQ(m1({0,2},1).norm(), sqrt(27));
+    EXPECT_EQ(m1({0,2},1).norm2(), 27);
+    EXPECT_EQ(m1({3,3},1).norm(), 2);
+    EXPECT_EQ(m1({3,3},1).norm2(), 4);
 
     // -- complex matrix -- //
     Mat_c m2(4,4,
@@ -1305,10 +1308,13 @@ TEST(Matrix, norm2){
          5,3.0+4i,0,9}
     );
 
-    EXPECT_THROW(m2.norm2(), invalid_argument);
-    EXPECT_EQ   (m2(2,{0,3}).norm2(), sqrt(171));
-    EXPECT_EQ   (m2({0,2},1).norm2(), sqrt(59));
-    EXPECT_EQ   (m2({3,3},1).norm2(), 5);
+    EXPECT_THROW(m2.norm(), invalid_argument);
+    EXPECT_EQ   (m2(2,{0,3}).norm(), sqrt(171));
+    EXPECT_EQ   (m2(2,{0,3}).norm2(), 171);
+    EXPECT_EQ   (m2({0,2},1).norm(), sqrt(59));
+    EXPECT_EQ   (m2({0,2},1).norm2(), 59);
+    EXPECT_EQ   (m2({3,3},1).norm(), 5);
+    EXPECT_EQ   (m2({3,3},1).norm2(), 25);
 }
 
 TEST(Matrix, normalize){
@@ -2089,19 +2095,27 @@ TEST(Matrix, reflector){
           -1.0-1i,      -3,       19,        4,  
           -3.0+1i,       5,  16.0+1i,       -9}
     );
-    Mat_c vc = Ac(ALL, 2);
     Reflector<c_double> ref = Ac.reflector(ALL,2);
     ref.apply_left(Ac, ALL);
     cout << Ac << endl;
     ref = Ac.reflector({2,5},0);
     ref.apply_left(Ac, ALL);
     cout << Ac << endl;
-    ref = Ac.reflector(1,{1,3});
-    ref.apply_right(Ac, {1,5});
+
+    cout << endl << "left prod ----------------" << endl;
+    Mat_c vc = Ac(1,{1,3});
+    vc = vc.no_conj_t();
+    ref = vc.reflector(ALL, 0);
+    // ref.apply_left(vc, {0,0});
     cout << ref.v() << endl;
-    cout << ref.alpha() << endl;
-    cout << ref.v()(0) + ref.alpha() << endl;
-    cout << Ac << endl;
+    cout << vc - ref.v()*(ref.v().t()*vc)/ref.tau() << endl;
+
+    cout << endl << "right prod -----------------" << endl;
+    vc = Ac(1,{1,3});
+    ref = vc.reflector(0, ALL);
+    // ref.apply_right(vc, ALL);
+    cout << vc - (vc * ref.v()) * ref.v().t() / std::conj(ref.tau()) << endl;
+    
 
 }
 

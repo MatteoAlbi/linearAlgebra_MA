@@ -751,15 +751,33 @@ Matrix<T> Matrix<T>::pinv_right() const{
 #pragma region decomposition_methods
 
 template<typename T>
-Reflector<T> Matrix<T>::reflector(uu_pair rs, uint c) const{
+Reflector<T> Matrix<T>::zero_reflector(uu_pair rs, uint c) const{
     Matrix<T> v = this->at(rs, c);
-    return Reflector<T>::zero_reflector(v, rs.first);
+
+    double a_n2 = v.norm2();
+    if(a_n2 < Matrix<T>::get_epsilon()) throw std::invalid_argument("selected vector has null norm");
+    double a_n = sqrt(a_n2);
+    T tau = a_n2 - a_n * v(0);
+    v(0) -= a_n;
+
+    return Reflector<T>(v, tau, a_n, rs.first);
 }
 
 template<typename T>
-Reflector<T> Matrix<T>::reflector(uint r, uu_pair cs) const{
+Reflector<T> Matrix<T>::zero_reflector(uint r, uu_pair cs) const{
     Matrix<T> v = this->at(r, cs).t();
-    return Reflector<T>::zero_reflector(v, cs.first);
+
+    double a_n2 = v.norm2();
+    if(a_n2 < Matrix<T>::get_epsilon()) throw std::invalid_argument("selected vector has null norm");
+    double a_n = sqrt(a_n2);
+    T tau;
+    // if constexpr(is_complex<T>::value) tau = a_n2 - a_n * std::conj(v(0));
+    if(false) ;
+    else tau = a_n2 - a_n * v(0);
+    
+    v(0) -= a_n;
+
+    return Reflector<T>(v, tau, a_n, cs.first);
 }
 
 template<typename T>
@@ -891,10 +909,13 @@ void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
     
     for(uint i=0; i<n; ++i){
         //compute reflector
-        Matrix<T> v = R({i, _r-1}, i).reflector(); // U
+        Reflector<T> v = R.zero_reflector({i, _r-1}, i);
+        // R({i, _r-1}, i).reflector(); // U
         // apply reflector
-        R.apply_reflector_left(v, i, i); // UR
-        Q.apply_reflector_right(v, i, 0); // QU
+        v.apply_left(R, {i, R.c()-1});
+        v.apply_right(Q, ALL);
+        // R.apply_reflector_left(v, i, i); // UR
+        // Q.apply_reflector_right(v, i, 0); // QU
     }
 }
 
@@ -1187,23 +1208,6 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
 #pragma region reflector
 
 template<typename T>
-Reflector<T> Reflector<T>::zero_reflector(Matrix<T> & v, uint start){
-    // Ha = b
-    // z = a -b
-    // Q = I - zz' / tau
-    double a_n2 = 0.0;
-    for(uint i=0; i<v.size(); ++i) {
-        if constexpr (is_complex<T>::value) a_n2 += v(i).real()*v(i).real() + v(i).imag() * v(i).imag();
-        else a_n2 += v(i) * v(i);
-    }
-    double a_n = sqrt(a_n2);
-    T tau = a_n2 - a_n * v(0);
-    v(0) -= a_n;
-
-    return Reflector<T>(v, tau, a_n, start);
-}
-
-template<typename T>
 Reflector<T>::Reflector(): _v() {}
 
 template<typename T>
@@ -1231,10 +1235,19 @@ double Reflector<T>::alpha() const {return _alpha;}
 template<typename T>
 uint Reflector<T>::si() const {return _start_index;}
 
+template<typename T>
+Matrix<T> Reflector<T>::householder_mat() const{
+    Matrix<T> ret;
+
+    if(_v.r() > 1) ret = IdMat(_v.size()) - _v * _v.t() / _tau;
+    else ret = IdMat(_v.size()) - _v.t() * _v / _tau;
+
+    return ret;
+}
 
 template<typename T>
 template<typename U>
-void Reflector<T>::apply_left(Matrix<U> & m, uu_pair cs){
+void Reflector<T>::apply_left(Matrix<U> & m, uu_pair cs) const{
     if(_start_index + _v.size() > m.r()) throw std::invalid_argument("Reflector too big to be applied to this matrix");
     if(cs.second == UINT_MAX) cs.second = m.c()-1;
     if(cs.second >= m.c()) throw std::out_of_range("Col index out of range");
@@ -1253,7 +1266,7 @@ void Reflector<T>::apply_left(Matrix<U> & m, uu_pair cs){
 
 template<typename T>
 template<typename U>
-void Reflector<T>::apply_right(Matrix<U> & m, uu_pair rs){
+void Reflector<T>::apply_right(Matrix<U> & m, uu_pair rs) const{
     if(_start_index + _v.size() > m.c()) throw std::invalid_argument("Reflector too big to be applied to this matrix");
     if(rs.second == UINT_MAX) rs.second = m.r()-1;
     if(rs.second >= m.r()) throw std::out_of_range("Row index out of range");
@@ -1261,7 +1274,9 @@ void Reflector<T>::apply_right(Matrix<U> & m, uu_pair rs){
 
     uint i = _start_index;
     T tmp;
-    Matrix<T> v_t = _v.t() / _tau;
+    Matrix<T> v_t;
+    if constexpr(is_complex<T>::value) v_t = _v.t() / std::conj(_tau); 
+    else v_t = _v.t() / _tau;
 
     for(uint j=rs.first; j<=rs.second; ++j){
         tmp = 0.0;

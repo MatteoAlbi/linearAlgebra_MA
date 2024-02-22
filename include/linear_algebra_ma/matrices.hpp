@@ -884,20 +884,22 @@ public:
     Matrix<T> reflector() const;
 
     /**
-     * @brief computes the reflector of the given vector
-     * https://en.wikipedia.org/wiki/QR_decomposition
+     * @brief computes the reflector of the given vector 
+     * zeroing all of its elements except the first
+     * https://ieeexplore.ieee.org/document/622959
      * 
-     * @return reflector vector
+     * @return reflector object
     */
-    Reflector<T> reflector(uu_pair rs, uint c) const;
+    Reflector<T> zero_reflector(uu_pair rs, uint c) const;
 
     /**
-     * @brief computes the reflector of the given vector
-     * https://en.wikipedia.org/wiki/QR_decomposition
+     * @brief computes the reflector of the given vector 
+     * zeroing all of its elements except the first
+     * https://ieeexplore.ieee.org/document/622959
      * 
-     * @return reflector vector
+     * @return reflector object
     */
-    Reflector<T> reflector(uint r, uu_pair cs) const;
+    Reflector<T> zero_reflector(uint r, uu_pair cs) const;
 
     /**
      * @brief given this matrix (A) and reflector v updates A as:
@@ -1103,11 +1105,13 @@ public:
     double alpha() const;
     uint si() const;
 
-    template<typename U>
-    void apply_left(Matrix<U> & m, uu_pair cs);
+    Matrix<T> householder_mat() const;
 
     template<typename U>
-    void apply_right(Matrix<U> & m, uu_pair rs);
+    void apply_left(Matrix<U> & m, uu_pair cs) const;
+
+    template<typename U>
+    void apply_right(Matrix<U> & m, uu_pair rs) const;
 
 };
 #pragma endregion reflector

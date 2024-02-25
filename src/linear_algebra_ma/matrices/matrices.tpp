@@ -775,66 +775,81 @@ Matrix<T> Matrix<T>::pinv_right() const{
 
 #pragma region decomposition_methods
 
+// template<typename T>
+// Reflector<T> Matrix<T>::zero_reflector(uu_pair rs, uint c) const{
+//     Matrix<T> v = this->at(rs, c);
+
+//     double a_n2 = v.norm2();
+//     double a_n = sqrt(a_n2);
+//     if(a_n < Matrix<T>::get_epsilon()) {
+//         // the vector is null, I do not need to apply any reflection
+//         // throw std::invalid_argument("selected vector has null norm");
+//         return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
+//     }
+//     // compute vector result of reflection
+//     Matrix<T> reflected(v.size(), 1);
+//     reflected(0) = a_n;
+//     if(v == reflected){
+//         // this is the case where the reflector transforms v in itself
+//         // it is an exception explained in the paper as the condition a* a != a* b
+//         // in this case a == b and the formula cannot be applied 
+//         return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
+//     }
+
+//     T tau = a_n2 - a_n * v(0);
+//     v(0) -= a_n;
+
+//     return Reflector<T>(v, tau, a_n, rs.first);
+// }
+
+// template<typename T>
+// Reflector<T> Matrix<T>::zero_reflector(uint r, uu_pair cs) const{
+//     Matrix<T> v = this->at(r, cs).t();
+
+//     double a_n2 = v.norm2();
+//     double a_n = sqrt(a_n2);
+//     if(a_n < Matrix<T>::get_epsilon()) {
+//         // the vector is null, I do not need to apply any reflection
+//         // throw std::invalid_argument("selected vector has null norm");
+//         return Reflector<T>(Matrix<T>(v.size(), 1), 1, 0, cs.first);
+//     }
+//     // compute vector result of reflection
+//     Matrix<T> reflected(v.size(), 1);
+//     reflected(0) = a_n;
+//     if(v == reflected){
+//         // this is the case where the reflector transforms v in itself
+//         // it is an exception explained in the paper as the condition a* a != a* b
+//         // in this case a == b and the formula cannot be applied 
+//         return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, cs.first);
+//     }
+
+//     T tau = a_n2 - a_n * v(0);
+//     v(0) -= a_n;
+
+//     return Reflector<T>(v, tau, a_n, cs.first);
+// }
+
 template<typename T>
-Reflector<T> Matrix<T>::zero_reflector(uu_pair rs, uint c) const{
-    Matrix<T> v = this->at(rs, c);
-
-    double a_n2 = v.norm2();
-    double a_n = sqrt(a_n2);
-    if(a_n < Matrix<T>::get_epsilon()) {
-        // the vector is null, I do not need to apply any reflection
-        // throw std::invalid_argument("selected vector has null norm");
-        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
-    }
-    // compute vector result of reflection
-    Matrix<T> reflected(v.size(), 1);
-    reflected(0) = a_n;
-    if(v == reflected){
-        // this is the case where the reflector transforms v in itself
-        // it is an exception explained in the paper as the condition a* a != a* b
-        // in this case a == b and the formula cannot be applied 
-        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
-    }
-
-    T tau = a_n2 - a_n * v(0);
-    v(0) -= a_n;
-
-    return Reflector<T>(v, tau, a_n, rs.first);
-}
-
-template<typename T>
-Reflector<T> Matrix<T>::zero_reflector(uint r, uu_pair cs) const{
-    Matrix<T> v = this->at(r, cs).t();
-
-    double a_n2 = v.norm2();
-    double a_n = sqrt(a_n2);
-    if(a_n < Matrix<T>::get_epsilon()) {
-        // the vector is null, I do not need to apply any reflection
-        // throw std::invalid_argument("selected vector has null norm");
-        return Reflector<T>(Matrix<T>(v.size(), 1), 1, 0, cs.first);
-    }
-    // compute vector result of reflection
-    Matrix<T> reflected(v.size(), 1);
-    reflected(0) = a_n;
-    if(v == reflected){
-        // this is the case where the reflector transforms v in itself
-        // it is an exception explained in the paper as the condition a* a != a* b
-        // in this case a == b and the formula cannot be applied 
-        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, cs.first);
-    }
-
-    T tau = a_n2 - a_n * v(0);
-    v(0) -= a_n;
-
-    return Reflector<T>(v, tau, a_n, cs.first);
-}
-
-template<typename T>
-Matrix<T> Matrix<T>::reflector() const{
-    if(!this->is_vec()) throw std::invalid_argument("The object must be a vector");
+Matrix<T> Matrix<T>::reflector(uu_pair rs, uint c) const{
+    Matrix<T> u = this->at(rs, c);
+    if(!u.is_vec()) throw std::invalid_argument("Given ranges do not extract a vector");
 
     using namespace std::complex_literals;
-    Matrix<T> u(*this);
+    T alpha;
+
+    if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm();
+    else alpha = -copysign(u.norm(), u(0));
+
+    u(0) -= alpha;
+    return u.normalize();
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::reflector(uint r, uu_pair cs) const{
+    Matrix<T> u = this->at(r, cs);
+    if(!u.is_vec()) throw std::invalid_argument("Given ranges do not extract a vector");
+
+    using namespace std::complex_literals;
     T alpha;
 
     if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm();
@@ -847,18 +862,21 @@ Matrix<T> Matrix<T>::reflector() const{
 template<typename T>
 void Matrix<T>::apply_reflector_right(
     const Matrix<T> & v, 
-    uint start_index, 
-    uint skip_index,
-    uint dim
+    uint start_col, 
+    uu_pair rs
 ){
-    if(start_index + v.size() - 1 >= _c) throw std::invalid_argument("Reflector too big to be applied using given start_index");
-    uint i = start_index;
-    if(dim == 0) dim = _r - i;
-
+    // setup indexes
+    uint i = start_col;
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    // range checks
+    if(i + v.size() - 1 >= _c) throw std::invalid_argument("Reflector too big to be applied using given start_index");
+    if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
+    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
+    // init variables
     T tmp;
     Matrix<T> v_t = 2 * v.t();
-
-    for(uint j=skip_index; j<i+dim; ++j){
+    // apply reflector
+    for(uint j=rs.first; j<=rs.second; ++j){
         tmp = 0.0;
         for(uint k=0; k<v.size(); ++k) tmp += v(k) * this->at(j,i+k);
         for(uint k=0; k<v.size(); ++k) this->at(j,i+k) -= v_t(k) * tmp;
@@ -868,18 +886,21 @@ void Matrix<T>::apply_reflector_right(
 template<typename T>
 void Matrix<T>::apply_reflector_left(
     const Matrix<T> & v, 
-    uint start_index, 
-    uint skip_index,
-    uint dim
+    uint start_row, 
+    uu_pair cs
 ){
-    if(start_index + v.size() - 1 >= _r) throw std::invalid_argument("Reflector too big to be applied using given start_index");
-    uint i = start_index;
-    if(dim == 0) dim = _c - i;
-
+    // setup indexes
+    uint i = start_row;
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+    // range checks
+    if(i + v.size() - 1 >= _r) throw std::invalid_argument("Reflector too big to be applied using given start_index");
+    if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
+    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
+    // init variables
     T tmp;
     Matrix<T> v_t = 2 * v.t();
-
-    for(uint j=skip_index; j<i+dim; ++j){
+    // apply reflector
+    for(uint j=cs.first; j<=cs.second; ++j){
         tmp = 0.0;
         for(uint k=0; k<v.size(); ++k) tmp += v_t(k) * this->at(i+k,j);
         for(uint k=0; k<v.size(); ++k) this->at(i+k,j) -= v(k) * tmp;
@@ -958,13 +979,10 @@ void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
     
     for(uint i=0; i<n; ++i){
         //compute reflector
-        Reflector<T> v = R.zero_reflector({i, _r-1}, i);
-        // R({i, _r-1}, i).reflector(); // U
+        Matrix<T> v = R.reflector({i, _r-1}, i); // U
         // apply reflector
-        v.apply_left(R, {i, R.c()-1});
-        v.apply_right(Q, ALL);
-        // R.apply_reflector_left(v, i, i); // UR
-        // Q.apply_reflector_right(v, i, 0); // QU
+        R.apply_reflector_left(v, i, {i,-1}); // UR
+        Q.apply_reflector_right(v, i, ALL); // QU
     }
 }
 
@@ -996,13 +1014,10 @@ void Matrix<T>::qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const{
         P.swap_cols(i, index);
 
         // compute reflector
-        Reflector<T> ref = R.zero_reflector({i, _r-1}, i);
-        // Matrix<T> v = R({i, _r-1}, i).reflector(); // U
+        Matrix<T> v = R.reflector({i, _r-1}, i); // U
         // apply reflector
-        ref.apply_left(R, {i, R.c()-1});
-        // R.apply_reflector_left(v, i, i); // UR
-        ref.apply_right(Q, ALL);
-        // Q.apply_reflector_right(v, i); // QU
+        R.apply_reflector_left(v, i, {i,-1}); // UR
+        Q.apply_reflector_right(v, i); // QU
     }
 }
 
@@ -1067,15 +1082,11 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
 
     for (uint i=1; i<_r-1; ++i){
         // compute reflector
-        // Matrix<T> v = H({i, _r-1}, i-1).reflector(); // U
-        Reflector<T> ref = H.zero_reflector({i, _r-1}, i-1);
+        Matrix<T> v = H.reflector({i, _r-1}, i-1); // U
         // apply reflector
-        ref.apply_left(H,{i-1, H.c()-1});
-        // H.apply_reflector_left(v, i, i-1); // UH
-        ref.apply_right(H, ALL);
-        // H.apply_reflector_right(v, i); // HU
-        ref.apply_right(Q, ALL);
-        // Q.apply_reflector_right(v, i); // QU
+        H.apply_reflector_left(v, i, {i-1,-1}); // UH
+        H.apply_reflector_right(v, i); // HU
+        Q.apply_reflector_right(v, i); // QU
     }
 }
 
@@ -1089,15 +1100,15 @@ void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt) co
     Matrix<T> v;
 
     for(uint i=0; i<_c; ++i){
-        v = B({i, _r-1}, i).reflector(); // Q
-        B.apply_reflector_left(v,i,i); // QB
-        U.apply_reflector_right(v,i); // UQ
+        v = B.reflector({i, -1}, i); // Q
+        B.apply_reflector_left(v, i, {i,-1}); // QB
+        U.apply_reflector_right(v, i); // UQ
         if(i < _c-2){
             // need to transpose the vector becaue I am taking a row vector 
             // actually, it is necessary only for complex matrices
-            v = B(i, {i+1, _c-1}).reflector().t(); // Q
-            B.apply_reflector_right(v,i+1); // BQ
-            Vt.apply_reflector_left(v,i+1); // QVt
+            v = B.reflector(i, {i+1, -1}).t(); // Q
+            B.apply_reflector_right(v, i+1, {i,-1}); // BQ
+            Vt.apply_reflector_left(v, i+1); // QVt
         }
     }
 }
@@ -1142,29 +1153,29 @@ void Matrix<T>::svd_reinsch_step(
 
     using namespace std;
 
-    // apply shift
-    // compute first reflector
-    Matrix<T> v = Matrix<T>(2,1,{E(si)*E(si) - shift, E(si)*E(si,si+1)}).reflector(); // G1
-    E.apply_reflector_right(v,si,si,min<uint>(dim,3)); // EG1
-    Gt.apply_reflector_left(v,si); // G1Gt
+    // // apply shift
+    // // compute first reflector
+    // Matrix<T> v = Matrix<T>(2, 1, {E(si)*E(si) - shift, E(si)*E(si,si+1)}).reflector(); // G1
+    // E.apply_reflector_right(v, si, {si,min<uint>(dim,3)}); // EG1
+    // Gt.apply_reflector_left(v, si); // G1Gt
 
-    // cout << "after shift: " << E << endl;
-    // chase the bulge
-    for(uint i=0; i<dim-1; ++i){
-        v = E({si+i, si+i+1}, si+i).reflector(); // Pi
-        E.apply_reflector_left(v,si+i,si+i,min<uint>(dim-i,3)); // PiE
-        P.apply_reflector_right(v,si+i); // PPi
-        // cout << "after lower bulge: " << E << endl;
+    // // cout << "after shift: " << E << endl;
+    // // chase the bulge
+    // for(uint i=0; i<dim-1; ++i){
+    //     v = E({si+i, si+i+1}, si+i).reflector(); // Pi
+    //     E.apply_reflector_left(v,si+i,si+i,min<uint>(dim-i,3)); // PiE
+    //     P.apply_reflector_right(v,si+i); // PPi
+    //     // cout << "after lower bulge: " << E << endl;
 
-        if(i < dim-2){
-            // need to transpose the vector becaue I am taking a row vector 
-            // actually, it is necessary only for complex matrices
-            v = E(si+i, {si+i+1, si+i+2}).reflector().t(); // Gi
-            E.apply_reflector_right(v,si+i+1,si+i,min<uint>(dim-i,3)); // EGi
-            Gt.apply_reflector_left(v,si+i+1); // GiGt
-            // cout << "after upper bulge: " << E << endl;
-        }
-    }
+    //     if(i < dim-2){
+    //         // need to transpose the vector becaue I am taking a row vector 
+    //         // actually, it is necessary only for complex matrices
+    //         v = E(si+i, {si+i+1, si+i+2}).reflector().t(); // Gi
+    //         E.apply_reflector_right(v,si+i+1,si+i,min<uint>(dim-i,3)); // EGi
+    //         Gt.apply_reflector_left(v,si+i+1); // GiGt
+    //         // cout << "after upper bulge: " << E << endl;
+    //     }
+    // }
 
 }
 
@@ -1259,89 +1270,6 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
 }
 
 #pragma endregion decomposition_methods
-
-
-#pragma region reflector
-
-template<typename T>
-Reflector<T>::Reflector(): _v() {}
-
-template<typename T>
-Reflector<T>::Reflector(
-    Matrix<T> v,
-    T tau,
-    double alpha,
-    uint start_index
-):
-_v(v),
-_tau(tau),
-_alpha(alpha),
-_start_index(start_index)
-{}
-
-template<typename T>
-Matrix<T> Reflector<T>::v() const {return _v;}
-
-template<typename T>
-T Reflector<T>::tau() const {return _tau;}
-
-template<typename T>
-double Reflector<T>::alpha() const {return _alpha;}
-
-template<typename T>
-uint Reflector<T>::si() const {return _start_index;}
-
-template<typename T>
-Matrix<T> Reflector<T>::householder_mat() const{
-    Matrix<T> ret;
-
-    if(_v.r() > 1) ret = IdMat(_v.size()) - _v * _v.t() / _tau;
-    else ret = IdMat(_v.size()) - _v.t() * _v / _tau;
-
-    return ret;
-}
-
-template<typename T>
-template<typename U>
-void Reflector<T>::apply_left(Matrix<U> & m, uu_pair cs) const{
-    if(_start_index + _v.size() > m.r()) throw std::invalid_argument("Reflector too big to be applied to this matrix");
-    if(cs.second == UINT_MAX) cs.second = m.c()-1;
-    if(cs.second >= m.c()) throw std::out_of_range("Col index out of range");
-    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
-
-    uint i = _start_index;
-    T tmp;
-    Matrix<T> v_t = _v.t() / _tau;
-
-    for(uint j=cs.first; j<=cs.second; ++j){
-        tmp = 0.0;
-        for(uint k=0; k<_v.size(); ++k) tmp += v_t(k) * m(i+k,j);
-        for(uint k=0; k<_v.size(); ++k) m(i+k,j) -= _v(k) * tmp;
-    }
-}
-
-template<typename T>
-template<typename U>
-void Reflector<T>::apply_right(Matrix<U> & m, uu_pair rs) const{
-    if(_start_index + _v.size() > m.c()) throw std::invalid_argument("Reflector too big to be applied to this matrix");
-    if(rs.second == UINT_MAX) rs.second = m.r()-1;
-    if(rs.second >= m.r()) throw std::out_of_range("Row index out of range");
-    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
-
-    uint i = _start_index;
-    T tmp;
-    Matrix<T> v_t;
-    if constexpr(is_complex<T>::value) v_t = _v.t() / std::conj(_tau); 
-    else v_t = _v.t() / _tau;
-
-    for(uint j=rs.first; j<=rs.second; ++j){
-        tmp = 0.0;
-        for(uint k=0; k<_v.size(); ++k) tmp += _v(k) * m(j,i+k);
-        for(uint k=0; k<_v.size(); ++k) m(j,i+k) -= v_t(k) * tmp;
-    }
-}
-
-#pragma endregion reflector
 
 
 #pragma region ls_solution
@@ -1462,11 +1390,10 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
 
     // for simpler notation
     uint n =  this->_r;
+    uint start;
     Matrix<T> A = *this;
 
-    Matrix<T> y, v, v_t;
-    T tmp;
-    Reflector<T> ref;
+    Matrix<T> y, v;
 
     for(uint i=0; i<n-1; ++i){
         if(i == 0){
@@ -1480,40 +1407,21 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
                     A(n-2,n-2) - A(n-1,n-1),
                 A(2,1)
             });
-            std::cout << y << std::endl;
-            // ref = y.zero_reflector(ALL, 0);
+            start = 0;
         }
         else {
             // extract column to transform in [x 0 0]
+
             y = A({i, std::min(i+2, n-1)}, i-1);
-            // ref = A.zero_reflector({i, std::min(i+2, n-1)}, i-1);  
+            start = i-1;
         }
         // compute reflector
-        v = y.reflector();
-        v_t = 2 * v.t();
-        // apply reflection B -> QB = B - v * (u.t * B)
-        for(uint j=0; j<n; j++){
-            tmp = 0.0;
-            for(uint k=0; k<v_t.size(); k++) tmp += v_t(k) * A(i+k, j);
-            for(uint k=0; k<v.size(); k++) A(i+k, j) -= tmp * v(k);
-        }
-        // apply reflection C -> CQ = C - (C * u) * v.t
-        for(uint j=0; j<n; j++){
-            tmp = 0.0;
-            for(uint k=0; k<v.size(); k++) tmp += v(k) * A(j, i+k);
-            for(uint k=0; k<v_t.size(); k++) A(j, i+k) -= tmp * v_t(k);
-        }
-        // std::cout << ref.v() << std::endl;
-        // if(ref.v().norm2() < 0.000000001) {
-        //     std::cout << A({i, std::min(i+2, n-1)}, i-1) << std::endl;
-        //     A.zero_reflector({i, std::min(i+2, n-1)}, i-1);
-        // }
-        // ref.apply_left(A, {i == 0 ? 0 : i-1, A.c()-1});
-        // std::cout << A << std::endl;
-        // ref.apply_right(A, ALL);
-        std::cout << A << std::endl;
+        v = y.reflector(); // Q
+        // apply reflector
+        A.apply_reflector_left(v, i, {start, -1});
+        A.apply_reflector_right(v, i);
     }
-    std::cout << std::endl << std::endl << std::endl;
+
     return A;
 }
 
@@ -1567,7 +1475,6 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
         // start running the implicit double QR steps
         for(uint k=0; k<max_iterations; ++k){
             H = H.implicit_double_QR_step();
-            std::cout << H << std::endl;
             // check for convergence
             for(int i=_c-2; i>=0; --i){
                 if(abs(H(i+1,i)) < tolerance){

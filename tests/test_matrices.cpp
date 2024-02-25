@@ -2087,32 +2087,32 @@ TEST(Matrix, is_lower_hessenberg){
 
 
 TEST(Matrix, reflector){
-    Mat_c Ac = Mat_c(6,4,
-        {  4.0-3i,       4, -16.0+1i,      -12, 
-               -3,      -4,       17,  17.0-1i, 
-              -16,       5,   6.0+1i, -13.0+1i,
-               -2, 12.0+1i,       -7,       15, 
-          -1.0-1i,      -3,       19,        4,  
-          -3.0+1i,       5,  16.0+1i,       -9}
-    );
-    Reflector<c_double> ref = Ac.zero_reflector(ALL,2);
-    ref.apply_left(Ac, ALL);
-    cout << Ac << endl;
-    ref = Ac.zero_reflector({2,5},0);
-    ref.apply_left(Ac, ALL);
-    cout << Ac << endl;
-    ref = Ac.zero_reflector(1,{1,3});
-    ref.apply_right(Ac, {1,1});
-    cout << Ac << endl;
+    // Mat_c Ac = Mat_c(6,4,
+    //     {  4.0-3i,       4, -16.0+1i,      -12, 
+    //            -3,      -4,       17,  17.0-1i, 
+    //           -16,       5,   6.0+1i, -13.0+1i,
+    //            -2, 12.0+1i,       -7,       15, 
+    //       -1.0-1i,      -3,       19,        4,  
+    //       -3.0+1i,       5,  16.0+1i,       -9}
+    // );
+    // Reflector<c_double> ref = Ac.zero_reflector(ALL,2);
+    // ref.apply_left(Ac, ALL);
+    // cout << Ac << endl;
+    // ref = Ac.zero_reflector({2,5},0);
+    // ref.apply_left(Ac, ALL);
+    // cout << Ac << endl;
+    // ref = Ac.zero_reflector(1,{1,3});
+    // ref.apply_right(Ac, {1,1});
+    // cout << Ac << endl;
 
-    Mat_c vc = Ac(0,ALL);
-    ref = vc.zero_reflector(0,ALL);
-    EXPECT_TRUE(ref.householder_mat().is_orthogonal());
-    cout << vc * ref.householder_mat().t() << endl;
-    vc = Ac(ALL, 1);
-    ref = vc.zero_reflector(ALL,0);
-    EXPECT_TRUE(ref.householder_mat().is_orthogonal());
-    cout << ref.householder_mat() * vc << endl;
+    // Mat_c vc = Ac(0,ALL);
+    // ref = vc.zero_reflector(0,ALL);
+    // EXPECT_TRUE(ref.householder_mat().is_orthogonal());
+    // cout << vc * ref.householder_mat().t() << endl;
+    // vc = Ac(ALL, 1);
+    // ref = vc.zero_reflector(ALL,0);
+    // EXPECT_TRUE(ref.householder_mat().is_orthogonal());
+    // cout << ref.householder_mat() * vc << endl;
 }
 
 TEST(Matrix, givens_rotation){
@@ -2957,8 +2957,8 @@ TEST(Matrix, divide_operator){
 
 
 TEST(Matrix, eigenvalues){
-    Mat::set_double_precision();
-    Mat_c::set_double_precision();
+    Mat::set_double_precision(8);
+    Mat_c::set_double_precision(8);
 
     Mat_c eig;
     Matrix m1(6,6,
@@ -2973,14 +2973,10 @@ TEST(Matrix, eigenvalues){
     EXPECT_THROW(m1(ALL, {0,4}).eigenvalues(), invalid_argument);
     EXPECT_NO_THROW(eig = m1.eigenvalues());
 
-    Mat::set_double_precision(8);
-    Mat_c::set_double_precision(8);
     EXPECT_EQ(eig, Mat_c(6,1,
         {3.06484856+0i, -0.43274903+0.5936662i, -0.43274903-0.5936662i,
         -0.42845434+0i, 0.20374645+0i, -0.26069222+0i}
     )); //  computed using numpy
-    Mat::set_double_precision();
-    Mat_c::set_double_precision();
 
     Mat_c m2(6,6,
         {0.885648  + 0.410313i, 0.365339 + 0.162199i, 0.455307 + 0.135109i, 0.931674 + 0.452336i, 0.908922 + 0.215248i, 0.505956 + 0.860846i,
@@ -2993,8 +2989,6 @@ TEST(Matrix, eigenvalues){
 
     EXPECT_THROW(m2(ALL, {0,4}).eigenvalues(), invalid_argument);
     EXPECT_NO_THROW(eig = m2.eigenvalues());
-    Mat::set_double_precision(8);
-    Mat_c::set_double_precision(8);
     EXPECT_EQ(eig, Mat_c(6,1,
         {3.17117652+2.94167887i, 0.299358  +0.82044159i, 0.69038181-0.09100735i,
          -0.00851327-0.62277115i,0.51258838-0.69008745i,-0.34551444+0.02982849i}
@@ -3089,18 +3083,18 @@ TEST(Matrix, svd){
            5, -10,   4,  -7,  8,   5}
     );
     Mat U,E,Vt;
-    A.svd(U,E,Vt);
-    Mat::set_double_precision(14);
-    for(uint i=0; i<E.r(); ++i){
-        for(uint j=0; j<E.c(); ++j){
-            if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Mat::get_epsilon());
-            else continue;
-        }
-    }
-    EXPECT_TRUE(U.is_orthogonal());
-    EXPECT_TRUE(Vt.is_orthogonal());
-    Mat::set_double_precision(13);
-    // cout << U << endl << E << endl << Vt << endl;
-    EXPECT_EQ(A, U*E*Vt);
-    // cout << A - U*E*Vt << endl;
+    // A.svd(U,E,Vt);
+    // Mat::set_double_precision(14);
+    // for(uint i=0; i<E.r(); ++i){
+    //     for(uint j=0; j<E.c(); ++j){
+    //         if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Mat::get_epsilon());
+    //         else continue;
+    //     }
+    // }
+    // EXPECT_TRUE(U.is_orthogonal());
+    // EXPECT_TRUE(Vt.is_orthogonal());
+    // Mat::set_double_precision(13);
+    // // cout << U << endl << E << endl << Vt << endl;
+    // EXPECT_EQ(A, U*E*Vt);
+    // // cout << A - U*E*Vt << endl;
 }

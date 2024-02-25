@@ -886,63 +886,49 @@ public:
 
 #pragma region decomposition_methods
     /**
-     * @brief computes the reflector of the given vector
+     * @brief computes the reflector of the selected portion of matrix
      * https://en.wikipedia.org/wiki/QR_decomposition
-     * 
+     * @param rs selected rows
+     * @param c selected column
      * @return reflector vector
     */
-    Matrix<T> reflector() const;
+    Matrix<T> reflector(uu_pair rs = ALL, uint c = 0) const;
 
     /**
-     * @brief computes the reflector of the given vector 
-     * zeroing all of its elements except the first
-     * https://ieeexplore.ieee.org/document/622959
-     * 
-     * @return reflector object
+     * @brief computes the reflector of the selected portion of matrix
+     * https://en.wikipedia.org/wiki/QR_decomposition
+     * @param r selected row
+     * @param cs selected columns
+     * @return reflector vector
     */
-    Reflector<T> zero_reflector(uu_pair rs, uint c) const;
-
-    /**
-     * @brief computes the reflector of the given vector 
-     * zeroing all of its elements except the first
-     * https://ieeexplore.ieee.org/document/622959
-     * 
-     * @return reflector object
-    */
-    Reflector<T> zero_reflector(uint r, uu_pair cs) const;
+    Matrix<T> reflector(uint r, uu_pair cs = ALL) const;
 
     /**
      * @brief given this matrix (A) and reflector v updates A as:
      *  A -> AQ = A - (A * v) * 2v'
      * @param v reflector
-     * @param start_index starting position of the matrix from which the reflector is 
-     *  applied. Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
-     *  as Q = I-2vv'
-     * @param skip_index index from which the product AQ is computed. Can be != 0 in order to exclude
-     *  portions of A which are full zeros
+     * @param start_col starting column of the matrix from which the reflector is applied. 
+     *  Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
+     *  as Q = I-2vv', and should match the first index of matrix from which the reflector 
+     *  is computed, e.g. ref extracted from ({1,3},2) -> start_col = 1
+     * @param rs rows to which the reflector is applied, can be different from ALL in order 
+     *  to exclude portion of the matrix which are null. Usually the first index can be taken
+     *  as the row/column from which the reflector is computed (if applied to the very same matrix)
     */
-    void apply_reflector_right(
-        const Matrix<T> & v, 
-        uint start_index = 0, 
-        uint skip_index = 0,
-        uint dim = 0
-    );
+    void apply_reflector_right(const Matrix<T> & v, uint start_col = 0, uu_pair rs = ALL);
 
     /**
      * @brief given this matrix (A) and reflector v, updates A as:
      *  A -> QA = A - v * (2v' * A)
      * @param v reflector
-     * @param start_index starting position of the matrix from which the reflector is 
-     *  applied. Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
-     *  as Q = I-2vv'
-     * @param skip_index index from which the product QA is computed. Can be != 0 in order to exclude
-     *  portions of A which are full zeros
+     * @param start_row starting row of the matrix from which the reflector is applied. 
+     *  Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
+     *  as Q = I-2vv', and should match the first index of matrix from which the reflector 
+     *  is computed, e.g. ref extracted from ({1,3},2) -> start_row = 1
+     * @param cs columns to which the reflector is applied, can be different from ALL in 
+     *  order to exclude portion of the matrix which are null
     */
-    void apply_reflector_left(const Matrix<T> & v, 
-        uint start_index = 0, 
-        uint skip_index = 0,
-        uint dim = 0
-    );
+    void apply_reflector_left(const Matrix<T> & v, uint start_row = 0, uu_pair cs = ALL);
 
     /**
      * @brief computes Given rotation of the given vector 
@@ -1087,44 +1073,6 @@ public:
 #pragma endregion eigen
 
 };
-
-#pragma region reflector
-
-template<typename T>
-class Reflector {
-private:
-    Matrix<T> _v;
-    T _tau;
-    double _alpha;
-    uint _start_index;
-
-public:
-    static Reflector<T> zero_reflector(Matrix<T> & v, uint start);
-
-    Reflector();
-
-    Reflector(
-        Matrix<T> v,
-        T tau = 1,
-        double alpha = 1,
-        uint start_index = 0
-    );
-
-    Matrix<T> v() const;
-    T tau() const;
-    double alpha() const;
-    uint si() const;
-
-    Matrix<T> householder_mat() const;
-
-    template<typename U>
-    void apply_left(Matrix<U> & m, uu_pair cs) const;
-
-    template<typename U>
-    void apply_right(Matrix<U> & m, uu_pair rs) const;
-
-};
-#pragma endregion reflector
 
 #pragma region ls_solution
     /**

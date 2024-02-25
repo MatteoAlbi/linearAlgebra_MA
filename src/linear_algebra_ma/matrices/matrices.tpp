@@ -776,34 +776,52 @@ Matrix<T> Matrix<T>::pinv_right() const{
 #pragma region decomposition_methods
 
 template<typename T>
-Reflector<T> Matrix<T>::zero_reflector(uu_pair rs, uint c) const{
+Reflector<T> Matrix<T>::zero_reflector_test(uu_pair rs, uint c) const{
     Matrix<T> v = this->at(rs, c);
 
-    double a_n2 = v.norm2();
-    double a_n = sqrt(a_n2);
-    if(a_n < Matrix<T>::get_epsilon()) {
-        // the vector is null, I do not need to apply any reflection
-        // throw std::invalid_argument("selected vector has null norm");
-        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
-    }
-    // compute vector result of reflection
-    Matrix<T> reflected(v.size(), 1);
-    reflected(0) = a_n;
-    if(v == reflected){
-        // this is the case where the reflector transforms v in itself
-        // it is an exception explained in the paper as the condition a* a != a* b
-        // in this case a == b and the formula cannot be applied 
-        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
-    }
+    // double a_n2 = v.norm2();
+    // double a_n = sqrt(a_n2);
+    if constexpr (is_complex<T>::value){
 
-    T tau = a_n2 - a_n * v(0);
-    v(0) -= a_n;
+        double x_n2 = v({1, v.size()-1}, 0).norm2();
+        double x_n = sqrt(x_n2);
+        double a_r = v(0).real();
+        double a_i = v(0).imag();
 
-    return Reflector<T>(v, tau, a_n, rs.first);
+        if(x_n < Matrix<T>::get_epsilon() && abs(a_i) < Matrix<T>::get_epsilon()) {
+            // the vector is null, I do not need to apply any reflection
+            // throw std::invalid_argument("selected vector has null norm");
+            return Reflector<T>(Matrix<T>(v.size(), 1), 0, rs.first);
+        }
+        // // compute vector result of reflection
+        // Matrix<T> reflected(v.size(), 1);
+        // reflected(0) = a_n;
+        // if(v == reflected){
+        //     // this is the case where the reflector transforms v in itself
+        //     // it is an exception explained in the paper as the condition a* a != a* b
+        //     // in this case a == b and the formula cannot be applied 
+        //     return Reflector<T>(Matrix<T>(v.size(), 1), 0, rs.first);
+        // }
+        
+        T tau = a_n2 - a_n * v(0);
+        v(0) -= a_n;
+
+        double b = - std::copysign(sqrt(a_r*a_r + a_i*a_i + x_n2), a_r);
+        T tau((b - a_r)/b , (-a_i/b));
+        using namespace std::complex_literals;
+        T alpha = 1.0 / (v(0) - b);
+        v(0) = 1.0;
+        for(uint i=1; i<v.size(); ++i) v(i) /= alpha;
+
+        return Reflector<T>(v, tau, rs.first);
+    }
+    else{
+        return Reflector<T>(v, 1, rs.first);
+    }
 }
 
 template<typename T>
-Reflector<T> Matrix<T>::zero_reflector(uint r, uu_pair cs) const{
+Reflector<T> Matrix<T>::zero_reflector_test(uint r, uu_pair cs) const{
     Matrix<T> v = this->at(r, cs).t();
 
     double a_n2 = v.norm2();
@@ -811,7 +829,7 @@ Reflector<T> Matrix<T>::zero_reflector(uint r, uu_pair cs) const{
     if(a_n < Matrix<T>::get_epsilon()) {
         // the vector is null, I do not need to apply any reflection
         // throw std::invalid_argument("selected vector has null norm");
-        return Reflector<T>(Matrix<T>(v.size(), 1), 1, 0, cs.first);
+        return Reflector<T>(Matrix<T>(v.size(), 1), 1, cs.first);
     }
     // compute vector result of reflection
     Matrix<T> reflected(v.size(), 1);
@@ -820,13 +838,13 @@ Reflector<T> Matrix<T>::zero_reflector(uint r, uu_pair cs) const{
         // this is the case where the reflector transforms v in itself
         // it is an exception explained in the paper as the condition a* a != a* b
         // in this case a == b and the formula cannot be applied 
-        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, cs.first);
+        return Reflector<T>(Matrix<T>(v.size(), 1), 1, cs.first);
     }
 
     T tau = a_n2 - a_n * v(0);
     v(0) -= a_n;
 
-    return Reflector<T>(v, tau, a_n, cs.first);
+    return Reflector<T>(v, tau, cs.first);
 }
 
 template<typename T>
@@ -958,13 +976,14 @@ void Matrix<T>::qr_dec(Matrix<T> & Q, Matrix<T> & R) const{
     
     for(uint i=0; i<n; ++i){
         //compute reflector
-        Reflector<T> v = R.zero_reflector({i, _r-1}, i);
-        // R({i, _r-1}, i).reflector(); // U
+        Matrix<T> v = R({i, _r-1}, i).reflector(); // U
+        // R.zero_reflector({i, _r-1}, i);
+        
         // apply reflector
-        v.apply_left(R, {i, R.c()-1});
-        v.apply_right(Q, ALL);
-        // R.apply_reflector_left(v, i, i); // UR
-        // Q.apply_reflector_right(v, i, 0); // QU
+        // v.apply_left(R, {i, R.c()-1});
+        // v.apply_right(Q, ALL);
+        R.apply_reflector_left(v, i, i); // UR
+        Q.apply_reflector_right(v, i, 0); // QU
     }
 }
 
@@ -996,13 +1015,13 @@ void Matrix<T>::qrp_dec(Matrix<T> & Q, Matrix<T> & R, Matrix<double> & P) const{
         P.swap_cols(i, index);
 
         // compute reflector
-        Reflector<T> ref = R.zero_reflector({i, _r-1}, i);
-        // Matrix<T> v = R({i, _r-1}, i).reflector(); // U
+        // Reflector<T> ref = R.zero_reflector({i, _r-1}, i);
+        Matrix<T> v = R({i, _r-1}, i).reflector(); // U
         // apply reflector
-        ref.apply_left(R, {i, R.c()-1});
-        // R.apply_reflector_left(v, i, i); // UR
-        ref.apply_right(Q, ALL);
-        // Q.apply_reflector_right(v, i); // QU
+        // ref.apply_left(R, {i, R.c()-1});
+        // ref.apply_right(Q, ALL);
+        R.apply_reflector_left(v, i, i); // UR
+        Q.apply_reflector_right(v, i); // QU
     }
 }
 
@@ -1067,15 +1086,15 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
 
     for (uint i=1; i<_r-1; ++i){
         // compute reflector
-        // Matrix<T> v = H({i, _r-1}, i-1).reflector(); // U
-        Reflector<T> ref = H.zero_reflector({i, _r-1}, i-1);
+        Matrix<T> v = H({i, _r-1}, i-1).reflector(); // U
+        // Reflector<T> ref = H.zero_reflector({i, _r-1}, i-1);
         // apply reflector
-        ref.apply_left(H,{i-1, H.c()-1});
-        // H.apply_reflector_left(v, i, i-1); // UH
-        ref.apply_right(H, ALL);
-        // H.apply_reflector_right(v, i); // HU
-        ref.apply_right(Q, ALL);
-        // Q.apply_reflector_right(v, i); // QU
+        // ref.apply_left(H,{i-1, H.c()-1});
+        H.apply_reflector_left(v, i, i-1); // UH
+        // ref.apply_right(H, ALL);
+        H.apply_reflector_right(v, i); // HU
+        // ref.apply_right(Q, ALL);
+        Q.apply_reflector_right(v, i); // QU
     }
 }
 
@@ -1270,12 +1289,10 @@ template<typename T>
 Reflector<T>::Reflector(
     Matrix<T> v,
     T tau,
-    double alpha,
     uint start_index
 ):
 _v(v),
 _tau(tau),
-_alpha(alpha),
 _start_index(start_index)
 {}
 
@@ -1284,9 +1301,6 @@ Matrix<T> Reflector<T>::v() const {return _v;}
 
 template<typename T>
 T Reflector<T>::tau() const {return _tau;}
-
-template<typename T>
-double Reflector<T>::alpha() const {return _alpha;}
 
 template<typename T>
 uint Reflector<T>::si() const {return _start_index;}
@@ -1311,7 +1325,7 @@ void Reflector<T>::apply_left(Matrix<U> & m, uu_pair cs) const{
 
     uint i = _start_index;
     T tmp;
-    Matrix<T> v_t = _v.t() / _tau;
+    Matrix<T> v_t = _v.t() * std::conj(_tau);
 
     for(uint j=cs.first; j<=cs.second; ++j){
         tmp = 0.0;
@@ -1466,7 +1480,7 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
 
     Matrix<T> y, v, v_t;
     T tmp;
-    Reflector<T> ref;
+    // Reflector<T> ref;
 
     for(uint i=0; i<n-1; ++i){
         if(i == 0){
@@ -1480,40 +1494,40 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
                     A(n-2,n-2) - A(n-1,n-1),
                 A(2,1)
             });
-            std::cout << y << std::endl;
-            ref = y.zero_reflector(ALL, 0);
+            // std::cout << y << std::endl;
+            // ref = y.zero_reflector(ALL, 0);
         }
         else {
             // extract column to transform in [x 0 0]
             y = A({i, std::min(i+2, n-1)}, i-1);
-            ref = A.zero_reflector({i, std::min(i+2, n-1)}, i-1);  
+            // ref = A.zero_reflector({i, std::min(i+2, n-1)}, i-1);  
         }
         // compute reflector
-        // v = y.reflector();
-        // v_t = 2 * v.t();
-        // // apply reflection B -> QB = B - v * (u.t * B)
-        // for(uint j=0; j<n; j++){
-        //     tmp = 0.0;
-        //     for(uint k=0; k<v_t.size(); k++) tmp += v_t(k) * A(i+k, j);
-        //     for(uint k=0; k<v.size(); k++) A(i+k, j) -= tmp * v(k);
-        // }
-        // // apply reflection C -> CQ = C - (C * u) * v.t
-        // for(uint j=0; j<n; j++){
-        //     tmp = 0.0;
-        //     for(uint k=0; k<v.size(); k++) tmp += v(k) * A(j, i+k);
-        //     for(uint k=0; k<v_t.size(); k++) A(j, i+k) -= tmp * v_t(k);
-        // }
+        v = y.reflector();
+        v_t = 2 * v.t();
+        // apply reflection B -> QB = B - v * (u.t * B)
+        for(uint j=0; j<n; j++){
+            tmp = 0.0;
+            for(uint k=0; k<v_t.size(); k++) tmp += v_t(k) * A(i+k, j);
+            for(uint k=0; k<v.size(); k++) A(i+k, j) -= tmp * v(k);
+        }
+        // apply reflection C -> CQ = C - (C * u) * v.t
+        for(uint j=0; j<n; j++){
+            tmp = 0.0;
+            for(uint k=0; k<v.size(); k++) tmp += v(k) * A(j, i+k);
+            for(uint k=0; k<v_t.size(); k++) A(j, i+k) -= tmp * v_t(k);
+        }
         // std::cout << ref.v() << std::endl;
         // if(ref.v().norm2() < 0.000000001) {
         //     std::cout << A({i, std::min(i+2, n-1)}, i-1) << std::endl;
         //     A.zero_reflector({i, std::min(i+2, n-1)}, i-1);
         // }
-        ref.apply_left(A, {i == 0 ? 0 : i-1, A.c()-1});
+        // ref.apply_left(A, {i == 0 ? 0 : i-1, A.c()-1});
         // std::cout << A << std::endl;
-        ref.apply_right(A, ALL);
+        // ref.apply_right(A, ALL);
         // std::cout << A << std::endl;
     }
-    std::cout << std::endl << std::endl << std::endl;
+    // std::cout << std::endl << std::endl << std::endl;
     return A;
 }
 
@@ -1567,7 +1581,7 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
         // start running the implicit double QR steps
         for(uint k=0; k<max_iterations; ++k){
             H = H.implicit_double_QR_step();
-            std::cout << H << std::endl;
+            // std::cout << H << std::endl;
             // check for convergence
             for(int i=_c-2; i>=0; --i){
                 if(abs(H(i+1,i)) < tolerance){

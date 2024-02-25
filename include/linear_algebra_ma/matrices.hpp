@@ -900,7 +900,7 @@ public:
      * 
      * @return reflector object
     */
-    Reflector<T> zero_reflector(uu_pair rs, uint c) const;
+    Reflector<T> zero_reflector_test(uu_pair rs, uint c) const;
 
     /**
      * @brief computes the reflector of the given vector 
@@ -909,7 +909,7 @@ public:
      * 
      * @return reflector object
     */
-    Reflector<T> zero_reflector(uint r, uu_pair cs) const;
+    Reflector<T> zero_reflector_test(uint r, uu_pair cs) const;
 
     /**
      * @brief given this matrix (A) and reflector v updates A as:
@@ -1095,24 +1095,19 @@ class Reflector {
 private:
     Matrix<T> _v;
     T _tau;
-    double _alpha;
     uint _start_index;
 
 public:
-    static Reflector<T> zero_reflector(Matrix<T> & v, uint start);
-
     Reflector();
 
     Reflector(
         Matrix<T> v,
-        T tau = 1,
-        double alpha = 1,
+        T tau = 0,
         uint start_index = 0
     );
 
     Matrix<T> v() const;
     T tau() const;
-    double alpha() const;
     uint si() const;
 
     Matrix<T> householder_mat() const;

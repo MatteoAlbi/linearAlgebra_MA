@@ -1481,37 +1481,37 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
                 A(2,1)
             });
             std::cout << y << std::endl;
-            // ref = y.zero_reflector(ALL, 0);
+            ref = y.zero_reflector(ALL, 0);
         }
         else {
             // extract column to transform in [x 0 0]
             y = A({i, std::min(i+2, n-1)}, i-1);
-            // ref = A.zero_reflector({i, std::min(i+2, n-1)}, i-1);  
+            ref = A.zero_reflector({i, std::min(i+2, n-1)}, i-1);  
         }
         // compute reflector
-        v = y.reflector();
-        v_t = 2 * v.t();
-        // apply reflection B -> QB = B - v * (u.t * B)
-        for(uint j=0; j<n; j++){
-            tmp = 0.0;
-            for(uint k=0; k<v_t.size(); k++) tmp += v_t(k) * A(i+k, j);
-            for(uint k=0; k<v.size(); k++) A(i+k, j) -= tmp * v(k);
-        }
-        // apply reflection C -> CQ = C - (C * u) * v.t
-        for(uint j=0; j<n; j++){
-            tmp = 0.0;
-            for(uint k=0; k<v.size(); k++) tmp += v(k) * A(j, i+k);
-            for(uint k=0; k<v_t.size(); k++) A(j, i+k) -= tmp * v_t(k);
-        }
+        // v = y.reflector();
+        // v_t = 2 * v.t();
+        // // apply reflection B -> QB = B - v * (u.t * B)
+        // for(uint j=0; j<n; j++){
+        //     tmp = 0.0;
+        //     for(uint k=0; k<v_t.size(); k++) tmp += v_t(k) * A(i+k, j);
+        //     for(uint k=0; k<v.size(); k++) A(i+k, j) -= tmp * v(k);
+        // }
+        // // apply reflection C -> CQ = C - (C * u) * v.t
+        // for(uint j=0; j<n; j++){
+        //     tmp = 0.0;
+        //     for(uint k=0; k<v.size(); k++) tmp += v(k) * A(j, i+k);
+        //     for(uint k=0; k<v_t.size(); k++) A(j, i+k) -= tmp * v_t(k);
+        // }
         // std::cout << ref.v() << std::endl;
         // if(ref.v().norm2() < 0.000000001) {
         //     std::cout << A({i, std::min(i+2, n-1)}, i-1) << std::endl;
         //     A.zero_reflector({i, std::min(i+2, n-1)}, i-1);
         // }
-        // ref.apply_left(A, {i == 0 ? 0 : i-1, A.c()-1});
+        ref.apply_left(A, {i == 0 ? 0 : i-1, A.c()-1});
         // std::cout << A << std::endl;
-        // ref.apply_right(A, ALL);
-        std::cout << A << std::endl;
+        ref.apply_right(A, ALL);
+        // std::cout << A << std::endl;
     }
     std::cout << std::endl << std::endl << std::endl;
     return A;

@@ -772,6 +772,16 @@ public:
     bool is_lower_triang() const;
 
     /**
+     * @brief return true if the matrix is upper bidiagonal
+     */
+    bool is_upper_bidiagonal() const;
+
+    /**
+     * @brief return true if the matrix is lower bidiagonal
+     */
+    bool is_lower_bidiagonal() const;
+
+    /**
      * @brief return true if the matrix is an upper hessenberg matrix
      */
     bool is_upper_hessenberg() const;

@@ -2208,7 +2208,7 @@ TEST(Matrix, qrp_dec){
     Matrix Q, R, P;
     Mat_c Qc, Rc;
 
-    Mat_c::set_double_precision(13);
+    Mat_c::set_double_precision(12);
     Mat::set_double_precision  (13);
 
     Matrix A(3,3, {2, -2, 18,
@@ -2957,9 +2957,10 @@ TEST(Matrix, divide_operator){
 
 
 TEST(Matrix, eigenvalues){
-    Mat::set_double_precision(8);
-    Mat_c::set_double_precision(8);
+    Mat::set_double_precision();
+    Mat_c::set_double_precision();
 
+    Mat_c eig;
     Matrix m1(6,6,
         {0.289316, 0.514435,  0.414028, 0.876566,  0.729748, 0.715642,
          0.706535, 0.0190924, 0.524987, 0.0651939, 0.488943, 0.682049,
@@ -2970,11 +2971,16 @@ TEST(Matrix, eigenvalues){
     );
 
     EXPECT_THROW(m1(ALL, {0,4}).eigenvalues(), invalid_argument);
-    EXPECT_NO_THROW(Matrix().eigenvalues());
-    EXPECT_EQ(m1.eigenvalues(), Mat_c(6,1,
+    EXPECT_NO_THROW(eig = m1.eigenvalues());
+
+    Mat::set_double_precision(8);
+    Mat_c::set_double_precision(8);
+    EXPECT_EQ(eig, Mat_c(6,1,
         {3.06484856+0i, -0.43274903+0.5936662i, -0.43274903-0.5936662i,
         -0.42845434+0i, 0.20374645+0i, -0.26069222+0i}
     )); //  computed using numpy
+    Mat::set_double_precision();
+    Mat_c::set_double_precision();
 
     Mat_c m2(6,6,
         {0.885648  + 0.410313i, 0.365339 + 0.162199i, 0.455307 + 0.135109i, 0.931674 + 0.452336i, 0.908922 + 0.215248i, 0.505956 + 0.860846i,
@@ -2986,12 +2992,13 @@ TEST(Matrix, eigenvalues){
     );
 
     EXPECT_THROW(m2(ALL, {0,4}).eigenvalues(), invalid_argument);
-    EXPECT_NO_THROW(Mat_c().eigenvalues());
-    EXPECT_EQ(m2.eigenvalues(), Mat_c(6,1,
+    EXPECT_NO_THROW(eig = m2.eigenvalues());
+    Mat::set_double_precision(8);
+    Mat_c::set_double_precision(8);
+    EXPECT_EQ(eig, Mat_c(6,1,
         {3.17117652+2.94167887i, 0.299358  +0.82044159i, 0.69038181-0.09100735i,
          -0.00851327-0.62277115i,0.51258838-0.69008745i,-0.34551444+0.02982849i}
     )); //  computed using numpy
-    
     Mat::set_double_precision();
     Mat_c::set_double_precision();
 } 

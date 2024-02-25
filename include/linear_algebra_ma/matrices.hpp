@@ -97,8 +97,9 @@ private:
         Matrix<T> & E, 
         Matrix<T> & Gt, 
         T shift, 
-        uint start_index = 0,
-        uint dim = 0
+        // uint start_index = 0,
+        // uint dim = 0
+        uu_pair range = ALL
     );
 
     /**
@@ -114,8 +115,9 @@ private:
         Matrix<T> & P, 
         Matrix<T> & E, 
         Matrix<T> & Gt,
-        uint start_index = 0,
-        uint dim = 0,
+        // uint start_index = 0,
+        // uint dim = 0,
+        uu_pair range = ALL,
         uint max_iterations = 1000, 
         double tolerance = TOL
     );
@@ -947,21 +949,41 @@ public:
      * @brief applies givens rotation as right product to a matrix: G*A
      *  modifying the column c
      * @param rot rotation to apply
-     * @param i first index: element -> r
-     * @param j second index: element -> 0
-     * @param c column to modify
+     * @param i first col index: element -> r
+     * @param j second col index: element -> 0
+     * @param r row to modify
     */
-    void apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uint c);
+    void apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uint r);
+
+    /**
+     * @brief applies givens rotation as right product to a matrix: G*A
+     *  modifying the column c
+     * @param rot rotation to apply
+     * @param i first col index: element -> r
+     * @param j second col index: element -> 0
+     * @param rs range of rows to modify
+    */
+    void apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uu_pair rs = ALL);
 
     /**
      * @brief applies givens rotation as left product to a matrix: A*G
      *  modifying the row r, ATT: G is not transpose
      * @param rot rotation to apply
-     * @param i first index: element -> r
-     * @param j second index: element -> 0
-     * @param r row to modify
+     * @param i first row index: element -> r
+     * @param j second row index: element -> 0
+     * @param c column to modify
     */
-    void apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uint r);
+    void apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uint c);
+
+    /**
+     * @brief applies givens rotation as left product to a matrix: A*G
+     *  modifying the row r, ATT: G is not transpose
+     * @param rot rotation to apply
+     * @param i first row index: element -> r
+     * @param j second row index: element -> 0
+     * @param cs range of columns to modify
+    */
+    void apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uu_pair cs = ALL);
 
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 

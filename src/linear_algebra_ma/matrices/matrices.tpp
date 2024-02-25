@@ -955,6 +955,17 @@ void Matrix<T>::apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, ui
 }
 
 template<typename T>
+void Matrix<T>::apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uu_pair rs){
+    if(rs.second == UINT_MAX) rs.second = this->_r-1;
+    if(rs.second >= this->_r) throw std::out_of_range("Row index greater than this matrix rows");
+    if(rs.first > rs.second) throw std::invalid_argument("Row first element must be <= of second");
+
+    for(uint k=rs.first; k<=rs.second; ++k){
+        this->apply_givens_rot_right(rot, i, j, k);
+    }
+}
+
+template<typename T>
 void Matrix<T>::apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uint c){
     if(!rot.is_vec() || rot.size() != 2) throw std::invalid_argument("Given rotation does not respect shape requirements");
     T f = this->at(i,c);
@@ -967,6 +978,17 @@ void Matrix<T>::apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uin
     else {
         this->at(i,c) = rot(0)*f + rot(1)*g;
         this->at(j,c) = rot(0)*g - rot(1)*f;
+    }
+}
+
+template<typename T>
+void Matrix<T>::apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uu_pair cs){
+    if(cs.second == UINT_MAX) cs.second = this->_c-1;
+    if(cs.second >= this->_c) throw std::out_of_range("Col index greater than this matrix cols");
+    if(cs.first > cs.second) throw std::invalid_argument("Col first element must be <= of second");
+
+    for(uint k=cs.first; k<=cs.second; ++k){
+        this->apply_givens_rot_left(rot, i, j ,k);
     }
 }
 
@@ -1143,39 +1165,42 @@ void Matrix<T>::svd_reinsch_step(
     Matrix<T> & E,
     Matrix<T> & Gt,
     T shift,
-    uint start_index,
-    uint dim
+    uu_pair range
+    // uint start_index,
+    // uint dim
 ){
     if(E.r() < E.c()) throw std::invalid_argument("Matrix must represent an overdetermined problem");
-    if(dim == 0) dim = E.c();
-    uint si = start_index;
-    if(start_index + dim > E.c()) throw std::invalid_argument("Given bounds exceed matrix dimensions");
+    if(range.second == UINT_MAX) range.second = E.c()-1;
+    if(range.second >= E.c()) throw std::out_of_range("Given bounds exceed matrix dimensions");
+    if(range.first > range.second) throw std::invalid_argument("Range first element must be <= of second"); 
+    uint start = range.first;
+    uint end = range.second;
 
     using namespace std;
 
-    // // apply shift
-    // // compute first reflector
-    // Matrix<T> v = Matrix<T>(2, 1, {E(si)*E(si) - shift, E(si)*E(si,si+1)}).reflector(); // G1
-    // E.apply_reflector_right(v, si, {si,min<uint>(dim,3)}); // EG1
-    // Gt.apply_reflector_left(v, si); // G1Gt
+    // apply shift
+    // compute first reflector
+    Matrix<T> v = Matrix<T>(2, 1, {E(start)*E(start) - shift, E(start)*E(start,start+1)}).givens_rot(0,1); // G1
+    E.apply_givens_rot_right(v, start, start+1, {start, std::min(start+2, end)}); // EG1
+    Gt.apply_givens_rot_left(v, start, start+1); // G1Gt
 
-    // // cout << "after shift: " << E << endl;
-    // // chase the bulge
-    // for(uint i=0; i<dim-1; ++i){
-    //     v = E({si+i, si+i+1}, si+i).reflector(); // Pi
-    //     E.apply_reflector_left(v,si+i,si+i,min<uint>(dim-i,3)); // PiE
-    //     P.apply_reflector_right(v,si+i); // PPi
-    //     // cout << "after lower bulge: " << E << endl;
+    cout << "after shift: " << endl << E << endl;
+    // chase the bulge
+    for(uint i=start; i<end; ++i){
+        v = E({i, i+1}, i).givens_rot(0,1); // Pi
+        E.apply_givens_rot_left(v, i, i+1, {i, std::min(i+2, end)}); // PiE
+        P.apply_givens_rot_right(v, i, i+1); // PPi
+        cout << "after lower bulge: " << endl << E << endl;
 
-    //     if(i < dim-2){
-    //         // need to transpose the vector becaue I am taking a row vector 
-    //         // actually, it is necessary only for complex matrices
-    //         v = E(si+i, {si+i+1, si+i+2}).reflector().t(); // Gi
-    //         E.apply_reflector_right(v,si+i+1,si+i,min<uint>(dim-i,3)); // EGi
-    //         Gt.apply_reflector_left(v,si+i+1); // GiGt
-    //         // cout << "after upper bulge: " << E << endl;
-    //     }
-    // }
+        if(i < end-1){
+            // need to transpose the vector becaue I am taking a row vector 
+            // actually, it is necessary only for complex matrices
+            v = E(i, {i+1, i+2}).givens_rot(0,1).t(); // Gi
+            E.apply_givens_rot_right(v, i+1, i+2, {i, std::min(i+2, end)}); // EGi
+            Gt.apply_givens_rot_left(v, i+1, i+2); // GiGt
+            cout << "after upper bulge: " << endl << E << endl;
+        }
+    }
 
 }
 
@@ -1184,15 +1209,17 @@ void Matrix<T>::svd_steps_iteration(
     Matrix<T> & P,
     Matrix<T> & E,
     Matrix<T> & Gt,
-    uint start_index,
-    uint dim,
+    uu_pair range,
+    // uint start_index,
+    // uint dim,
     uint max_iterations,
     double tolerance
 ){
     if(E.r() < E.c()) throw std::invalid_argument("Matrix must represent an overdetermined problem");
-    uint si = start_index;
-    if(dim == 0) dim = E.c();
-    if(start_index + dim > E.c()) throw std::invalid_argument("Given bounds exceed matrix dimensions");
+    if(range.second == UINT_MAX) range.second = E.c()-1;
+    if(range.second >= E.c()) throw std::out_of_range("Given bounds exceed matrix dimensions");
+    if(range.first > range.second) throw std::invalid_argument("Range first element must be <= of second"); 
+    // uint si = start_index;
     
     uint zero_shift_iterations = 0;
     T shift;
@@ -1204,7 +1231,7 @@ void Matrix<T>::svd_steps_iteration(
     //      << "working matrix:" << E({si,si+dim-1},{si,si+dim-1}) << endl;
 
     // I can stop: we deflated a single value, meaning it converged
-    if(dim == 1){ 
+    if(range.first == range.second){ 
         // cout << "single value: iteration terminated" << endl;
         return;
     }
@@ -1212,25 +1239,25 @@ void Matrix<T>::svd_steps_iteration(
     for(uint steps=0; steps<max_iterations && !converged; ++steps){
         // apply step
         if(steps < zero_shift_iterations) shift = 0;
-        else shift = E({si,si+dim-1},{si,si+dim-1}).svd_shift();
-        Matrix<T>::svd_reinsch_step(P, E, Gt, shift, si, dim);
+        else shift = E(range, range).svd_shift();
+        Matrix<T>::svd_reinsch_step(P, E, Gt, shift, range);
 
         // deflation
-        for(uint i=si+dim-1; i>=si+1; --i){ // i indicates column position
+        for(uint i=range.second; i>=range.first+1; --i){ // i indicates column position
             if(abs(E(i-1,i)) < tolerance){
                 // cout << P * E * Gt << endl << "converged in i=" << i << endl << E << endl;
                 converged = true;
                 // upper part
-                Matrix<T>::svd_steps_iteration(P, E, Gt, si, i-si, max_iterations, tolerance);
+                Matrix<T>::svd_steps_iteration(P, E, Gt, {range.first, i-1}, max_iterations, tolerance);
                 // lower part
-                Matrix<T>::svd_steps_iteration(P, E, Gt, i, si+dim-i, max_iterations, tolerance);
+                Matrix<T>::svd_steps_iteration(P, E, Gt, {i, range.second}, max_iterations, tolerance);
                 // exit
                 return;
             }
         }
         // cancellation
-        for(uint i=si+dim-1; i>=si+1; --i){
-        
+        for(uint i=range.second; i>=range.first+1; --i){
+            // ATT: without +1 it cycle for inf (once it's 0, it overflows)
         }
     }
 }
@@ -1253,7 +1280,7 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_itera
     Matrix<T> P = IdMat(E.r());
     Matrix<T> Gt = IdMat(E.c());
 
-    Matrix<T>::svd_steps_iteration(P,E,Gt, 0, 0, max_iterations, tolerance);
+    Matrix<T>::svd_steps_iteration(P,E,Gt, ALL, max_iterations, tolerance);
     // cout << P << endl << E << endl << Gt << endl;
 
     // update solution incorporating bidiagonal decomposition

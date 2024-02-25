@@ -3083,18 +3083,18 @@ TEST(Matrix, svd){
            5, -10,   4,  -7,  8,   5}
     );
     Mat U,E,Vt;
-    // A.svd(U,E,Vt);
-    // Mat::set_double_precision(14);
-    // for(uint i=0; i<E.r(); ++i){
-    //     for(uint j=0; j<E.c(); ++j){
-    //         if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Mat::get_epsilon());
-    //         else continue;
-    //     }
-    // }
-    // EXPECT_TRUE(U.is_orthogonal());
-    // EXPECT_TRUE(Vt.is_orthogonal());
-    // Mat::set_double_precision(13);
-    // // cout << U << endl << E << endl << Vt << endl;
-    // EXPECT_EQ(A, U*E*Vt);
-    // // cout << A - U*E*Vt << endl;
+    A.svd(U,E,Vt);
+    Mat::set_double_precision(14);
+    for(uint i=0; i<E.r(); ++i){
+        for(uint j=0; j<E.c(); ++j){
+            if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Mat::get_epsilon());
+            else continue;
+        }
+    }
+    EXPECT_TRUE(U.is_orthogonal());
+    EXPECT_TRUE(Vt.is_orthogonal());
+    Mat::set_double_precision(13);
+    // cout << U << endl << E << endl << Vt << endl;
+    EXPECT_EQ(A, U*E*Vt);
+    // cout << A - U*E*Vt << endl;
 }

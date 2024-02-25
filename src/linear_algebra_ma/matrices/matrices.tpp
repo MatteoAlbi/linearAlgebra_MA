@@ -784,15 +784,19 @@ Reflector<T> Matrix<T>::zero_reflector(uu_pair rs, uint c) const{
     if(a_n < Matrix<T>::get_epsilon()) {
         // the vector is null, I do not need to apply any reflection
         // throw std::invalid_argument("selected vector has null norm");
-        return Reflector<T>(Matrix<T>(rs.second-rs.first+1, 1), 1, 0, rs.first);
+        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
     }
-    T tau = a_n2 - a_n * v(0);
-    if(abs(tau) < Matrix<T>::get_epsilon()){
+    // compute vector result of reflection
+    Matrix<T> reflected(v.size(), 1);
+    reflected(0) = a_n;
+    if(v == reflected){
         // this is the case where the reflector transforms v in itself
         // it is an exception explained in the paper as the condition a* a != a* b
         // in this case a == b and the formula cannot be applied 
-        return Reflector<T>(Matrix<T>(rs.second-rs.first+1, 1), 1, 0, rs.first);
+        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
     }
+
+    T tau = a_n2 - a_n * v(0);
     v(0) -= a_n;
 
     return Reflector<T>(v, tau, a_n, rs.first);
@@ -803,16 +807,23 @@ Reflector<T> Matrix<T>::zero_reflector(uint r, uu_pair cs) const{
     Matrix<T> v = this->at(r, cs).t();
 
     double a_n2 = v.norm2();
-    if(a_n2 < Matrix<T>::get_epsilon()) {
-        // throw std::invalid_argument("selected vector has null norm");
-        return Reflector<T>(Matrix<T>(cs.second-cs.first+1, 1), 1, 0, cs.first);
-    }
     double a_n = sqrt(a_n2);
-    T tau;
-    // if constexpr(is_complex<T>::value) tau = a_n2 - a_n * std::conj(v(0));
-    if(false) ;
-    else tau = a_n2 - a_n * v(0);
-    
+    if(a_n < Matrix<T>::get_epsilon()) {
+        // the vector is null, I do not need to apply any reflection
+        // throw std::invalid_argument("selected vector has null norm");
+        return Reflector<T>(Matrix<T>(v.size(), 1), 1, 0, cs.first);
+    }
+    // compute vector result of reflection
+    Matrix<T> reflected(v.size(), 1);
+    reflected(0) = a_n;
+    if(v == reflected){
+        // this is the case where the reflector transforms v in itself
+        // it is an exception explained in the paper as the condition a* a != a* b
+        // in this case a == b and the formula cannot be applied 
+        return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, cs.first);
+    }
+
+    T tau = a_n2 - a_n * v(0);
     v(0) -= a_n;
 
     return Reflector<T>(v, tau, a_n, cs.first);
@@ -1447,7 +1458,7 @@ Matrix<V> matrix_r_divide(Matrix<T> const & B, Matrix<U> const & A){
 
 template<typename T>
 Matrix<T> Matrix<T>::implicit_double_QR_step() const{
-    if(!this->is_upper_hessenberg()) throw std::invalid_argument("Input matrix must be upper hessenberg");
+    // if(!this->is_upper_hessenberg()) throw std::invalid_argument("Input matrix must be upper hessenberg");
 
     // for simpler notation
     uint n =  this->_r;
@@ -1457,7 +1468,6 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
     T tmp;
     Reflector<T> ref;
 
-    std::cout << A << std::endl;
     for(uint i=0; i<n-1; ++i){
         if(i == 0){
             // compute first column of B
@@ -1470,35 +1480,37 @@ Matrix<T> Matrix<T>::implicit_double_QR_step() const{
                     A(n-2,n-2) - A(n-1,n-1),
                 A(2,1)
             });
-            ref = y.zero_reflector(ALL, 0);
+            std::cout << y << std::endl;
+            // ref = y.zero_reflector(ALL, 0);
         }
         else {
             // extract column to transform in [x 0 0]
-            // y = A({i, std::min(i+2, n-1)}, i-1);
-            ref = A.zero_reflector({i, std::min(i+2, n-1)}, i-1);
+            y = A({i, std::min(i+2, n-1)}, i-1);
+            // ref = A.zero_reflector({i, std::min(i+2, n-1)}, i-1);  
         }
-        // // compute reflector
-        // v = y.reflector();
-        // v_t = 2 * v.t();
-        // // apply reflection B -> QB = B - v * (u.t * B)
-        // for(uint j=0; j<n; j++){
-        //     tmp = 0.0;
-        //     for(uint k=0; k<v_t.size(); k++) tmp += v_t(k) * A(i+k, j);
-        //     for(uint k=0; k<v.size(); k++) A(i+k, j) -= tmp * v(k);
-        // }
-        // // apply reflection C -> CQ = C - (C * u) * v.t
-        // for(uint j=0; j<n; j++){
-        //     tmp = 0.0;
-        //     for(uint k=0; k<v.size(); k++) tmp += v(k) * A(j, i+k);
-        //     for(uint k=0; k<v_t.size(); k++) A(j, i+k) -= tmp * v_t(k);
-        // }
-        std::cout << ref.v() << std::endl;
-        if(ref.v().norm2() < 0.000000001) {
-            std::cout << A({i, std::min(i+2, n-1)}, i-1) << std::endl;
-            A.zero_reflector({i, std::min(i+2, n-1)}, i-1);
+        // compute reflector
+        v = y.reflector();
+        v_t = 2 * v.t();
+        // apply reflection B -> QB = B - v * (u.t * B)
+        for(uint j=0; j<n; j++){
+            tmp = 0.0;
+            for(uint k=0; k<v_t.size(); k++) tmp += v_t(k) * A(i+k, j);
+            for(uint k=0; k<v.size(); k++) A(i+k, j) -= tmp * v(k);
         }
-        ref.apply_left(A, {i == 0 ? 0 : i-1, A.c()-1});
-        ref.apply_right(A, ALL);
+        // apply reflection C -> CQ = C - (C * u) * v.t
+        for(uint j=0; j<n; j++){
+            tmp = 0.0;
+            for(uint k=0; k<v.size(); k++) tmp += v(k) * A(j, i+k);
+            for(uint k=0; k<v_t.size(); k++) A(j, i+k) -= tmp * v_t(k);
+        }
+        // std::cout << ref.v() << std::endl;
+        // if(ref.v().norm2() < 0.000000001) {
+        //     std::cout << A({i, std::min(i+2, n-1)}, i-1) << std::endl;
+        //     A.zero_reflector({i, std::min(i+2, n-1)}, i-1);
+        // }
+        // ref.apply_left(A, {i == 0 ? 0 : i-1, A.c()-1});
+        // std::cout << A << std::endl;
+        // ref.apply_right(A, ALL);
         std::cout << A << std::endl;
     }
     std::cout << std::endl << std::endl << std::endl;
@@ -1555,7 +1567,7 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
         // start running the implicit double QR steps
         for(uint k=0; k<max_iterations; ++k){
             H = H.implicit_double_QR_step();
-            
+            std::cout << H << std::endl;
             // check for convergence
             for(int i=_c-2; i>=0; --i){
                 if(abs(H(i+1,i)) < tolerance){

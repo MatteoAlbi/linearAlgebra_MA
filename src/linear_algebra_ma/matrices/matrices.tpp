@@ -1149,7 +1149,7 @@ T Matrix<T>::svd_shift() const{
     d = this->at(n)*this->at(n) + this->at(n-1,n)*this->at(n-1,n);
     // polynom coefficients
     c = a * d - c * b;
-    b = (- a - d)/2; // b/2
+    b = (- a - d)/2.0; // b/2
     // matrix is symmetric -> only real eigenvalues 
     a = sqrt(b*b - c); // alpha
     c = -b+a;
@@ -1166,8 +1166,6 @@ void Matrix<T>::svd_reinsch_step(
     Matrix<T> & Gt,
     T shift,
     uu_pair range
-    // uint start_index,
-    // uint dim
 ){
     if(E.r() < E.c()) throw std::invalid_argument("Matrix must represent an overdetermined problem");
     if(range.second == UINT_MAX) range.second = E.c()-1;
@@ -1184,21 +1182,19 @@ void Matrix<T>::svd_reinsch_step(
     E.apply_givens_rot_right(v, start, start+1, {start, std::min(start+2, end)}); // EG1
     Gt.apply_givens_rot_left(v, start, start+1); // G1Gt
 
-    cout << "after shift: " << endl << E << endl;
+    // cout << "after shift: " << endl << E << endl;
     // chase the bulge
     for(uint i=start; i<end; ++i){
         v = E({i, i+1}, i).givens_rot(0,1); // Pi
         E.apply_givens_rot_left(v, i, i+1, {i, std::min(i+2, end)}); // PiE
         P.apply_givens_rot_right(v, i, i+1); // PPi
-        cout << "after lower bulge: " << endl << E << endl;
+        // cout << "after lower bulge: " << endl << E << endl;
 
         if(i < end-1){
-            // need to transpose the vector becaue I am taking a row vector 
-            // actually, it is necessary only for complex matrices
-            v = E(i, {i+1, i+2}).givens_rot(0,1).t(); // Gi
+            v = E(i, {i+1, i+2}).givens_rot(0,1); // Gi
             E.apply_givens_rot_right(v, i+1, i+2, {i, std::min(i+2, end)}); // EGi
             Gt.apply_givens_rot_left(v, i+1, i+2); // GiGt
-            cout << "after upper bulge: " << endl << E << endl;
+            // cout << "after upper bulge: " << endl << E << endl;
         }
     }
 
@@ -1210,8 +1206,6 @@ void Matrix<T>::svd_steps_iteration(
     Matrix<T> & E,
     Matrix<T> & Gt,
     uu_pair range,
-    // uint start_index,
-    // uint dim,
     uint max_iterations,
     double tolerance
 ){
@@ -1237,16 +1231,13 @@ void Matrix<T>::svd_steps_iteration(
     }
 
     for(uint steps=0; steps<max_iterations && !converged; ++steps){
-        // apply step
-        if(steps < zero_shift_iterations) shift = 0;
-        else shift = E(range, range).svd_shift();
-        Matrix<T>::svd_reinsch_step(P, E, Gt, shift, range);
 
         // deflation
         for(uint i=range.second; i>=range.first+1; --i){ // i indicates column position
             if(abs(E(i-1,i)) < tolerance){
                 // cout << P * E * Gt << endl << "converged in i=" << i << endl << E << endl;
                 converged = true;
+                // cout << steps << endl;
                 // upper part
                 Matrix<T>::svd_steps_iteration(P, E, Gt, {range.first, i-1}, max_iterations, tolerance);
                 // lower part
@@ -1256,9 +1247,15 @@ void Matrix<T>::svd_steps_iteration(
             }
         }
         // cancellation
-        for(uint i=range.second; i>=range.first+1; --i){
-            // ATT: without +1 it cycle for inf (once it's 0, it overflows)
-        }
+        // for(uint i=range.second; i>=range.first+1; --i){
+        //     // ATT: without +1 it cycle for inf (once it's 0, it overflows)
+        // }
+
+        // apply step
+        if(steps < zero_shift_iterations) shift = 0;
+        else shift = E(range, range).svd_shift();
+        // cout << "matrix before step: " <<  endl << E << endl;
+        Matrix<T>::svd_reinsch_step(P, E, Gt, shift, range);
     }
 }
 

@@ -3097,4 +3097,31 @@ TEST(Matrix, svd){
     // cout << U << endl << E << endl << Vt << endl;
     EXPECT_EQ(A, U*E*Vt);
     // cout << A - U*E*Vt << endl;
+
+    // -- complex matrix
+
+    Mat_c Ac(6,8,
+        { 14.0+1i,   4, -16.0-1i, -20, -3.0-1i,  -4,
+           7,  17, -16.0+1i,   5,  6.0-1i, -13,
+          -2.0-1i,  12,  -7.0+1i,  15, -1,  -3,
+          19,   4,  -3.0-1i,   5, 16,  -9.0-1i,
+          -8,  11.0+1i,   4,   7.0-1i, -5,   2,
+           4,  -2,   5,  -8.0-1i, -6.0+1i,   7,
+          -8,   4,  12.0+1i,   4, -5.0-1i,   8, 
+           5.0+1i, -10,   4,  -7,  8.0+1i,   5.0-1i}
+    );
+    Mat_c Uc,Ec,Vtc;
+    Ac.svd(Uc,Ec,Vtc);
+    Mat::set_double_precision(14);
+    for(uint i=0; i<E.r(); ++i){
+        for(uint j=0; j<E.c(); ++j){
+            if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Mat::get_epsilon());
+            else continue;
+        }
+    }
+    EXPECT_TRUE(U.is_orthogonal());
+    EXPECT_TRUE(Vt.is_orthogonal());
+    Mat::set_double_precision(13);
+    // cout << U << endl << E << endl << Vt << endl;
+    EXPECT_EQ(A, U*E*Vt);
 }

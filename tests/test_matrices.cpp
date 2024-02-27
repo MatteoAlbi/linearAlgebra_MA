@@ -2408,25 +2408,25 @@ TEST(Matrix, bidiagonal_form){
     Mat::set_double_precision();
 
 
-    Mat_c Bc,Uc,Vtc;
+    Mat_c Uc,Vtc;
     Mat_c Ac(6,4,{ 14.0+1i,   4.0-1i, -16.0-1i, -20, -3.0-1i,  -4,
                     17,  17.0+1i, -16,   5,  6.0-1i, -13,
                     -2,  12,  -7.0-1i,  15, -1,  -3.0+1i,
                     19.0-1i,   4,  -3,   5, 16.0+1i,  -9});
 
-    EXPECT_THROW(Ac.reshape(4,6).bidiagonal_form(Uc,Bc,Vtc), invalid_argument);
-    EXPECT_NO_THROW(Ac.bidiagonal_form(Uc,Bc,Vtc));
+    EXPECT_THROW(Ac.reshape(4,6).bidiagonal_form(Uc,B,Vtc), invalid_argument);
+    EXPECT_NO_THROW(Ac.bidiagonal_form(Uc,B,Vtc));
     EXPECT_TRUE(Vtc.is_orthogonal());
     Mat_c::set_double_precision(14);
     EXPECT_TRUE(Uc.is_orthogonal());
-    EXPECT_TRUE(Bc.is_upper_triang());
-    for(uint i=0; i<Bc.c()-2; ++i){
-        for(uint j=i+2; j<Bc.c(); ++j){
-            EXPECT_TRUE(abs(Bc(i,j)) < Mat_c::get_epsilon());
+    EXPECT_TRUE(B.is_upper_triang());
+    for(uint i=0; i<B.c()-2; ++i){
+        for(uint j=i+2; j<B.c(); ++j){
+            EXPECT_TRUE(abs(B(i,j)) < Mat_c::get_epsilon());
         }
     }
     Mat_c::set_double_precision(13);
-    EXPECT_EQ(Ac, Uc*Bc*Vtc);
+    EXPECT_EQ(Ac, Uc*B*Vtc);
     Mat_c::set_double_precision();
 }
 
@@ -3110,18 +3110,19 @@ TEST(Matrix, svd){
           -8,   4,  12.0+1i,   4, -5.0-1i,   8, 
            5.0+1i, -10,   4,  -7,  8.0+1i,   5.0-1i}
     );
-    Mat_c Uc,Ec,Vtc;
-    Ac.svd(Uc,Ec,Vtc);
-    Mat::set_double_precision(14);
+    Mat_c Uc,Vtc;
+    Ac.svd(Uc,E,Vtc);
+    Mat_c::set_double_precision(14);
     for(uint i=0; i<E.r(); ++i){
         for(uint j=0; j<E.c(); ++j){
             if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Mat::get_epsilon());
             else continue;
         }
     }
-    EXPECT_TRUE(U.is_orthogonal());
-    EXPECT_TRUE(Vt.is_orthogonal());
-    Mat::set_double_precision(13);
-    // cout << U << endl << E << endl << Vt << endl;
-    EXPECT_EQ(A, U*E*Vt);
+    EXPECT_TRUE(Uc.is_orthogonal());
+    EXPECT_TRUE(Vtc.is_orthogonal());
+    Mat_c::set_double_precision(13);
+    // cout << Uc << endl << E << endl << Vtc << endl;
+    // cout << IdMat(Vtc.c()) - Vtc*Vtc.t() << endl;
+    EXPECT_EQ(Ac, Uc*E*Vtc);
 }

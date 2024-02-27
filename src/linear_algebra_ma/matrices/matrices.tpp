@@ -1113,34 +1113,62 @@ void Matrix<T>::hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const{
 }
 
 template<typename T>
-void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt) const{
+void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<double> & B, Matrix<T> & Vt) const{
     if(_r < _c) throw std::invalid_argument("Number of rows must be greater or equal to number of columns");
-    using namespace std;
-    B = *this;
+    Matrix<T> B_tmp = *this;
     U = IdMat(_r,_r);
     Vt = IdMat(_c,_c);
+    B = Matrix<double>(_r, _c);
     Matrix<T> v;
 
     for(uint i=0; i<_c; ++i){
-        v = B.reflector({i, -1}, i); // Q
-        B.apply_reflector_left(v, i, {i,-1}); // QB
+        v = B_tmp.reflector({i, -1}, i); // Q
+        B_tmp.apply_reflector_left(v, i, {i,-1}); // QB
         U.apply_reflector_right(v, i); // UQ
         if(i < _c-2){
             // need to transpose the vector becaue I am taking a row vector 
             // actually, it is necessary only for complex matrices
-            v = B.reflector(i, {i+1, -1}).t(); // Q
-            B.apply_reflector_right(v, i+1, {i,-1}); // BQ
+            v = B_tmp.reflector(i, {i+1, -1}).t(); // Q
+            B_tmp.apply_reflector_right(v, i+1, {i,-1}); // BQ
             Vt.apply_reflector_left(v, i+1); // QVt
         }
     }
+
+    // if the matrix is complex, make the bidiagonal matrix real
+    if constexpr (is_complex<T>::value){    
+        for(uint i=0; i<_c; ++i){ // row index
+            for(uint j=i; j<std::min(i+2, _c); ++j){ // column index
+                double magn_inv = 1.0 / abs(B_tmp(i,j));
+                T x(B_tmp(i,j).real() * std::copysign(magn_inv, B_tmp(i,j).imag()), - abs(B_tmp(i,j).imag()) * magn_inv);
+                T x_c = std::conj(x);
+                B(i,j) = (B_tmp(i,j) * x).real();
+                if(i==j){ // modify row
+                    // multiply row of B_tmp
+                    if(j+1 < _c) B_tmp(i,j+1) *= x;
+                    // multiply column of U
+                    for(uint k=0; k<U.r(); ++k) U(k,j) *= x_c;
+                }
+                else{ // modify column
+                    // multiply column of B_tmp
+                    B_tmp(i+1,j) *= x;
+                    // multiply row of Vt
+                    for(uint k=0; k<Vt.c(); ++k) Vt(j,k) *= x_c;
+                }
+            }
+        }
+        // std::cout << B << std::endl;
+    }
+    else{
+        B = B_tmp;
+    }
 }
 
-template<typename T>
-T Matrix<T>::svd_shift() const{
+template<>
+double Matrix<double>::svd_shift() const{
     uint n = std::min(_r-1,_c-1);
     using namespace std;
 
-    T a, b, c, d;
+    double a, b, c, d;
     // matrix elements: | a  b |
     //                  | c  d |
     a = this->at(n-1)*this->at(n-1) + this->at(n-2,n-1)*this->at(n-2,n-1);
@@ -1162,9 +1190,9 @@ T Matrix<T>::svd_shift() const{
 template<typename T>
 void Matrix<T>::svd_reinsch_step(
     Matrix<T> & P,
-    Matrix<T> & E,
+    Matrix<double> & E,
     Matrix<T> & Gt,
-    T shift,
+    double shift,
     uu_pair range
 ){
     if(E.r() < E.c()) throw std::invalid_argument("Matrix must represent an overdetermined problem");
@@ -1178,7 +1206,7 @@ void Matrix<T>::svd_reinsch_step(
 
     // apply shift
     // compute first reflector
-    Matrix<T> v = Matrix<T>(2, 1, {E(start)*E(start) - shift, E(start)*E(start,start+1)}).givens_rot(0,1); // G1
+    Matrix<double> v = Matrix<double>(2, 1, {E(start)*E(start) - shift, E(start)*E(start,start+1)}).givens_rot(0,1); // G1
     E.apply_givens_rot_right(v, start, start+1, {start, std::min(start+2, end)}); // EG1
     Gt.apply_givens_rot_left(v, start, start+1); // G1Gt
 
@@ -1203,7 +1231,7 @@ void Matrix<T>::svd_reinsch_step(
 template<typename T>
 void Matrix<T>::svd_steps_iteration(
     Matrix<T> & P,
-    Matrix<T> & E,
+    Matrix<double> & E,
     Matrix<T> & Gt,
     uu_pair range,
     uint max_iterations,
@@ -1216,7 +1244,7 @@ void Matrix<T>::svd_steps_iteration(
     // uint si = start_index;
     
     uint zero_shift_iterations = 0;
-    T shift;
+    double shift;
     bool converged = false;
 
     using namespace std;
@@ -1260,7 +1288,7 @@ void Matrix<T>::svd_steps_iteration(
 }
 
 template<typename T>
-void Matrix<T>::svd(Matrix<T> & U, Matrix<T> & E, Matrix<T> & Vt, uint max_iterations, double tolerance) const{
+void Matrix<T>::svd(Matrix<T> & U, Matrix<double> & E, Matrix<T> & Vt, uint max_iterations, double tolerance) const{
     using namespace std;
 
     // transpose this if r<c

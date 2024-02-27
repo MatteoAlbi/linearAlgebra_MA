@@ -76,11 +76,6 @@ class Matrix {
 #pragma region private
 
 private:
-    /**
-     * @brief computes the Wilkinson’s shift for the given bidiagonal matrix
-     * @return Wilkinson’s shift
-    */
-    T svd_shift() const;
 
     /**
      * @brief perform one Reinsch step for svd 
@@ -94,11 +89,9 @@ private:
     */
     static void svd_reinsch_step(
         Matrix<T> & P, 
-        Matrix<T> & E, 
+        Matrix<double> & E, 
         Matrix<T> & Gt, 
-        T shift, 
-        // uint start_index = 0,
-        // uint dim = 0
+        double shift,
         uu_pair range = ALL
     );
 
@@ -113,10 +106,8 @@ private:
     */
     static void svd_steps_iteration(
         Matrix<T> & P, 
-        Matrix<T> & E, 
+        Matrix<double> & E, 
         Matrix<T> & Gt,
-        // uint start_index = 0,
-        // uint dim = 0,
         uu_pair range = ALL,
         uint max_iterations = 1000, 
         double tolerance = TOL
@@ -1034,12 +1025,18 @@ public:
     void hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const;
 
     /**
-     * @brief given A m*n computes matrices U,B,V such that A = UBV' with
+     * @brief given A m*n computes matrices U,B,V' such that A = UBV' with
      * @param U orthogonal matrix m*m
-     * @param B bidiagonal matrix m*n (main and upper diagonal != 0)
+     * @param B real bidiagonal matrix m*n (main and upper diagonal != 0)
      * @param Vt orthogonal matrix n*n
     */
-    void bidiagonal_form(Matrix<T> & U, Matrix<T> & B, Matrix<T> & Vt) const;  
+    void bidiagonal_form(Matrix<T> & U, Matrix<double> & B, Matrix<T> & Vt) const;  
+
+    /**
+     * @brief computes the Wilkinson’s shift for the given bidiagonal matrix
+     * @return Wilkinson’s shift
+    */
+    double svd_shift() const;
 
     /**
      * @brief comuptes the singular value decomposition of the matrix m*n 
@@ -1050,7 +1047,7 @@ public:
     */
     void svd(
         Matrix<T> & U, 
-        Matrix<T> & E, 
+        Matrix<double> & E, 
         Matrix<T> & Vt, 
         uint max_iterations = 1000, 
         double tolerance = TOL

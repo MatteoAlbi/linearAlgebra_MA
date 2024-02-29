@@ -3124,5 +3124,6 @@ TEST(Matrix, svd){
     Mat_c::set_double_precision(13);
     // cout << Uc << endl << E << endl << Vtc << endl;
     // cout << IdMat(Vtc.c()) - Vtc*Vtc.t() << endl;
+    cout << E << endl;
     EXPECT_EQ(Ac, Uc*E*Vtc);
 }

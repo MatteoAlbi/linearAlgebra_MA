@@ -9,6 +9,7 @@
 #include <complex>
 #include <stdexcept>
 #include <exception>
+#include <algorithm> // std::sort
 
 #include <cstddef>
 #include <concepts>

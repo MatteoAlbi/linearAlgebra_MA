@@ -1307,10 +1307,49 @@ void Matrix<T>::svd(Matrix<T> & U, Matrix<double> & E, Matrix<T> & Vt, uint max_
 
     Matrix<T>::svd_steps_iteration(P,E,Gt, ALL, max_iterations, tolerance);
     // cout << P << endl << E << endl << Gt << endl;
+    // make all singular values have positive values
+    for(uint i=0; i<E.c(); ++i){
+        if(E(i) < 0){
+            E(i) = -E(i);
+            for(uint j=0; j<Gt.c(); ++j){
+                Gt(i,j) = -Gt(i,j);
+            }
+        }
+    }
 
     // update solution incorporating bidiagonal decomposition
     U = U*P;
     Vt = Gt*Vt;
+
+    // reorder singular values
+    // create vector of singular values + indeces
+    std::vector<std::pair<double,uint>> vec_backward_sort;
+    std::vector<uint> vec_forward_sort;
+    for(uint i=0; i<E.c(); ++i){
+        vec_backward_sort.push_back(std::pair<double, uint>(E(i), i));
+        vec_forward_sort.push_back(0);
+    }
+    auto sort_logic = [](std::pair<double, uint> i, std::pair<double, uint> j) {
+        return i.first > j.first;
+    };
+    // reorder the vector to keep track of the indeces
+    std::sort(vec_backward_sort.begin(), vec_backward_sort.end(), sort_logic);
+    // define the destination of each element from non-sorted to sorted
+    for(uint i=0; i<vec_backward_sort.size(); ++i){
+        vec_forward_sort[vec_backward_sort[i].second] = i;
+    }
+    // reorder matrices
+    uint i=0;
+    while(i<vec_forward_sort.size()){
+        if(vec_forward_sort[i] == i) ++i;
+        else{
+            U.swap_cols(i, vec_forward_sort[i]);
+            E.swap_rows(i, vec_forward_sort[i]);
+            E.swap_cols(i, vec_forward_sort[i]);
+            Vt.swap_rows(i, vec_forward_sort[i]);
+            std::swap(vec_forward_sort[i], vec_forward_sort[vec_forward_sort[i]]);
+        }
+    }
 
     // transpose the result
     if(_r<_c){

@@ -3112,18 +3112,27 @@ TEST(Matrix, svd){
     );
     Mat_c Uc,Vtc;
     Ac.svd(Uc,E,Vtc);
+    // cout << Uc << endl << E << endl << Vtc << endl;
+    // cout << IdMat(Vtc.c()) - Vtc*Vtc.t() << endl;
+    // cout << E << endl;
     Mat_c::set_double_precision(14);
+    // check E is diagonal
     for(uint i=0; i<E.r(); ++i){
         for(uint j=0; j<E.c(); ++j){
             if(i!=j) EXPECT_TRUE(abs(E(i,j)) < Mat::get_epsilon());
             else continue;
         }
     }
+    // check singular values are positive
+    for(uint i=0; i<std::min(E.c(), E.r()); ++i){
+        EXPECT_TRUE(E(i) > 0);
+    }
+    // check singular values are ordered
+    for(uint i=0; i<std::min(E.c(), E.r())-1; ++i){
+        EXPECT_TRUE(E(i) > E(i+1));
+    }
     EXPECT_TRUE(Uc.is_orthogonal());
     EXPECT_TRUE(Vtc.is_orthogonal());
     Mat_c::set_double_precision(13);
-    // cout << Uc << endl << E << endl << Vtc << endl;
-    // cout << IdMat(Vtc.c()) - Vtc*Vtc.t() << endl;
-    cout << E << endl;
     EXPECT_EQ(Ac, Uc*E*Vtc);
 }

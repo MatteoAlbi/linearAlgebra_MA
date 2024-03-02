@@ -485,7 +485,7 @@ Matrix<RetType_t<U,V>> cross(const Matrix<U> & v1, const Matrix<V> & v2){
 template<typename T>
 double Matrix<T>::norm() const{
     if(!this->is_vec()) throw std::invalid_argument("Norm only appliable to row/column vectors");
-    return sqrt(this->norm2());
+    return std::sqrt(this->norm2());
 }
 
 template<typename T>
@@ -770,6 +770,43 @@ Matrix<T> Matrix<T>::pinv_right() const{
     }
 }
 
+template<typename T>
+Matrix<c_double> Matrix<T>::sqrt() const{
+    Matrix<c_double> V, D;
+    this->eigen_dec(D, V);
+    for(uint i=0; i<D.size(); ++i) D(i) = std::sqrt(D(i));    
+    return V * MA::diag(D) * V.inv();
+}
+
+template<typename T>
+Matrix<T> Matrix<T>::pow(int exp) const{
+    if(_c != _r) throw std::invalid_argument("Matrix must be square");
+
+    Matrix<T> z;
+    Matrix<T> result = IdMat(_c);
+    int bit;
+
+    if(exp == 0) return IdMat(_c);
+    else if(exp < 0){ 
+        z = this->inv();
+        exp = std::abs(exp);
+    }
+    else{
+        z = *this;
+    }
+
+    while(exp > 0){
+        bit = exp%2;
+        exp = exp/2;
+
+        if(bit) result *= z;
+
+        z *= z;
+    }
+
+    return result;
+}
+
 #pragma endregion matrix_operations
 
 
@@ -924,13 +961,13 @@ Matrix<T> Matrix<T>::givens_rot(uint i, uint j) const{
             // T d1 = 1.0/sqrt(f2 * (f2 + g.real()*g.real() + g.imag()*g.imag()));
             // ret(0) = f2 * d1;
             // ret(1) = f * d1 * std::conj(g);
-            T d = 1/sqrt(f.real()*f.real() + f.imag()*f.imag() + g.real()*g.real() + g.imag()*g.imag());
+            T d = 1/std::sqrt(f.real()*f.real() + f.imag()*f.imag() + g.real()*g.real() + g.imag()*g.imag());
             ret(0) = f * d;
             ret(1) = std::conj(g) * d;
         }
         else{
             T f2 = f*f;
-            T d1 = 1.0/sqrt(f2 * (f2 + g*g));
+            T d1 = 1.0/std::sqrt(f2 * (f2 + g*g));
             ret(0) = f2 * d1;
             ret(1) = f * d1 * g;
         }
@@ -1179,7 +1216,7 @@ double Matrix<double>::svd_shift() const{
     c = a * d - c * b;
     b = (- a - d)/2.0; // b/2
     // matrix is symmetric -> only real eigenvalues 
-    a = sqrt(b*b - c); // alpha
+    a = std::sqrt(b*b - c); // alpha
     c = -b+a;
     d = -b-a;
     // return closest to A(n,n)
@@ -1530,14 +1567,14 @@ Matrix<c_double> Matrix<T>::eigenvalues(uint max_iterations, double tolerance) c
         T alpha = b*b - 4.0*c;
         
         if constexpr (is_complex<T>::value){
-            T tmp = sqrt(alpha);
+            T tmp = std::sqrt(alpha);
             return Matrix<c_double>(2,1, std::vector<c_double>{
                 (- b + tmp) / 2.0,
                 (- b - tmp) / 2.0
             });
         }
         else{
-            T tmp = sqrt(abs(alpha));
+            T tmp = std::sqrt(abs(alpha));
             if(alpha >= 0.0){
                 return Matrix<c_double>(2,1, std::vector<c_double>{
                     (- b + tmp) / 2.0,

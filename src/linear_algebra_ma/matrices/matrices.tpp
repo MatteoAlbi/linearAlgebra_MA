@@ -1190,7 +1190,7 @@ void Matrix<T>::svd_reinsch_step(
     using namespace std;
 
     // apply shift
-    // compute first reflector
+    // compute first rotation
     Matrix<double> v = Matrix<double>(2, 1, {E(start)*E(start) - shift, E(start)*E(start,start+1)}).givens_rot(0,1); // G1
     E.apply_givens_rot_right(v, start, start+1, {start, std::min(start+2, end)}); // EG1
     Gt.apply_givens_rot_left(v, start, start+1); // G1Gt

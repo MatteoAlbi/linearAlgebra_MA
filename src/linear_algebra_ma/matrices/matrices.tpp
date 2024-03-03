@@ -820,7 +820,8 @@ Matrix<T> Matrix<T>::reflector(uu_pair rs, uint c) const{
     using namespace std::complex_literals;
     T alpha;
 
-    if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm();
+    // if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm();
+    if constexpr (is_complex<T>::value) alpha = -u(0) / abs(u(0)) * u.norm();
     else alpha = -copysign(u.norm(), u(0));
 
     u(0) -= alpha;
@@ -835,7 +836,8 @@ Matrix<T> Matrix<T>::reflector(uint r, uu_pair cs) const{
     using namespace std::complex_literals;
     T alpha;
 
-    if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm();
+    // if constexpr (is_complex<T>::value) alpha = -exp(arg(u(0))*1i) * u.norm();
+    if constexpr (is_complex<T>::value) alpha = -u(0) / abs(u(0)) * u.norm();
     else alpha = -copysign(u.norm(), u(0));
 
     u(0) -= alpha;

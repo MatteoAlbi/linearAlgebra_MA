@@ -2160,32 +2160,25 @@ TEST(Matrix, is_lower_hessenberg){
 
 
 TEST(Matrix, reflector){
-    // Mat_c Ac = Mat_c(6,4,
-    //     {  4.0-3i,       4, -16.0+1i,      -12, 
-    //            -3,      -4,       17,  17.0-1i, 
-    //           -16,       5,   6.0+1i, -13.0+1i,
-    //            -2, 12.0+1i,       -7,       15, 
-    //       -1.0-1i,      -3,       19,        4,  
-    //       -3.0+1i,       5,  16.0+1i,       -9}
-    // );
-    // Reflector<c_double> ref = Ac.zero_reflector(ALL,2);
-    // ref.apply_left(Ac, ALL);
-    // cout << Ac << endl;
-    // ref = Ac.zero_reflector({2,5},0);
-    // ref.apply_left(Ac, ALL);
-    // cout << Ac << endl;
-    // ref = Ac.zero_reflector(1,{1,3});
-    // ref.apply_right(Ac, {1,1});
-    // cout << Ac << endl;
-
-    // Mat_c vc = Ac(0,ALL);
-    // ref = vc.zero_reflector(0,ALL);
-    // EXPECT_TRUE(ref.householder_mat().is_orthogonal());
-    // cout << vc * ref.householder_mat().t() << endl;
-    // vc = Ac(ALL, 1);
-    // ref = vc.zero_reflector(ALL,0);
-    // EXPECT_TRUE(ref.householder_mat().is_orthogonal());
-    // cout << ref.householder_mat() * vc << endl;
+    Mat_c::set_double_precision(14);
+    
+    Mat_c Ac = Mat_c(6,4,
+        {  4.0-3i,       4, -16.0+1i,      -12, 
+               -3,      -4,       17,  17.0-1i, 
+              -16,       5,   6.0+1i, -13.0+1i,
+               -2, 12.0+1i,       -7,       15, 
+          -1.0-1i,      -3,       19,        4,  
+          -3.0+1i,       5,  16.0+1i,       -9}
+    );
+    Mat_c ref = Ac.reflector(ALL,2);
+    Ac.apply_reflector_left(ref, 0, {2,2});
+    EXPECT_EQ(Ac({1, 5}, 2), Mat_c(5, 1));
+    ref = Ac.reflector({2,5},0);
+    Ac.apply_reflector_left(ref, 2, ALL);
+    EXPECT_EQ(Ac({3,5}, 0), Mat_c(3, 1));
+    ref = Ac.reflector(1,{1,3});
+    Ac.apply_reflector_right(ref, 1, {1,1});
+    EXPECT_EQ(Ac(1, {2,3}), Mat_c(1, 2));
 }
 
 TEST(Matrix, givens_rotation){

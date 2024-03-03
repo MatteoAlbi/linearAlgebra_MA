@@ -812,60 +812,6 @@ Matrix<T> Matrix<T>::pow(int exp) const{
 
 #pragma region decomposition_methods
 
-// template<typename T>
-// Reflector<T> Matrix<T>::zero_reflector(uu_pair rs, uint c) const{
-//     Matrix<T> v = this->at(rs, c);
-
-//     double a_n2 = v.norm2();
-//     double a_n = sqrt(a_n2);
-//     if(a_n < Matrix<T>::get_epsilon()) {
-//         // the vector is null, I do not need to apply any reflection
-//         // throw std::invalid_argument("selected vector has null norm");
-//         return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
-//     }
-//     // compute vector result of reflection
-//     Matrix<T> reflected(v.size(), 1);
-//     reflected(0) = a_n;
-//     if(v == reflected){
-//         // this is the case where the reflector transforms v in itself
-//         // it is an exception explained in the paper as the condition a* a != a* b
-//         // in this case a == b and the formula cannot be applied 
-//         return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, rs.first);
-//     }
-
-//     T tau = a_n2 - a_n * v(0);
-//     v(0) -= a_n;
-
-//     return Reflector<T>(v, tau, a_n, rs.first);
-// }
-
-// template<typename T>
-// Reflector<T> Matrix<T>::zero_reflector(uint r, uu_pair cs) const{
-//     Matrix<T> v = this->at(r, cs).t();
-
-//     double a_n2 = v.norm2();
-//     double a_n = sqrt(a_n2);
-//     if(a_n < Matrix<T>::get_epsilon()) {
-//         // the vector is null, I do not need to apply any reflection
-//         // throw std::invalid_argument("selected vector has null norm");
-//         return Reflector<T>(Matrix<T>(v.size(), 1), 1, 0, cs.first);
-//     }
-//     // compute vector result of reflection
-//     Matrix<T> reflected(v.size(), 1);
-//     reflected(0) = a_n;
-//     if(v == reflected){
-//         // this is the case where the reflector transforms v in itself
-//         // it is an exception explained in the paper as the condition a* a != a* b
-//         // in this case a == b and the formula cannot be applied 
-//         return Reflector<T>(Matrix<T>(v.size(), 1), 1, a_n, cs.first);
-//     }
-
-//     T tau = a_n2 - a_n * v(0);
-//     v(0) -= a_n;
-
-//     return Reflector<T>(v, tau, a_n, cs.first);
-// }
-
 template<typename T>
 Matrix<T> Matrix<T>::reflector(uu_pair rs, uint c) const{
     Matrix<T> u = this->at(rs, c);
@@ -883,7 +829,7 @@ Matrix<T> Matrix<T>::reflector(uu_pair rs, uint c) const{
 
 template<typename T>
 Matrix<T> Matrix<T>::reflector(uint r, uu_pair cs) const{
-    Matrix<T> u = this->at(r, cs);
+    Matrix<T> u = this->at(r, cs).t();
     if(!u.is_vec()) throw std::invalid_argument("Given ranges do not extract a vector");
 
     using namespace std::complex_literals;
@@ -1165,7 +1111,7 @@ void Matrix<T>::bidiagonal_form(Matrix<T> & U, Matrix<double> & B, Matrix<T> & V
         if(i < _c-2){
             // need to transpose the vector becaue I am taking a row vector 
             // actually, it is necessary only for complex matrices
-            v = B_tmp.reflector(i, {i+1, -1}).t(); // Q
+            v = B_tmp.reflector(i, {i+1, -1}); // Q
             B_tmp.apply_reflector_right(v, i+1, {i,-1}); // BQ
             Vt.apply_reflector_left(v, i+1); // QVt
         }

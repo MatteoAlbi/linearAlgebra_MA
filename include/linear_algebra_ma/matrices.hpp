@@ -35,8 +35,6 @@ typedef unsigned int uint;
 typedef std::pair<uint,uint> uu_pair;
 typedef std::complex<double> c_double;
 #define ALL uu_pair{0, UINT_MAX}
-// #define ALL uu_pair{}
-template<typename T> class Reflector; // forward declaration to use it in calss Matrix
 
 #pragma region helper_structs
 

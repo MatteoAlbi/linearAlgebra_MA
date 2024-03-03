@@ -5,25 +5,21 @@
             "${workspaceFolder}/src",
             "/usr/include/c++/13"
         ]
-        // "myDefines": [
-        //     "DEBUG",
-        //     "MY_FEATURE=1"
-        // ]
     },
     "configurations": [
         {
             "name": "Linux",
             "compilerPath": "/usr/bin/gcc-13",
-            "intelliSenseMode": "${default}",
+            "intelliSenseMode": "linux-gcc-x64",
             "includePath": [
                 "${myIncludePath}",
                 "/usr/include",
                 "/usr/include/**",
-                "build/GCC 13.1.0 x86_64-linux-gnu/Debug/_deps/googletest-src/googletest/include"
+                "build/GCC 13.1.0 x86_64-linux-gnu/Debug/_deps/googletest-src/googletest/include",
+                "${workspaceFolder}",
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/include/**"
             ],
-            // "defines": [
-            //     "${myDefines}"
-            // ],
             "cStandard": "gnu11",
             "cppStandard": "gnu++20",
             "browse": {

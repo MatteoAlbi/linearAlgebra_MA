@@ -9,6 +9,7 @@
 #include <complex>
 #include <stdexcept>
 #include <exception>
+#include <algorithm> // std::sort
 
 #include <cstddef>
 #include <concepts>
@@ -24,7 +25,7 @@
 #include <random>
 
 #define PREC 15.0
-#define TOL  pow(10.0,-PREC)
+#define TOL  std::pow(10.0,-PREC)
 
 
 namespace MA
@@ -34,7 +35,6 @@ typedef unsigned int uint;
 typedef std::pair<uint,uint> uu_pair;
 typedef std::complex<double> c_double;
 #define ALL uu_pair{0, UINT_MAX}
-// #define ALL uu_pair{}
 
 #pragma region helper_structs
 
@@ -46,7 +46,7 @@ template <typename T>
 struct is_complex<std::complex<T>> : std::true_type {};
 
 template <typename T>
-using is_complex_t = is_complex<T>::value;
+using is_complex_t = typename is_complex<T>::value;
 
 // Helper type to conditionally determine the type of V
 template <typename T, typename U>
@@ -71,6 +71,56 @@ using enable_if_not_comp2d_t = typename enable_if_not_comp2d<T, U>::type;
 
 template<typename T = double>
 class Matrix {
+
+#pragma region private
+
+private:
+
+    /**
+     * @brief perform one Reinsch step for svd 
+     * @param P left orthogonal matrix
+     * @param E matrix to diagonalize
+     * @param Gt right side orthogonal matrix
+     * @param shift shift to apply to the matrix E
+     * @param start_index from which diagonal index the step must start,
+     *  used to implement deflation
+     * @param dim dimension of the deflated matrix
+    */
+    static void svd_reinsch_step(
+        Matrix<T> & P, 
+        Matrix<double> & E, 
+        Matrix<T> & Gt, 
+        double shift,
+        uu_pair range = ALL
+    );
+
+    /**
+     * @brief perform one Reinsch step for svd 
+     * @param P left orthogonal matrix
+     * @param E matrix to diagonalize
+     * @param Gt right side orthogonal matrix
+     * @param start_index from which diagonal index the step must start,
+     *  used to implement deflation
+     * @param dim dimension of the deflated matrix
+    */
+    static void svd_steps_iteration(
+        Matrix<T> & P, 
+        Matrix<double> & E, 
+        Matrix<T> & Gt,
+        uu_pair range = ALL,
+        uint max_iterations = 1000, 
+        double tolerance = TOL
+    );
+
+    /**
+     * @brief implementation of the implicit double QR algorithm,
+     *  one single step. Works only for upper hessenberg matrices.
+     * @return matrix after one step
+     * @throw invalid_argument if the matrix is not upper hessenberg matrices
+    */
+    Matrix<T> implicit_double_QR_step() const;
+#pragma endregion private
+
 protected:
 
     // number of decimals used in double comparison
@@ -95,7 +145,7 @@ public:
     inline static void set_double_precision(double dp = PREC){ 
         if(dp > PREC) std::cout << "WARNING: double precision very small, this may result in bad behavior" << std::endl;
         Matrix<T>::double_precision = dp; 
-        Matrix<T>::epsilon = pow(10.0,-dp);
+        Matrix<T>::epsilon = std::pow(10.0,-dp);
     }
 
     /**
@@ -230,6 +280,64 @@ public:
      * @return submatrix of rows rs and columns cs
     */
     Matrix<T> operator()(uu_pair rs, uu_pair cs) const;
+
+    /**
+     * @brief get operator using ()
+     * @param r row index
+     * @param c columns index
+     * @return T& element in position (r,c)
+     */
+    T& at(uint r, uint c);
+
+    /**
+     * @brief const get operator using ()
+     * @param r row index
+     * @param c columns index
+     * @return const T& element in position (r,c)
+     */
+    const T& at(uint r, uint c) const;
+
+    /**
+     * @brief if the object is a vector, access the i-th element,
+     * if the object is a matrix, access the i-th element on the diagonal.
+     * The returned value is a modifiable reference.
+     * @param i index of access
+     * @return element of the object
+    */
+    T& at(uint i);
+
+    /**
+     * @brief if the object is a vector, access the i-th element,
+     * if the object is a matrix, access the i-th element on the diagonal.
+     * The returned value is a constant refrence.
+     * @param i index of access
+     * @return element of the object
+    */
+    const T& at(uint i) const;
+
+    /**
+     * @brief extract the elements on rows rs and column c.
+     * @param rs rows index pair (both extremes included)
+     * @param c column index
+     * @return submatrix of rows rs and column c
+    */
+    Matrix<T> at(uu_pair rs, uint c) const;
+
+    /**
+     * @brief extract the elements on row r and columns cs.
+     * @param r row index 
+     * @param cs columns index pair (both extremes included)
+     * @return submatrix of rows r and column cs
+    */
+    Matrix<T> at(uint r, uu_pair cs) const;
+
+    /**
+     * @brief extract the elements on rows rs and columns cs.
+     * @param rs rows index pair (both extremes included)
+     * @param cs columns index pair (both extremes included)
+     * @return submatrix of rows rs and columns cs
+    */
+    Matrix<T> at(uu_pair rs, uu_pair cs) const;
 
     /**
      * @brief get number of rows
@@ -603,9 +711,16 @@ public:
     friend Matrix<RetType_t<U,V>> cross(const Matrix<U> & v1, const Matrix<V> & v2);
 
     /**
-     * @brief return norm2: sqrt(sum(v(i)^2)) of the given vector
+     * @brief computes norm of the given vector
      * 
-     * @return double: norm2 of the vector
+     * @return norm
+     */
+    double norm() const;
+
+    /**
+     * @brief computes squared norm of the given vector
+     * 
+     * @return squared norm
      */
     double norm2() const;
 
@@ -649,6 +764,16 @@ public:
     bool is_lower_triang() const;
 
     /**
+     * @brief return true if the matrix is upper bidiagonal
+     */
+    bool is_upper_bidiagonal() const;
+
+    /**
+     * @brief return true if the matrix is lower bidiagonal
+     */
+    bool is_lower_bidiagonal() const;
+
+    /**
      * @brief return true if the matrix is an upper hessenberg matrix
      */
     bool is_upper_hessenberg() const;
@@ -657,6 +782,11 @@ public:
      * @brief return true if the matrix is an lower hessenberg matrix
      */
     bool is_lower_hessenberg() const;
+
+    /**
+     * @brief return true if the matrix is orthogonal
+     */
+    bool is_orthogonal() const;
 #pragma endregion checks
 
 #pragma region matrix_operations
@@ -744,16 +874,120 @@ public:
      * @return Matrix: right pseudo-inverse
      */
     Matrix<T> pinv_right() const;
+
+    /**
+     * @brief returns sqaure root of the matrix.
+     * @return square root matrix
+    */
+    Matrix<c_double> sqrt() const;
+
+    /**
+     * @brief elevate the matrix to the given exponent.
+     * @param exp exponent
+     * @return power elevation of matrix
+    */
+    Matrix<T> pow(int exp) const;
+
 #pragma endregion matrix_operations
 
 #pragma region decomposition_methods
     /**
-     * @brief computes the reflector of the given vector
+     * @brief computes the reflector of the selected portion of matrix
      * https://en.wikipedia.org/wiki/QR_decomposition
-     * 
+     * @param rs selected rows
+     * @param c selected column
      * @return reflector vector
     */
-    Matrix<T> reflector() const;
+    Matrix<T> reflector(uu_pair rs = ALL, uint c = 0) const;
+
+    /**
+     * @brief computes the reflector of the selected portion of matrix
+     * https://en.wikipedia.org/wiki/QR_decomposition
+     * @param r selected row
+     * @param cs selected columns
+     * @return reflector vector
+    */
+    Matrix<T> reflector(uint r, uu_pair cs = ALL) const;
+
+    /**
+     * @brief given this matrix (A) and reflector v updates A as:
+     *  A -> AQ = A - (A * v) * 2v'
+     * @param v reflector
+     * @param start_col starting column of the matrix from which the reflector is applied. 
+     *  Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
+     *  as Q = I-2vv', and should match the first index of matrix from which the reflector 
+     *  is computed, e.g. ref extracted from ({1,3},2) -> start_col = 1
+     * @param rs rows to which the reflector is applied, can be different from ALL in order 
+     *  to exclude portion of the matrix which are null. Usually the first index can be taken
+     *  as the row/column from which the reflector is computed (if applied to the very same matrix)
+    */
+    void apply_reflector_right(const Matrix<T> & v, uint start_col = 0, uu_pair rs = ALL);
+
+    /**
+     * @brief given this matrix (A) and reflector v, updates A as:
+     *  A -> QA = A - v * (2v' * A)
+     * @param v reflector
+     * @param start_row starting row of the matrix from which the reflector is applied. 
+     *  Matches the first non-unitary diagonal entry of the reflector matrix Q computed 
+     *  as Q = I-2vv', and should match the first index of matrix from which the reflector 
+     *  is computed, e.g. ref extracted from ({1,3},2) -> start_row = 1
+     * @param cs columns to which the reflector is applied, can be different from ALL in 
+     *  order to exclude portion of the matrix which are null
+    */
+    void apply_reflector_left(const Matrix<T> & v, uint start_row = 0, uu_pair cs = ALL);
+
+    /**
+     * @brief computes Given rotation of the given vector 
+     *  for elements in positions i,j:
+     *  [G][... i ... j ...]' = [... r ... 0 ...]'
+     *  explanation: https://en.wikipedia.org/wiki/Givens_rotation
+     *  computation: https://www.netlib.org/lapack/lawnspdf/lawn148.pdf, 
+     *               https://patentimages.storage.googleapis.com/e4/51/85/2c89fd0a7e4a42/US8473539.pdf
+     * @param i first index: element -> r
+     * @param j second index: element -> 0
+     * @return vector of dim (2,1) containing c and s, from which G can be easily computed
+    */
+    Matrix<T> givens_rot(uint i, uint j) const;
+
+    /**
+     * @brief applies givens rotation as right product to a matrix: G*A
+     *  modifying the column c
+     * @param rot rotation to apply
+     * @param i first col index: element -> r
+     * @param j second col index: element -> 0
+     * @param r row to modify
+    */
+    void apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uint r);
+
+    /**
+     * @brief applies givens rotation as right product to a matrix: G*A
+     *  modifying the column c
+     * @param rot rotation to apply
+     * @param i first col index: element -> r
+     * @param j second col index: element -> 0
+     * @param rs range of rows to modify
+    */
+    void apply_givens_rot_right(const Matrix<T> & rot, uint i, uint j, uu_pair rs = ALL);
+
+    /**
+     * @brief applies givens rotation as left product to a matrix: A*G
+     *  modifying the row r, ATT: G is not transpose
+     * @param rot rotation to apply
+     * @param i first row index: element -> r
+     * @param j second row index: element -> 0
+     * @param c column to modify
+    */
+    void apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uint c);
+
+    /**
+     * @brief applies givens rotation as left product to a matrix: A*G
+     *  modifying the row r, ATT: G is not transpose
+     * @param rot rotation to apply
+     * @param i first row index: element -> r
+     * @param j second row index: element -> 0
+     * @param cs range of columns to modify
+    */
+    void apply_givens_rot_left(const Matrix<T> & rot, uint i, uint j, uu_pair cs = ALL);
 
     /**
      * @brief Compute QR decomposition of the given matrix: A=Q*R 
@@ -798,22 +1032,43 @@ public:
      *        QHQ* = A
      *      https://en.wikipedia.org/wiki/Hessenberg_matrix
      * 
-     * @param Q unitary matrix
+     * @param Q orthogonal matrix
      * @param H hessenberg matrix
     */
     void hessenberg_dec(Matrix<T> & Q, Matrix<T> & H) const;
 
+    /**
+     * @brief given A m*n computes matrices U,B,V' such that A = UBV' with
+     * @param U orthogonal matrix m*m
+     * @param B real bidiagonal matrix m*n (main and upper diagonal != 0)
+     * @param Vt orthogonal matrix n*n
+    */
+    void bidiagonal_form(Matrix<T> & U, Matrix<double> & B, Matrix<T> & Vt) const;  
+
+    /**
+     * @brief computes the Wilkinson’s shift for the given bidiagonal matrix
+     * @return Wilkinson’s shift
+    */
+    double svd_shift() const;
+
+    /**
+     * @brief comuptes the singular value decomposition of the matrix m*n 
+     *  such that A = UEV' where:
+     *  - U m*m orthogonal matrix
+     *  - E m*n diagonal matrix, with singular values as diagonal elements
+     *  - V n*n orthogonal matrix
+    */
+    void svd(
+        Matrix<T> & U, 
+        Matrix<double> & E, 
+        Matrix<T> & Vt, 
+        uint max_iterations = 1000, 
+        double tolerance = TOL
+    ) const;
+
 #pragma endregion decomposition_methods
 
 #pragma region eigen
-    
-    /**
-     * @brief implementation of the implicit double QR algorithm,
-     *  one single step. Works only for upper hessenberg matrices.
-     * @return matrix after one step
-     * @throw invalid_argument if the matrix is not upper hessenberg matrices
-    */
-    Matrix<T> implicit_double_QR_step() const;
 
     /**
      * @brief extract the eigenvalues of a matrix. Depending on the dimension:
@@ -852,94 +1107,103 @@ public:
 };
 
 #pragma region ls_solution
-    /**
-     * @brief Solve the system U*x=B using a backward substitution algorithm.
-     *        U must be an upper triangular square matrix (n*n) and B is the 
-     *        known terms matrix with number of rows equalt to U -> B is (n*c_b)
-     * 
-     * @param U     upper triangular matrix (n*n)
-     * @param B     known terms matrix (n*c_b)
-     */
-    template<typename T, typename V, typename W = RetType_t<T,V>>
-    Matrix<W> backward_sub(Matrix<T> const & U, Matrix<V> const & B);
+/**
+ * @brief Solve the system U*x=B using a backward substitution algorithm.
+ *        U must be an upper triangular square matrix (n*n) and B is the 
+ *        known terms matrix with number of rows equalt to U -> B is (n*c_b)
+ * 
+ * @param U     upper triangular matrix (n*n)
+ * @param B     known terms matrix (n*c_b)
+ */
+template<typename T, typename V, typename W = RetType_t<T,V>>
+Matrix<W> backward_sub(Matrix<T> const & U, Matrix<V> const & B);
 
-    /**
-     * @brief Solve the system L*x=B using a forward substitution algorithm.
-     *        L must be a lower triangular square matrix (n*n) and B is the 
-     *        known terms matrix with number of rows equalt to L -> B is (n*c_b)
-     * 
-     * @param L     lower triangular matrix (n*n)
-     * @param B     known terms matrix (n*c_b)
-     */
-    template<typename T, typename U, typename V = RetType_t<T,U>>
-    Matrix<V> forward_sub(Matrix<T> const & L, Matrix<U> const & B);
+/**
+ * @brief Solve the system L*x=B using a forward substitution algorithm.
+ *        L must be a lower triangular square matrix (n*n) and B is the 
+ *        known terms matrix with number of rows equalt to L -> B is (n*c_b)
+ * 
+ * @param L     lower triangular matrix (n*n)
+ * @param B     known terms matrix (n*c_b)
+ */
+template<typename T, typename U, typename V = RetType_t<T,U>>
+Matrix<V> forward_sub(Matrix<T> const & L, Matrix<U> const & B);
 
-    /**
-     * @brief computes the left division A\B, which corresponds to solve the 
-     *        linear equation system Ax=B or performing the operation (A^-1)*b.
-     *        The rows of A must be equal the rows of B. The result has dimensions (r_a*c_b)
-     *        The functions solves the problem depending on the dimensions of the 
-     *        given matrices: 
-     *        
-     *        - A is a square matrix (r_a*c_r_common): A is decomposed using
-     *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
-     *          subsequentially solving the two systems:
-     *              - L*(U*x) = PB, thus solving it using forward substitution the system 
-     *                L*y=PB equal to y=L\PB
-     *              - U*x=y, thus solving it using backward substitution the system 
-     *                U*x=y equal to x=U\y
-     *        - A is rectangular and represent an overconstrained problem (rows > cols): A
-     *          is decomposed using QRP decomposition (AP = QR) and performing the operation
-     *          X = P*(R\(Q'*b)). Notably, using the householder projection for the QRP
-     *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
-     *          the diagonal are zero. Such rows are discared along with the corresponding 
-     *          rows of b. R\(Q'*b) is solved using backward substitution.
-     * 
-     * @param A             left hand division term
-     * @param B             right hand division term
-     * @return Matrix: result of the division
-     * @throw invalid_argument if rows don't match
-     */
-    template<typename T, typename U, typename V = RetType_t<T,U>>
-    Matrix<V> matrix_l_divide(Matrix<T> const & A, Matrix<U> const & B);
+/**
+ * @brief computes the left division A\B, which corresponds to solve the 
+ *        linear equation system Ax=B or performing the operation (A^-1)*b.
+ *        The rows of A must be equal the rows of B. The result has dimensions (r_a*c_b)
+ *        The functions solves the problem depending on the dimensions of the 
+ *        given matrices: 
+ *        
+ *        - A is a square matrix (r_a*c_r_common): A is decomposed using
+ *          LUP decomposition: Ax=B -> PA = LU -> LUx = PB. Then, the problem is solved by
+ *          subsequentially solving the two systems:
+ *              - L*(U*x) = PB, thus solving it using forward substitution the system 
+ *                L*y=PB equal to y=L\PB
+ *              - U*x=y, thus solving it using backward substitution the system 
+ *                U*x=y equal to x=U\y
+ *        - A is rectangular and represent an overconstrained problem (rows > cols): A
+ *          is decomposed using QRP decomposition (AP = QR) and performing the operation
+ *          X = P*(R\(Q'*b)). Notably, using the householder projection for the QRP
+ *          decomposition, matrix R is rectangular upper triangular, thus all rows below 
+ *          the diagonal are zero. Such rows are discared along with the corresponding 
+ *          rows of b. R\(Q'*b) is solved using backward substitution.
+ * 
+ * @param A             left hand division term
+ * @param B             right hand division term
+ * @return Matrix: result of the division
+ * @throw invalid_argument if rows don't match
+ */
+template<typename T, typename U, typename V = RetType_t<T,U>>
+Matrix<V> matrix_l_divide(Matrix<T> const & A, Matrix<U> const & B);
 
-    /**
-     * @brief solves the linear system A*x=B. 
-     *        Calls matrix_l_divide.
-     * @param A coefficient matrix (must be square nxn)
-     * @param B known terms matrix (B.rows == A.cols)
-     * @return Matrix: x (dimensions A.rows x B.cols)
-     * @throw invalid_argument if rows don't match
-     */
-    template<typename T, typename U, typename V = RetType_t<T,U>>
-    Matrix<V> solve_ls(Matrix<T> const & A, Matrix<U> const & B);
+/**
+ * @brief solves the linear system A*x=B. 
+ *        Calls matrix_l_divide.
+ * @param A coefficient matrix (must be square nxn)
+ * @param B known terms matrix (B.rows == A.cols)
+ * @return Matrix: x (dimensions A.rows x B.cols)
+ * @throw invalid_argument if rows don't match
+ */
+template<typename T, typename U, typename V = RetType_t<T,U>>
+Matrix<V> solve_ls(Matrix<T> const & A, Matrix<U> const & B);
 
-    /**
-     * @brief computes the right division B/A translating it in a left 
-     *        division problem following the equality B/A = (A.t\B.t).t
-     *        where .t stands for transpose. 
-     *        The columns of A must be equal the columns of B.
-     *        The functions solves the problem depending on the dimensions of the 
-     *        given matrices, as described in  matrix_l_divide.
-     * 
-     * @param B             left hand division term 
-     * @param A             right hand division term
-     * @return Matrix: result of the division
-     * @throw invalid_argument if columns don't match
-     */
-    template<typename T, typename U, typename V = RetType_t<T,U>>
-    Matrix<V> matrix_r_divide(Matrix<T> const & B, Matrix<U> const & A);
+/**
+ * @brief computes the right division B/A translating it in a left 
+ *        division problem following the equality B/A = (A.t\B.t).t
+ *        where .t stands for transpose. 
+ *        The columns of A must be equal the columns of B.
+ *        The functions solves the problem depending on the dimensions of the 
+ *        given matrices, as described in  matrix_l_divide.
+ * 
+ * @param B             left hand division term 
+ * @param A             right hand division term
+ * @return Matrix: result of the division
+ * @throw invalid_argument if columns don't match
+ */
+template<typename T, typename U, typename V = RetType_t<T,U>>
+Matrix<V> matrix_r_divide(Matrix<T> const & B, Matrix<U> const & A);
 
 #pragma endregion ls_solution
 
 #pragma region special_constructors
 /**
- * @brief create identity matrix of shape dim*dim 
+ * @brief create identity matrix of shape r*c 
  * 
- * @param dim 
+ * @param r n of rows
+ * @param c n of columns
  * @return Matrix 
  */
-Matrix<double> IdMat(const uint & dim);
+Matrix<double> IdMat(uint r, uint c);
+
+/**
+ * @brief create identity matrix of shape dim*dim 
+ * 
+ * @param dim
+ * @return Matrix 
+ */
+Matrix<double> IdMat(uint dim);
 
 /**
  * @brief create matrix of only ones of shape r*c

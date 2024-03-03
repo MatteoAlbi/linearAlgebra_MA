@@ -226,10 +226,8 @@ Matrix<RetType_t<U,V>> operator+(const Matrix<U>& m1, const Matrix<V>& m2){
 template<typename T>
 template<typename U, typename V, typename>
 Matrix<T>& Matrix<T>::operator-=(const V & k){
-    for(uint i=0; i<this->_r; ++i){
-        for(uint j=0; j<this->_c; ++j){
-            this->operator()(i,j) -= k;
-        }
+    for(uint i=0; i<this->size(); ++i){
+        this->_v[i] -= k;
     }
     return *this;
 }
@@ -339,10 +337,8 @@ Matrix<RetType_t<U,V>> operator*(const Matrix<U>& m1, const Matrix<V>& m2){
 template<typename T>
 template<typename U, typename V, typename>
 Matrix<T>& Matrix<T>::operator/=(const V & k){
-    for(uint i=0; i<this->_r; ++i){
-        for(uint j=0; j<this->_c; ++j){
-            this->operator()(i,j) /= k;
-        }
+    for(uint i=0; i<this->size(); ++i){
+        this->_v[i] /= k;
     }
     return *this;
 }
